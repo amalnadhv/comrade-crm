@@ -3,8 +3,8 @@ import pandas as pd
 
 from database import (
     init_db,
-    get_customers,
     add_customer,
+    get_customers,
     update_customer,
     delete_customer
 )
@@ -12,17 +12,16 @@ from database import (
 # ---------------- INIT ----------------
 init_db()
 
-st.set_page_config(
-    page_title="Comrade CRM",
-    layout="wide"
-)
+st.set_page_config(page_title="Comrade CRM", layout="wide")
 
-# ---------------- LOAD DATA FUNCTION ----------------
+
+# ---------------- LOAD DATA ----------------
 def load_df():
     rows = get_customers()
     return pd.DataFrame(rows, columns=[
         "id", "name", "phone", "email", "company", "status"
     ])
+
 
 # ---------------- SESSION STATE ----------------
 if "selected_customer" not in st.session_state:
@@ -31,13 +30,11 @@ if "selected_customer" not in st.session_state:
 if "edit_id" not in st.session_state:
     st.session_state["edit_id"] = None
 
+
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("📊 Comrade CRM")
 
-page = st.sidebar.radio(
-    "Navigation",
-    ["Dashboard", "Customers", "Analytics"]
-)
+page = st.sidebar.radio("Navigation", ["Dashboard", "Customers", "Analytics"])
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("➕ Add Customer")
@@ -51,10 +48,11 @@ status = st.sidebar.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
 if st.sidebar.button("Save Customer"):
     if name and phone:
         add_customer(name, phone, email, company, status)
-        st.sidebar.success("Customer added!")
+        st.success("Customer added!")
         st.rerun()
     else:
-        st.sidebar.error("Name and Phone required")
+        st.error("Name and Phone required")
+
 
 # ================= DASHBOARD =================
 if page == "Dashboard":
@@ -64,28 +62,22 @@ if page == "Dashboard":
 
     col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric("Total Customers", len(df))
-    col2.metric("New Leads", len(df[df["status"] == "New"]))
-    col3.metric("Won Deals", len(df[df["status"] == "Won"]))
-    col4.metric("Lost Deals", len(df[df["status"] == "Lost"]))
+    col1.metric("Total", len(df))
+    col2.metric("New", len(df[df["status"] == "New"]))
+    col3.metric("Won", len(df[df["status"] == "Won"]))
+    col4.metric("Lost", len(df[df["status"] == "Lost"]))
 
     st.markdown("---")
 
-    st.subheader("Status Chart")
-
-    if len(df) > 0:
+    if not df.empty:
         st.bar_chart(df["status"].value_counts())
 
-    st.markdown("---")
-
-    st.subheader("Recent Customers")
-    st.dataframe(df.tail(10), use_container_width=True)
 
 # ================= CUSTOMERS =================
 elif page == "Customers":
     st.title("👥 Customers")
 
-    df = load_df()
+    df = load_df()   # ALWAYS FRESH DATA
 
     search = st.text_input("🔎 Search")
 
@@ -99,49 +91,33 @@ elif page == "Customers":
 
     # ---------------- LEFT LIST ----------------
     with col_left:
-        st.subheader("Customer List")
+        st.subheader("List")
 
         for _, row in df.iterrows():
-
-            if st.button(f"👤 {row['name']}", key=f"select_{row['id']}"):
+            if st.button(f"👤 {row['name']}", key=f"sel_{row['id']}"):
                 st.session_state["selected_customer"] = row["id"]
 
-            st.markdown(
-                f"""
-                <div style="
-                    background: rgba(30,41,59,0.5);
-                    padding: 10px;
-                    border-radius: 10px;
-                    margin-bottom: 8px;
-                ">
-                    📞 {row['phone']} <br>
-                    🔖 {row['status']}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.caption(f"{row['phone']} | {row['status']}")
 
     # ---------------- RIGHT DETAILS ----------------
     with col_right:
-        st.subheader("Customer Details")
+        st.subheader("Details")
 
         selected_id = st.session_state["selected_customer"]
 
         if selected_id is None:
-            st.info("Select a customer from the left")
+            st.info("Select a customer")
         else:
-            customer = df[df["id"] == selected_id]
+            customer_df = df[df["id"] == selected_id]
 
-            if not customer.empty:
-                customer = customer.iloc[0]
+            if not customer_df.empty:
+                customer = customer_df.iloc[0]
 
-                st.markdown("### Profile")
-
-                st.write(f"**Name:** {customer['name']}")
-                st.write(f"**Phone:** {customer['phone']}")
-                st.write(f"**Email:** {customer['email']}")
-                st.write(f"**Company:** {customer['company']}")
-                st.write(f"**Status:** {customer['status']}")
+                st.write("**Name:**", customer["name"])
+                st.write("**Phone:**", customer["phone"])
+                st.write("**Email:**", customer["email"])
+                st.write("**Company:**", customer["company"])
+                st.write("**Status:**", customer["status"])
 
                 st.markdown("---")
 
@@ -157,6 +133,7 @@ elif page == "Customers":
                     if st.button("🗑️ Delete", key=f"del_{customer['id']}"):
                         delete_customer(customer["id"])
                         st.session_state["selected_customer"] = None
+                        st.session_state["edit_id"] = None
                         st.rerun()
 
                 # ---------------- EDIT FORM ----------------
@@ -187,13 +164,16 @@ elif page == "Customers":
                                 new_company,
                                 new_status
                             )
+
                             st.session_state["edit_id"] = None
+                            st.success("Updated!")
                             st.rerun()
 
                     with c2:
                         if st.button("❌ Cancel"):
                             st.session_state["edit_id"] = None
                             st.rerun()
+
 
 # ================= ANALYTICS =================
 elif page == "Analytics":
@@ -202,6 +182,6 @@ elif page == "Analytics":
     df = load_df()
 
     if df.empty:
-        st.info("No data available")
+        st.info("No data")
     else:
         st.bar_chart(df["status"].value_counts())
