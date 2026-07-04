@@ -82,21 +82,19 @@ elif page == "Customers":
         st.session_state["edit_id"] = None
 
      # ---------------- HEADER ----------------
-    c1, c2, c3, c4, c5, c6 = st.columns([2,2,3,2,2,2])
-    
     st.markdown("""
     <style>
     
-    /* Edit button */
-    div[data-testid="column"] button[kind="secondary"]:first-child {
+    /* EDIT buttons */
+    button[key^="edit_"] {
         background-color: #3b82f6 !important;
         color: white !important;
         border-radius: 6px !important;
         border: none !important;
     }
     
-    /* Delete button */
-    div[data-testid="column"] button[kind="secondary"]:last-child {
+    /* DELETE buttons */
+    button[key^="del_"] {
         background-color: #ef4444 !important;
         color: white !important;
         border-radius: 6px !important;
@@ -104,13 +102,12 @@ elif page == "Customers":
     }
     
     /* Hover effect */
-    div[data-testid="column"] button:hover {
-        opacity: 0.85;
+    button:hover {
+        opacity: 0.85 !important;
     }
     
     </style>
-    """, unsafe_allow_html=True)
-    
+    """, unsafe_allow_html=True)    
     # ---------------- ROWS ----------------
     for row in df.itertuples():
 
