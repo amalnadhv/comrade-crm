@@ -115,7 +115,52 @@ elif page == "Customers":
             df["email"].str.contains(search, case=False, na=False)
         ]
 
-    # ---------------- AG GRID ----------------
+    # ---------------- EDIT FORM (TOP LEVEL) ----------------
+    if st.session_state.get("edit_id") is not None:
+
+        edit_id = st.session_state["edit_id"]
+        edit_row = df[df["id"] == edit_id]
+
+        if not edit_row.empty:
+            edit_row = edit_row.iloc[0]
+
+            st.markdown("---")
+            st.subheader(f"✏️ Edit Customer: {edit_row['name']}")
+
+            new_name = st.text_input("Name", edit_row["name"])
+            new_phone = st.text_input("Phone", edit_row["phone"])
+            new_email = st.text_input("Email", edit_row["email"])
+            new_company = st.text_input("Company", edit_row["company"])
+
+            new_status = st.selectbox(
+                "Status",
+                ["New", "Contacted", "Won", "Lost"],
+                index=["New", "Contacted", "Won", "Lost"].index(edit_row["status"])
+            )
+
+            c1, c2 = st.columns(2)
+
+            with c1:
+                if st.button("💾 Save Changes"):
+                    update_customer(
+                        edit_id,
+                        new_name,
+                        new_phone,
+                        new_email,
+                        new_company,
+                        new_status
+                    )
+                    st.session_state["edit_id"] = None
+                    st.rerun()
+
+            with c2:
+                if st.button("❌ Cancel"):
+                    st.session_state["edit_id"] = None
+                    st.rerun()
+
+    st.markdown("---")
+
+    # ---------------- GRID ----------------
     from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
     gb = GridOptionsBuilder.from_dataframe(df)
@@ -133,42 +178,36 @@ elif page == "Customers":
     )
 
     # ---------------- SAFE SELECTION ----------------
- 
-selected_rows = grid_response.get("selected_rows")
+    selected_rows = grid_response.get("selected_rows")
 
-# ---------------- NORMALIZE SAFELY ----------------
-if selected_rows is None:
-    selected_rows = []
-elif isinstance(selected_rows, dict):
-    selected_rows = [selected_rows]
-elif isinstance(selected_rows, pd.DataFrame):
-    selected_rows = selected_rows.to_dict("records")
+    if selected_rows is None:
+        selected_rows = []
+    elif isinstance(selected_rows, dict):
+        selected_rows = [selected_rows]
+    elif isinstance(selected_rows, pd.DataFrame):
+        selected_rows = selected_rows.to_dict("records")
 
-# ensure it's always a list
-if not isinstance(selected_rows, list):
-    selected_rows = []
+    # ---------------- ACTION PANEL ----------------
+    if len(selected_rows) > 0:
+        row = selected_rows[0]
 
-# ---------------- SAFE CHECK ----------------
-if len(selected_rows) > 0:
-    row = selected_rows[0]
+        st.markdown("---")
+        st.subheader(f"Selected: {row['name']}")
 
-    st.markdown("---")
-    st.subheader(f"Selected Customer: {row['name']}")
+        col1, col2, col3 = st.columns(3)
 
-    col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("✏️ Edit Selected", key=f"edit_{row['id']}"):
+                st.session_state["edit_id"] = int(row["id"])
+                st.rerun()
 
-    with col1:
-        if st.button("✏️ Edit Selected", key=f"edit_{row['id']}"):
-            st.session_state["edit_id"] = int(row["id"])
-            st.rerun()
+        with col2:
+            if st.button("🗑️ Delete Selected", key=f"del_{row['id']}"):
+                delete_customer(int(row["id"]))
+                st.rerun()
 
-    with col2:
-        if st.button("🗑️ Delete Selected", key=f"del_{row['id']}"):
-            delete_customer(int(row["id"]))
-            st.rerun()
-
-    with col3:
-        st.info(f"Phone: {row['phone']}")
+        with col3:
+            st.info(f"Phone: {row['phone']}")
 
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
