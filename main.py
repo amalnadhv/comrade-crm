@@ -66,11 +66,11 @@ if page == "Dashboard":
 # ---------------- CUSTOMERS ----------------
 
 elif page == "Customers":
-    st.title("👥 Customers")
+    st.title("Customers")
 
     df = load_df()
 
-    search = st.text_input("🔎 Search customers")
+    search = st.text_input("Search customers")
 
     if search:
         df = df[
@@ -81,37 +81,51 @@ elif page == "Customers":
     if "edit_id" not in st.session_state:
         st.session_state["edit_id"] = None
 
-    # ---------------- STYLE ----------------
+    # ---------------- PROFESSIONAL STYLE ----------------
     st.markdown("""
     <style>
 
-    .header {
-        background: linear-gradient(90deg, #1e3a8a, #2563eb);
-        color: white;
-        padding: 10px;
+    /* Page spacing */
+    .block-container {
+        padding-top: 1rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+
+    /* Header */
+    .crm-header {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 10px 12px;
         border-radius: 8px;
-        font-weight: bold;
+        font-weight: 600;
+        font-size: 13px;
     }
 
-    .row {
-        padding: 10px;
-        border-radius: 8px;
-        margin-top: 6px;
+    /* Rows */
+    .crm-row {
+        padding: 10px 12px;
+        border-bottom: 1px solid #1f2937;
+        font-size: 13px;
     }
 
-    .even { background: #0f172a; }
-    .odd { background: #111827; }
-
-    .edit {
-        border: 2px solid #3b82f6;
-        background: #1f2937;
+    .crm-row:hover {
+        background: #111827;
     }
 
+    /* Edit highlight */
+    .edit-active {
+        background: #1e293b !important;
+        border-left: 3px solid #3b82f6;
+    }
+
+    /* Status badge */
     .badge {
-        padding: 4px 10px;
-        border-radius: 12px;
+        padding: 3px 10px;
+        border-radius: 10px;
+        font-size: 11px;
         color: white;
-        font-size: 12px;
+        display: inline-block;
     }
 
     .New { background: #3b82f6; }
@@ -119,15 +133,18 @@ elif page == "Customers":
     .Won { background: #10b981; }
     .Lost { background: #ef4444; }
 
+    /* Buttons (compact SaaS style) */
     button[kind="secondary"] {
-        border-radius: 6px;
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+        border-radius: 6px !important;
     }
 
     </style>
     """, unsafe_allow_html=True)
 
     # ---------------- HEADER ----------------
-    h1, h2, h3, h4, h5, h6 = st.columns([2,2,3,2,2,2])
+    h1, h2, h3, h4, h5, h6 = st.columns([2.2, 2.2, 3, 2.2, 1.6, 1.6])
 
     h1.markdown("**Name**")
     h2.markdown("**Phone**")
@@ -136,93 +153,75 @@ elif page == "Customers":
     h5.markdown("**Status**")
     h6.markdown("**Actions**")
 
-    st.markdown("---")
+    st.divider()
 
     # ---------------- ROWS ----------------
     for idx, row in enumerate(df.itertuples()):
 
-        is_edit = (st.session_state.get("edit_id") == row.id)
+        is_edit = st.session_state.get("edit_id") == row.id
 
-        style_class = "edit" if is_edit else ("even" if idx % 2 == 0 else "odd")
+        row_style = "crm-row edit-active" if is_edit else "crm-row"
 
-        # -------- ROW DISPLAY --------
-        r1, r2, r3, r4, r5, r6 = st.columns([2,2,3,2,2,2])
+        st.markdown(f"""
+        <div class="{row_style}">
+            <div style="display:flex; gap:10px;">
+                <div style="width:18%"><b>{row.name}</b></div>
+                <div style="width:18%">{row.phone}</div>
+                <div style="width:25%">{row.email}</div>
+                <div style="width:18%">{row.company}</div>
+                <div style="width:10%">
+                    <span class="badge {row.status}">{row.status}</span>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        with r1:
-            st.markdown(f"**{row.name}**")
+        c1, c2 = st.columns([1,1])
 
-        with r2:
-            st.write(row.phone)
+        with c1:
+            if st.button("Edit", key=f"edit_{row.id}"):
+                st.session_state["edit_id"] = row.id
 
-        with r3:
-            st.write(row.email)
+        with c2:
+            if st.button("Delete", key=f"del_{row.id}"):
+                delete_customer(row.id)
+                st.rerun()
 
-        with r4:
-            st.write(row.company)
-
-        with r5:
-            st.markdown(
-                f"<span class='badge {row.status}'>{row.status}</span>",
-                unsafe_allow_html=True
-            )
-
-        with r6:
-            b1, b2 = st.columns(2)
-
-            with b1:
-                if st.button("✏️", key=f"edit_{row.id}"):
-                    st.session_state["edit_id"] = row.id
-
-            with b2:
-                if st.button("🗑️", key=f"del_{row.id}"):
-                    delete_customer(row.id)
-                    st.rerun()
-
-        # ---------------- EDIT INLINE ----------------
+        # ---------------- EDIT MODE ----------------
         if st.session_state.get("edit_id") == row.id:
 
-            e1, e2, e3, e4, e5, e6 = st.columns([2,2,3,2,2,2])
+            st.markdown("### Edit Customer")
 
-            with e1:
-                new_name = st.text_input("", row.name, key=f"n{row.id}")
+            new_name = st.text_input("Name", row.name)
+            new_phone = st.text_input("Phone", row.phone)
+            new_email = st.text_input("Email", row.email)
+            new_company = st.text_input("Company", row.company)
 
-            with e2:
-                new_phone = st.text_input("", row.phone, key=f"p{row.id}")
+            new_status = st.selectbox(
+                "Status",
+                ["New", "Contacted", "Won", "Lost"],
+                index=["New", "Contacted", "Won", "Lost"].index(row.status)
+            )
 
-            with e3:
-                new_email = st.text_input("", row.email, key=f"e{row.id}")
+            c1, c2 = st.columns(2)
 
-            with e4:
-                new_company = st.text_input("", row.company, key=f"c{row.id}")
+            with c1:
+                if st.button("Save", key=f"save_{row.id}"):
+                    update_customer(
+                        row.id,
+                        new_name,
+                        new_phone,
+                        new_email,
+                        new_company,
+                        new_status
+                    )
+                    st.session_state["edit_id"] = None
+                    st.rerun()
 
-            with e5:
-                new_status = st.selectbox(
-                    "",
-                    ["New", "Contacted", "Won", "Lost"],
-                    index=["New", "Contacted", "Won", "Lost"].index(row.status),
-                    key=f"s{row.id}"
-                )
-
-            with e6:
-                c1, c2 = st.columns(2)
-
-                with c1:
-                    if st.button("💾", key=f"save_{row.id}"):
-                        update_customer(
-                            row.id,
-                            new_name,
-                            new_phone,
-                            new_email,
-                            new_company,
-                            new_status
-                        )
-                        st.session_state["edit_id"] = None
-                        st.rerun()
-
-                with c2:
-                    if st.button("❌", key=f"cancel_{row.id}"):
-                        st.session_state["edit_id"] = None
-                        st.rerun()
+            with c2:
+                if st.button("Cancel", key=f"cancel_{row.id}"):
+                    st.session_state["edit_id"] = None
+                    st.rerun()
 
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
