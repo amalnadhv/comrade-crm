@@ -12,41 +12,37 @@ from database import (
 st.markdown("""
 <style>
 
-/* EDIT button (green) */
-button[kind="secondary"][data-testid="baseButton-secondary"] {
-    background-color: #22c55e !important;
-    color: white !important;
+/* Edit button */
+div.stButton > button[kind="primary"] {
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-weight: 600;
+}
+
+/* Hover effect */
+div.stButton > button:hover {
+    background-color: #1d4ed8;
+    color: white;
+}
+
+/* Delete button styling using button text selector */
+div.stButton > button:contains("Delete") {
+    background-color: #ef4444;
+    color: white;
     border-radius: 8px;
 }
 
-/* DELETE button (red) */
-button[data-testid="baseButton-secondary"]:has(span:contains("🗑️")) {
-    background-color: #ef4444 !important;
-    color: white !important;
-}
-
-/* SAVE button (yellow) */
-button[data-testid="baseButton-primary"]:has(span:contains("💾")) {
-    background-color: #facc15 !important;
-    color: black !important;
-}
-
-/* CANCEL button (pink) */
-button[data-testid="baseButton-secondary"]:has(span:contains("Cancel")) {
-    background-color: #ec4899 !important;
-    color: white !important;
-}
-
-/* Hover effect for all */
-button:hover {
-    opacity: 0.85;
-    transform: scale(1.02);
-    transition: 0.2s;
+/* Save button */
+div.stButton > button:contains("Save") {
+    background-color: #10b981;
+    color: white;
+    border-radius: 8px;
 }
 
 </style>
 """, unsafe_allow_html=True)
-
 # ---------------- INIT ----------------
 init_db()
 
