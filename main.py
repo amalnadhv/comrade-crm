@@ -135,36 +135,36 @@ elif page == "Customers":
         fit_columns_on_grid_load=True
     )
 
-    # ---------------- SAFE SELECTION HANDLING ----------------
-    selected = grid_response.get("selected_rows")
+# ---------------- SAFE SELECTION HANDLING ----------------
+  selected = grid_response.get("selected_rows")
 
-    if selected is None:
-        selected = []
-    elif isinstance(selected, dict):
-        selected = [selected]
+# ---------------- NORMALIZE OUTPUT ----------------
+if selected is None:
+    selected = pd.DataFrame()
+elif isinstance(selected, list):
+    selected = pd.DataFrame(selected)
 
-    # ---------------- ACTION PANEL ----------------
-    if len(selected) > 0:
-        row = selected[0]
+# ---------------- SAFE CHECK ----------------
+if not selected.empty:
+    row = selected.iloc[0]
 
-        st.markdown("---")
-        st.subheader(f"Selected: {row['name']}")
+    st.markdown("---")
+    st.subheader(f"Selected: {row['name']}")
 
-        col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns(3)
 
-        with col1:
-            if st.button("✏️ Edit Selected", key=f"edit_selected_{row['id']}"):
-                st.session_state["edit_id"] = row["id"]
-                st.rerun()
+    with col1:
+        if st.button("✏️ Edit Selected", key=f"edit_{row['id']}"):
+            st.session_state["edit_id"] = row["id"]
+            st.rerun()
 
-        with col2:
-            if st.button("🗑️ Delete Selected", key=f"del_selected_{row['id']}"):
-                delete_customer(row["id"])
-                st.rerun()
+    with col2:
+        if st.button("🗑️ Delete Selected", key=f"del_{row['id']}"):
+            delete_customer(row["id"])
+            st.rerun()
 
-        with col3:
-            st.info(f"Phone: {row['phone']}")
-
+    with col3:
+        st.info(f"Phone: {row['phone']}")
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
     st.title("📊 Analytics")
