@@ -134,18 +134,28 @@ elif page == "Customers":
         height=450,
         fit_columns_on_grid_load=True
     )
-
 # ---------------- SAFE SELECTION HANDLING ----------------
-selected = grid_response.selected_rows
+
+selected = []
+
+try:
+    selected = grid_response["selected_rows"]
+except Exception:
+    try:
+        selected = grid_response.selected_rows
+    except Exception:
+        selected = []
 
 if selected is None:
-    selected = pd.DataFrame()
-elif isinstance(selected, list):
-    selected = pd.DataFrame(selected)
+    selected = []
+elif isinstance(selected, dict):
+    selected = [selected]
+elif isinstance(selected, pd.DataFrame):
+    selected = selected.to_dict("records")
 
 # ---------------- ACTION PANEL ----------------
-if not selected.empty:
-    row = selected.iloc[0]
+if len(selected) > 0:
+    row = selected[0]
 
     st.markdown("---")
     st.subheader(f"Selected: {row['name']}")
@@ -164,6 +174,7 @@ if not selected.empty:
 
     with col3:
         st.info(f"Phone: {row['phone']}")
+
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
     st.title("📊 Analytics")
