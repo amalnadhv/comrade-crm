@@ -36,18 +36,18 @@ def init_db():
     conn.commit()
     conn.close()
 
-def add_customer(name, phone, email, company, status):
+def update_customer(id, name, phone, email, company, status):
     conn = get_connection()
     c = conn.cursor()
 
     c.execute("""
-        INSERT INTO customers (name, phone, email, company, status)
-        VALUES (?, ?, ?, ?, ?)
-    """, (name, phone, email, company, status))
+        UPDATE customers
+        SET name=?, phone=?, email=?, company=?, status=?
+        WHERE id=?
+    """, (name, phone, email, company, status, id))
 
     conn.commit()
     conn.close()
-
 
 def get_customers():
     conn = get_connection()
