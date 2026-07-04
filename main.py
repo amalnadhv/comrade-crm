@@ -175,15 +175,15 @@ elif page == "Customers":
 
     st.markdown("---")
 
-    # ---------------- RESET EDIT IF ID NO LONGER EXISTS ----------------
+    # ---------------- SESSION STATE INIT ----------------
     if "edit_id" not in st.session_state:
         st.session_state["edit_id"] = None
 
-    # ---------------- LIST CUSTOMERS ----------------
+    # ---------------- CUSTOMERS LIST ----------------
     for _, row in df.iterrows():
 
-        # -------- CUSTOMER ROW --------
-        c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 3, 2, 1, 1])
+        # ---------------- ROW DISPLAY ----------------
+        c1, c2, c3, c4, c5, c6, c7 = st.columns([2, 2, 3, 2, 1, 1, 1])
 
         c1.markdown(f"**{row['name']}**")
         c2.write(row["phone"])
@@ -192,15 +192,30 @@ elif page == "Customers":
         c5.write(row["status"])
 
         # ---------------- EDIT BUTTON ----------------
-        if c6.button("✏️ Edit", key=f"edit_btn_{row['id']}"):
+        if c6.button("✏️", key=f"edit_{row['id']}"):
             st.session_state["edit_id"] = row["id"]
 
-        # ---------------- DELETE BUTTON ----------------
-        if c6.button("🗑️", key=f"del_{row['id']}"):
+        # ---------------- DELETE BUTTON (RED STYLE) ----------------
+        delete_style = """
+        <style>
+        div.stButton > button {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-radius: 6px;
+            border: none;
+        }
+        div.stButton > button:hover {
+            background-color: #dc2626 !important;
+        }
+        </style>
+        """
+        st.markdown(delete_style, unsafe_allow_html=True)
+
+        if c7.button("🗑️", key=f"del_{row['id']}"):
             delete_customer(row["id"])
             st.rerun()
 
-        # ---------------- EDIT FORM (ONLY FOR SELECTED ROW) ----------------
+        # ---------------- EDIT PANEL ----------------
         if st.session_state["edit_id"] == row["id"]:
 
             st.markdown("### ✏️ Edit Customer")
@@ -217,10 +232,9 @@ elif page == "Customers":
                 key=f"status_{row['id']}"
             )
 
-            c1, c2 = st.columns(2)
+            c_save, c_cancel = st.columns(2)
 
-            # ---------------- SAVE ----------------
-            with c1:
+            with c_save:
                 if st.button("💾 Save", key=f"save_{row['id']}"):
                     update_customer(
                         row["id"],
@@ -234,8 +248,7 @@ elif page == "Customers":
                     st.success("Updated successfully!")
                     st.rerun()
 
-            # ---------------- CANCEL ----------------
-            with c2:
+            with c_cancel:
                 if st.button("❌ Cancel", key=f"cancel_{row['id']}"):
                     st.session_state["edit_id"] = None
                     st.rerun()
