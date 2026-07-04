@@ -99,6 +99,7 @@ if page == "Dashboard":
     st.dataframe(df, use_container_width=True)
 
 # ---------------- CUSTOMERS ----------------
+
 elif page == "Customers":
     st.title("Customers")
 
@@ -120,7 +121,7 @@ elif page == "Customers":
     gb = GridOptionsBuilder.from_dataframe(df)
 
     gb.configure_pagination(paginationAutoPageSize=True)
-    gb.configure_default_column(editable=False, sortable=True, filter=True)
+    gb.configure_default_column(sortable=True, filter=True)
 
     gb.configure_selection("single", use_checkbox=True)
 
@@ -130,33 +131,39 @@ elif page == "Customers":
         df,
         gridOptions=grid_options,
         update_mode=GridUpdateMode.SELECTION_CHANGED,
-        height=400,
+        height=450,
         fit_columns_on_grid_load=True
     )
 
-selected = grid_response["selected_rows"]
+    # ---------------- SAFE SELECTION HANDLING ----------------
+    selected = grid_response.get("selected_rows")
 
-# ---------------- ACTION PANEL ----------------
-if selected is not None and len(selected) > 0:
-    st.markdown("---")
-    st.subheader("Selected Customer")
+    if selected is None:
+        selected = []
+    elif isinstance(selected, dict):
+        selected = [selected]
 
-    row = selected[0]
+    # ---------------- ACTION PANEL ----------------
+    if len(selected) > 0:
+        row = selected[0]
 
-    col1, col2, col3 = st.columns(3)
+        st.markdown("---")
+        st.subheader(f"Selected: {row['name']}")
 
-    with col1:
-        if st.button("✏️ Edit Selected"):
-            st.session_state["edit_id"] = row["id"]
-            st.rerun()
+        col1, col2, col3 = st.columns(3)
 
-    with col2:
-        if st.button("🗑️ Delete Selected"):
-            delete_customer(row["id"])
-            st.rerun()
+        with col1:
+            if st.button("✏️ Edit Selected", key=f"edit_selected_{row['id']}"):
+                st.session_state["edit_id"] = row["id"]
+                st.rerun()
 
-    with col3:
-        st.info(f"Selected: {row['name']}")
+        with col2:
+            if st.button("🗑️ Delete Selected", key=f"del_selected_{row['id']}"):
+                delete_customer(row["id"])
+                st.rerun()
+
+        with col3:
+            st.info(f"Phone: {row['phone']}")
 
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
