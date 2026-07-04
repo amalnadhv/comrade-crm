@@ -1,15 +1,12 @@
 import sqlite3
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "crm.db")
-
-print("🚨 USING DB:", DB_PATH)
+# 🔥 FORCE SINGLE DATABASE LOCATION
+DB_NAME = os.path.join(os.getcwd(), "crm.db")
 
 
 def get_connection():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    print("✅ DB CONNECTED")
+    conn = sqlite3.connect(DB_NAME, check_same_thread=False)
     return conn
 
 
@@ -30,7 +27,6 @@ def init_db():
 
     conn.commit()
     conn.close()
-    print("✅ DB INIT DONE")
 
 
 def add_customer(name, phone, email, company, status):
@@ -44,14 +40,13 @@ def add_customer(name, phone, email, company, status):
 
     conn.commit()
     conn.close()
-    print("➕ CUSTOMER ADDED")
 
 
 def get_customers():
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM customers")
+    cur.execute("SELECT * FROM customers ORDER BY id DESC")
     rows = cur.fetchall()
 
     conn.close()
@@ -69,9 +64,6 @@ def update_customer(id, name, phone, email, company, status):
     """, (name, phone, email, company, status, id))
 
     conn.commit()
-
-    print("✏️ UPDATE EXECUTED FOR ID:", id)
-
     conn.close()
 
 
@@ -82,7 +74,4 @@ def delete_customer(id):
     cur.execute("DELETE FROM customers WHERE id=?", (id,))
 
     conn.commit()
-
-    print("🗑️ DELETE EXECUTED FOR ID:", id)
-
     conn.close()
