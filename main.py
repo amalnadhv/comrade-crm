@@ -81,18 +81,30 @@ elif page == "Customers":
     if "edit_id" not in st.session_state:
         st.session_state["edit_id"] = None
 
-    # ---------------- HEADER ----------------
+     # ---------------- HEADER ----------------
     c1, c2, c3, c4, c5, c6 = st.columns([2,2,3,2,2,2])
-
-    c1.markdown("**Name**")
-    c2.markdown("**Phone**")
-    c3.markdown("**Email**")
-    c4.markdown("**Company**")
-    c5.markdown("**Status**")
-    c6.markdown("**Actions**")
-
-    st.divider()
-
+    
+    st.markdown(
+        """
+        <div style="
+            background: #1e3a8a;
+            padding: 10px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+        ">
+            <div style="width: 18%;">Name</div>
+            <div style="width: 18%;">Phone</div>
+            <div style="width: 22%;">Email</div>
+            <div style="width: 15%;">Company</div>
+            <div style="width: 12%;">Status</div>
+            <div style="width: 15%;">Actions</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     # ---------------- ROWS ----------------
     for row in df.itertuples():
 
