@@ -11,6 +11,7 @@ def init_db():
     conn = get_connection()
     c = conn.cursor()
 
+    # Customers table
     c.execute("""
     CREATE TABLE IF NOT EXISTS customers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,9 +23,18 @@ def init_db():
     )
     """)
 
+    # USERS TABLE (PUT IT HERE)
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        subscription_status TEXT DEFAULT 'inactive'
+    )
+    """)
+
     conn.commit()
     conn.close()
-
 
 def add_customer(name, phone, email, company, status):
     conn = get_connection()
