@@ -1,6 +1,50 @@
 import streamlit as st
 import pandas as pd
 
+st.set_page_config(
+    page_title="Comrade CRM",
+    layout="wide"
+)
+
+st.markdown("""
+<style>
+
+/* App background */
+.stApp {
+    background: #0f172a;
+    color: #f8fafc;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #111827;
+}
+
+/* Metric cards */
+div[data-testid="metric-container"] {
+    background-color: #1f2937;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Buttons */
+.stButton button {
+    background: linear-gradient(90deg, #6366f1, #3b82f6);
+    color: white;
+    border-radius: 8px;
+    border: none;
+    padding: 6px 12px;
+}
+
+.stButton button:hover {
+    transform: scale(1.02);
+    background: linear-gradient(90deg, #3b82f6, #6366f1);
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 from database import (
     init_db,
     add_customer,
