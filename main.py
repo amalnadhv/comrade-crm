@@ -133,35 +133,43 @@ elif page == "Customers":
     )
 
     # ---------------- SAFE SELECTION ----------------
-    selected_rows = grid_response.get("selected_rows", [])
+ 
+selected_rows = grid_response.get("selected_rows")
 
-    # convert safely to list of dicts
-    if isinstance(selected_rows, dict):
-        selected_rows = [selected_rows]
-    elif isinstance(selected_rows, pd.DataFrame):
-        selected_rows = selected_rows.to_dict("records")
+# ---------------- NORMALIZE SAFELY ----------------
+if selected_rows is None:
+    selected_rows = []
+elif isinstance(selected_rows, dict):
+    selected_rows = [selected_rows]
+elif isinstance(selected_rows, pd.DataFrame):
+    selected_rows = selected_rows.to_dict("records")
 
-    # ---------------- ACTION PANEL ----------------
-    if len(selected_rows) > 0:
-        row = selected_rows[0]
+# ensure it's always a list
+if not isinstance(selected_rows, list):
+    selected_rows = []
 
-        st.markdown("---")
-        st.subheader(f"Selected Customer: {row['name']}")
+# ---------------- SAFE CHECK ----------------
+if len(selected_rows) > 0:
+    row = selected_rows[0]
 
-        col1, col2, col3 = st.columns(3)
+    st.markdown("---")
+    st.subheader(f"Selected Customer: {row['name']}")
 
-        with col1:
-            if st.button("✏️ Edit Selected", key=f"edit_{row['id']}"):
-                st.session_state["edit_id"] = int(row["id"])
-                st.rerun()
+    col1, col2, col3 = st.columns(3)
 
-        with col2:
-            if st.button("🗑️ Delete Selected", key=f"del_{row['id']}"):
-                delete_customer(int(row["id"]))
-                st.rerun()
+    with col1:
+        if st.button("✏️ Edit Selected", key=f"edit_{row['id']}"):
+            st.session_state["edit_id"] = int(row["id"])
+            st.rerun()
 
-        with col3:
-            st.info(f"Phone: {row['phone']}")
+    with col2:
+        if st.button("🗑️ Delete Selected", key=f"del_{row['id']}"):
+            delete_customer(int(row["id"]))
+            st.rerun()
+
+    with col3:
+        st.info(f"Phone: {row['phone']}")
+
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
     st.title("📊 Analytics")
