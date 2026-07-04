@@ -136,7 +136,7 @@ elif page == "Customers":
     )
 
 # ---------------- SAFE SELECTION HANDLING ----------------
-selected = grid_response.get("selected_rows")
+selected = grid_response.selected_rows
 
 if selected is None:
     selected = pd.DataFrame()
@@ -164,7 +164,6 @@ if not selected.empty:
 
     with col3:
         st.info(f"Phone: {row['phone']}")
-
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
     st.title("📊 Analytics")
