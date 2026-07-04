@@ -4,9 +4,9 @@ import pandas as pd
 from database import (
     init_db,
     add_customer,
+    get_customers,
     update_customer,
-    delete_customer,
-    load_customers_df
+    delete_customer
 )
 
 # ---------------- INIT ----------------
@@ -17,11 +17,16 @@ st.set_page_config(page_title="Comrade CRM", layout="wide")
 
 # ---------------- LOAD DATA ----------------
 def load_df():
-    return load_customers_df()
+    rows = get_customers()
+    return pd.DataFrame(rows, columns=[
+        "id", "name", "phone", "email", "company", "status"
+    ])
 
+
+df = load_df()
 
 # ---------------- SIDEBAR ----------------
-st.sidebar.title("📊 Comrade CRM")
+st.sidebar.title("📊 CRM")
 
 page = st.sidebar.radio("Navigation", ["Dashboard", "Customers", "Analytics"])
 
@@ -41,14 +46,12 @@ if st.sidebar.button("Save Customer"):
         st.success("Customer added!")
         st.rerun()
     else:
-        st.error("Name & Phone required")
+        st.error("Name and Phone required")
 
 
-# ================= DASHBOARD =================
+# ---------------- DASHBOARD ----------------
 if page == "Dashboard":
-    st.title("Dashboard")
-
-    df = load_df()
+    st.title("📌 Dashboard")
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -57,17 +60,12 @@ if page == "Dashboard":
     col3.metric("Won", len(df[df["status"] == "Won"]) if not df.empty else 0)
     col4.metric("Lost", len(df[df["status"] == "Lost"]) if not df.empty else 0)
 
-    st.markdown("---")
-
     st.dataframe(df, use_container_width=True)
 
 
-# ================= CUSTOMERS =================
-
+# ---------------- CUSTOMERS ----------------
 elif page == "Customers":
     st.title("👥 Customers")
-
-    df = load_df()
 
     search = st.text_input("🔎 Search customers")
 
@@ -80,88 +78,66 @@ elif page == "Customers":
     if "edit_id" not in st.session_state:
         st.session_state["edit_id"] = None
 
-    # ---------------- CLEAN TABLE STYLE ----------------
-    st.markdown("""
-    <style>
-    .crm-header, .crm-row {
-        display: flex;
-        padding: 10px;
-        border-bottom: 1px solid #2a2a2a;
-        font-size: 14px;
-        align-items: center;
-    }
-
-    .crm-header {
-        font-weight: bold;
-        background: #111827;
-        border-radius: 6px;
-        margin-bottom: 6px;
-    }
-
-    .col { padding: 4px; }
-
-    .name { width: 18%; }
-    .phone { width: 15%; }
-    .email { width: 22%; }
-    .company { width: 15%; }
-    .status { width: 12%; }
-    .actions { width: 18%; }
-
-    .badge {
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 12px;
-        color: white;
-        display: inline-block;
-    }
-
-    .New { background: #3b82f6; }
-    .Contacted { background: #f59e0b; }
-    .Won { background: #10b981; }
-    .Lost { background: #ef4444; }
-
-    </style>
-    """, unsafe_allow_html=True)
-
     # ---------------- HEADER ----------------
-    st.markdown("""
-    <div class="crm-header">
-        <div class="name">Name</div>
-        <div class="phone">Phone</div>
-        <div class="email">Email</div>
-        <div class="company">Company</div>
-        <div class="status">Status</div>
-        <div class="actions">Actions</div>
-    </div>
-    """, unsafe_allow_html=True)
+    col1, col2, col3, col4, col5, col6 = st.columns([2,2,3,2,2,2])
+
+    col1.markdown("**Name**")
+    col2.markdown("**Phone**")
+    col3.markdown("**Email**")
+    col4.markdown("**Company**")
+    col5.markdown("**Status**")
+    col6.markdown("**Actions**")
+
+    st.markdown("---")
 
     # ---------------- ROWS ----------------
     for _, row in df.iterrows():
 
-        st.markdown(f"""
-        <div class="crm-row">
-            <div class="name">{row['name']}</div>
-            <div class="phone">{row['phone']}</div>
-            <div class="email">{row['email']}</div>
-            <div class="company">{row['company']}</div>
-            <div class="status">
-                <span class="badge {row['status']}">{row['status']}</span>
-            </div>
-            <div class="actions">ID: {row['id']}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # ---------------- ACTION BUTTONS ----------------
-        col1, col2 = st.columns([1, 1])
+        col1, col2, col3, col4, col5, col6 = st.columns([2,2,3,2,2,2])
 
         with col1:
-            if st.button("✏️ Edit", key=f"edit_{row['id']}"):
-                st.session_state["edit_id"] = row["id"]
+            st.markdown(f"**{row['name']}**")
 
         with col2:
-            if st.button("🗑️ Delete", key=f"del_{row['id']}"):
-                delete_customer(row["id"])
-                st.rerun()
+            st.write(row["phone"])
+
+        with col3:
+            st.write(row["email"])
+
+        with col4:
+            st.write(row["company"])
+
+        with col5:
+            st.markdown(
+                f"""
+                <span style="
+                    padding:4px 10px;
+                    border-radius:12px;
+                    background:
+                        {'#3b82f6' if row['status']=='New' else
+                         '#f59e0b' if row['status']=='Contacted' else
+                         '#10b981' if row['status']=='Won' else
+                         '#ef4444'};
+                    color:white;
+                    font-size:12px;
+                ">
+                {row['status']}
+                </span>
+                """,
+                unsafe_allow_html=True
+            )
+
+        with col6:
+            c1, c2 = st.columns(2)
+
+            with c1:
+                if st.button("✏️", key=f"edit_{row['id']}"):
+                    st.session_state["edit_id"] = row["id"]
+
+            with c2:
+                if st.button("🗑️", key=f"del_{row['id']}"):
+                    delete_customer(row["id"])
+                    st.rerun()
 
         # ---------------- EDIT FORM ----------------
         if st.session_state["edit_id"] == row["id"]:
@@ -197,14 +173,14 @@ elif page == "Customers":
             with c2:
                 if st.button("❌ Cancel", key=f"cancel_{row['id']}"):
                     st.session_state["edit_id"] = None
-                    st.rerun()                    
-# ================= ANALYTICS =================
-elif page == "Analytics":
-    st.title("Analytics")
+                    st.rerun()
 
-    df = load_df()
+
+# ---------------- ANALYTICS ----------------
+elif page == "Analytics":
+    st.title("📊 Analytics")
 
     if df.empty:
-        st.info("No data")
+        st.info("No data available")
     else:
         st.bar_chart(df["status"].value_counts())
