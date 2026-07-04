@@ -1,9 +1,13 @@
 import sqlite3
+import os
 
-DB_NAME = "crm.db"
+# ---------------- FIXED DB PATH (IMPORTANT) ----------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "crm.db")
+
 
 def get_connection():
-    return sqlite3.connect(DB_NAME, check_same_thread=False)
+    return sqlite3.connect(DB_PATH, check_same_thread=False)
 
 
 def init_db():
@@ -42,20 +46,11 @@ def get_customers():
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM customers")
+    cur.execute("SELECT * FROM customers ORDER BY id DESC")
     rows = cur.fetchall()
 
     conn.close()
     return rows
-
-
-def delete_customer(id):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("DELETE FROM customers WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
 
 
 def update_customer(id, name, phone, email, company, status):
@@ -68,5 +63,14 @@ def update_customer(id, name, phone, email, company, status):
         WHERE id=?
     """, (name, phone, email, company, status, id))
 
+    conn.commit()
+    conn.close()
+
+
+def delete_customer(id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM customers WHERE id=?", (id,))
     conn.commit()
     conn.close()
