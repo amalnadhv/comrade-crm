@@ -9,6 +9,42 @@ from database import (
     delete_customer
 )
 
+st.markdown("""
+<style>
+
+/* Edit button */
+div.stButton > button[kind="primary"] {
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-weight: 600;
+}
+
+/* Hover effect */
+div.stButton > button:hover {
+    background-color: #1d4ed8;
+    color: white;
+}
+
+/* Delete button styling using button text selector */
+div.stButton > button:contains("Delete") {
+    background-color: #ef4444;
+    color: white;
+    border-radius: 8px;
+}
+
+/* Save button */
+div.stButton > button:contains("Save") {
+    background-color: #10b981;
+    color: white;
+    border-radius: 8px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
 # ---------------- INIT ----------------
 init_db()
 
