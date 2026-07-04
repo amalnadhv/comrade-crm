@@ -143,29 +143,36 @@ if st.sidebar.button("Save Customer"):
 
 # ---------------- DASHBOARD ----------------
 if page == "Dashboard":
-    st.title("📌 Dashboard Overview")
+    st.title("📊 CRM Dashboard")
 
     df = load_df()
 
     col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric("Total Customers", len(df))
-    col2.metric("New Leads", len(df[df["status"] == "New"]))
-    col3.metric("Won Deals", len(df[df["status"] == "Won"]))
-    col4.metric("Lost Deals", len(df[df["status"] == "Lost"]))
+    col1.metric("👥 Total Customers", len(df))
+    col2.metric("🆕 New Leads", len(df[df["status"] == "New"]))
+    col3.metric("🏆 Won Deals", len(df[df["status"] == "Won"]))
+    col4.metric("❌ Lost Deals", len(df[df["status"] == "Lost"]))
 
     st.markdown("---")
-    st.subheader("Recent Customers")
-    st.dataframe(df.tail(10), use_container_width=True, hide_index=True)
 
+    st.subheader("📈 Status Overview")
+
+    if len(df) > 0:
+        status_counts = df["status"].value_counts()
+        st.bar_chart(status_counts)
+
+    st.markdown("---")
+
+    st.subheader("🧾 Latest Customers")
+    st.dataframe(df.tail(10), use_container_width=True)
 # ---------------- CUSTOMERS ----------------
 elif page == "Customers":
-    st.title("👥 Customers Management")
+    st.title("👥 Customers")
 
     df = load_df()
 
-    # ---------------- SEARCH ----------------
-    search = st.text_input("🔎 Search by name or phone")
+    search = st.text_input("🔎 Search")
 
     if search:
         df = df[
@@ -173,68 +180,55 @@ elif page == "Customers":
             df["phone"].str.contains(search, case=False, na=False)
         ]
 
-    st.markdown("---")
-
-    # ---------------- SESSION STATE INIT ----------------
     if "edit_id" not in st.session_state:
         st.session_state["edit_id"] = None
 
-    # ---------------- CUSTOMERS LIST ----------------
     for _, row in df.iterrows():
 
-        # ---------------- ROW DISPLAY ----------------
-        c1, c2, c3, c4, c5, c6, c7 = st.columns([2, 2, 3, 2, 1, 1, 1])
+        st.markdown(f"""
+        <div style="
+            background: rgba(30, 41, 59, 0.6);
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        ">
+            <b>{row['name']}</b><br>
+            📞 {row['phone']} | ✉️ {row['email']}<br>
+            🏢 {row['company']} | 🔖 {row['status']}
+        </div>
+        """, unsafe_allow_html=True)
 
-        c1.markdown(f"**{row['name']}**")
-        c2.write(row["phone"])
-        c3.write(row["email"])
-        c4.write(row["company"])
-        c5.write(row["status"])
+        c1, c2 = st.columns(2)
 
-        # ---------------- EDIT BUTTON ----------------
-        if c6.button("✏️", key=f"edit_{row['id']}"):
-            st.session_state["edit_id"] = row["id"]
+        with c1:
+            if st.button("✏️ Edit", key=f"edit_{row['id']}"):
+                st.session_state["edit_id"] = row["id"]
 
-        # ---------------- DELETE BUTTON (RED STYLE) ----------------
-        delete_style = """
-        <style>
-        div.stButton > button {
-            background-color: #ef4444 !important;
-            color: white !important;
-            border-radius: 6px;
-            border: none;
-        }
-        div.stButton > button:hover {
-            background-color: #dc2626 !important;
-        }
-        </style>
-        """
-        st.markdown(delete_style, unsafe_allow_html=True)
-
-        if c7.button("🗑️", key=f"del_{row['id']}"):
-            delete_customer(row["id"])
-            st.rerun()
+        with c2:
+            if st.button("🗑️ Delete", key=f"del_{row['id']}"):
+                delete_customer(row["id"])
+                st.rerun()
 
         # ---------------- EDIT PANEL ----------------
         if st.session_state["edit_id"] == row["id"]:
 
-            st.markdown("### ✏️ Edit Customer")
+            st.info("Editing customer...")
 
-            new_name = st.text_input("Name", row["name"], key=f"name_{row['id']}")
-            new_phone = st.text_input("Phone", row["phone"], key=f"phone_{row['id']}")
-            new_email = st.text_input("Email", row["email"], key=f"email_{row['id']}")
-            new_company = st.text_input("Company", row["company"], key=f"company_{row['id']}")
+            new_name = st.text_input("Name", row["name"], key=f"n_{row['id']}")
+            new_phone = st.text_input("Phone", row["phone"], key=f"p_{row['id']}")
+            new_email = st.text_input("Email", row["email"], key=f"e_{row['id']}")
+            new_company = st.text_input("Company", row["company"], key=f"c_{row['id']}")
 
             new_status = st.selectbox(
                 "Status",
                 ["New", "Contacted", "Won", "Lost"],
                 index=["New", "Contacted", "Won", "Lost"].index(row["status"]),
-                key=f"status_{row['id']}"
+                key=f"s_{row['id']}"
             )
 
-            c_save, c_cancel = st.columns(2)
+            c1, c2 = st.columns(2)
 
-            with c_save:
+            with c1:
                 if st.button("💾 Save", key=f"save_{row['id']}"):
                     update_customer(
                         row["id"],
@@ -245,10 +239,10 @@ elif page == "Customers":
                         new_status
                     )
                     st.session_state["edit_id"] = None
-                    st.success("Updated successfully!")
+                    st.success("Updated!")
                     st.rerun()
 
-            with c_cancel:
+            with c2:
                 if st.button("❌ Cancel", key=f"cancel_{row['id']}"):
                     st.session_state["edit_id"] = None
                     st.rerun()
