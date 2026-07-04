@@ -81,39 +81,8 @@ elif page == "Customers":
     if "edit_id" not in st.session_state:
         st.session_state["edit_id"] = None
 
-     # ---------------- HEADER ----------------
- 
-    st.markdown("""
-    <style>
-    
-    /* Make ALL buttons slightly rounded */
-    .stButton button {
-        border-radius: 6px !important;
-        font-size: 12px !important;
-    }
-    
-    /* EDIT button = first column button in action area */
-    div[data-testid="column"]:nth-child(6) div.stButton button:first-of-type {
-        background-color: #3b82f6 !important;
-        color: white !important;
-        border: none !important;
-    }
-    
-    /* DELETE button = second button in same column */
-    div[data-testid="column"]:nth-child(6) div.stButton button:last-of-type {
-        background-color: #ef4444 !important;
-        color: white !important;
-        border: none !important;
-    }
-    
-    /* Hover effect */
-    .stButton button:hover {
-        opacity: 0.85 !important;
-    }
-    
-    </style>
-    """, unsafe_allow_html=True)
-    
+    # ---------------- HEADER ----------------
+      
     # ---------------- ROWS ----------------
     for row in df.itertuples():
 
@@ -135,16 +104,21 @@ elif page == "Customers":
 
         # ACTIONS INLINE (THIS IS THE KEY FIX)
         with c6:
-            b1, b2 = st.columns(2)
-
-            with b1:
-                if st.button("Edit", key=f"edit_{row.id}"):
-                    st.session_state["edit_id"] = row.id
-
-            with b2:
-                if st.button("Delete", key=f"del_{row.id}"):
-                    delete_customer(row.id)
-                    st.rerun()
+            col_edit, col_del = st.columns([1,1])
+        
+            with col_edit:
+                st.button(
+                    "✏️ Edit",
+                    key=f"edit_{row.id}",
+                    type="primary"
+                )
+        
+            with col_del:
+                st.button(
+                    "🗑️ Delete",
+                    key=f"del_{row.id}",
+                    type="secondary"
+                )
 
         # ---------------- EDIT ----------------
         if st.session_state.get("edit_id") == row.id:
