@@ -1,13 +1,11 @@
 import sqlite3
 import os
 
-# 🔥 FORCE SINGLE DATABASE LOCATION
 DB_NAME = os.path.join(os.getcwd(), "crm.db")
 
 
 def get_connection():
-    conn = sqlite3.connect(DB_NAME, check_same_thread=False)
-    return conn
+    return sqlite3.connect(DB_NAME, check_same_thread=False)
 
 
 def init_db():
@@ -75,3 +73,9 @@ def delete_customer(id):
 
     conn.commit()
     conn.close()
+
+
+def load_customers_df():
+    import pandas as pd
+    rows = get_customers()
+    return pd.DataFrame(rows, columns=["id", "name", "phone", "email", "company", "status"])
