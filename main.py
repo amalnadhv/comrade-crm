@@ -82,32 +82,38 @@ elif page == "Customers":
         st.session_state["edit_id"] = None
 
      # ---------------- HEADER ----------------
+ 
     st.markdown("""
     <style>
     
-    /* EDIT buttons */
-    button[key^="edit_"] {
+    /* Make ALL buttons slightly rounded */
+    .stButton button {
+        border-radius: 6px !important;
+        font-size: 12px !important;
+    }
+    
+    /* EDIT button = first column button in action area */
+    div[data-testid="column"]:nth-child(6) div.stButton button:first-of-type {
         background-color: #3b82f6 !important;
         color: white !important;
-        border-radius: 6px !important;
         border: none !important;
     }
     
-    /* DELETE buttons */
-    button[key^="del_"] {
+    /* DELETE button = second button in same column */
+    div[data-testid="column"]:nth-child(6) div.stButton button:last-of-type {
         background-color: #ef4444 !important;
         color: white !important;
-        border-radius: 6px !important;
         border: none !important;
     }
     
     /* Hover effect */
-    button:hover {
+    .stButton button:hover {
         opacity: 0.85 !important;
     }
     
     </style>
-    """, unsafe_allow_html=True)    
+    """, unsafe_allow_html=True)
+    
     # ---------------- ROWS ----------------
     for row in df.itertuples():
 
