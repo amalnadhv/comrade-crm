@@ -4,40 +4,35 @@ import os
 
 FILE = "data.csv"
 
-st.set_page_config(page_title="Comrade CRM", layout="wide")
+st.set_page_config(
+    page_title="Comrade CRM",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# ---------------- LOAD DATA ----------------
+# ---------------- DATA ----------------
 def load_data():
     if os.path.exists(FILE):
         return pd.read_csv(FILE)
-    return pd.DataFrame(columns=["Name", "Phone", "Email", "Company", "Notes"])
+    return pd.DataFrame(columns=["Name", "Phone", "Email", "Company", "Status"])
 
 def save_data(df):
     df.to_csv(FILE, index=False)
 
 df = load_data()
 
-# ---------------- HEADER ----------------
-st.markdown(
-    """
-    <div style="padding:15px;background:#1f77b4;border-radius:10px">
-        <h1 style="color:white;margin:0">📊 Comrade CRM</h1>
-        <p style="color:#e0e0e0;margin:0">Simple customer management system</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+# ---------------- SIDEBAR NAV ----------------
+st.sidebar.title("📊 Comrade CRM")
+page = st.sidebar.radio("Navigation", ["Dashboard", "Customers", "Analytics"])
 
-st.write("")
-
-# ---------------- SIDEBAR ----------------
-st.sidebar.title("➕ Add Customer")
+st.sidebar.markdown("---")
+st.sidebar.subheader("➕ Add Customer")
 
 name = st.sidebar.text_input("Name")
 phone = st.sidebar.text_input("Phone")
 email = st.sidebar.text_input("Email")
 company = st.sidebar.text_input("Company")
-notes = st.sidebar.text_area("Notes")
+status = st.sidebar.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
 
 if st.sidebar.button("Save Customer"):
     if name and phone:
@@ -46,44 +41,59 @@ if st.sidebar.button("Save Customer"):
             "Phone": phone,
             "Email": email,
             "Company": company,
-            "Notes": notes
+            "Status": status
         }])
 
         df = pd.concat([df, new_row], ignore_index=True)
         save_data(df)
-        st.sidebar.success("Saved successfully!")
+        st.sidebar.success("Customer added!")
     else:
         st.sidebar.error("Name and Phone required")
 
-# ---------------- METRICS ----------------
-col1, col2, col3 = st.columns(3)
+# ---------------- DASHBOARD ----------------
+if page == "Dashboard":
+    st.title("📌 Dashboard Overview")
 
-col1.metric("👥 Customers", len(df))
-col2.metric("🏢 Companies", df["Company"].nunique() if len(df) > 0 else 0)
-col3.metric("📧 Emails", df["Email"].notna().sum())
+    col1, col2, col3, col4 = st.columns(4)
 
-st.write("")
+    col1.metric("Total Customers", len(df))
+    col2.metric("New Leads", len(df[df["Status"] == "New"]) if len(df) > 0 else 0)
+    col3.metric("Won Deals", len(df[df["Status"] == "Won"]) if len(df) > 0 else 0)
+    col4.metric("Lost Deals", len(df[df["Status"] == "Lost"]) if len(df) > 0 else 0)
 
-# ---------------- SEARCH ----------------
-search = st.text_input("🔎 Search customers")
+    st.markdown("---")
 
-filtered = df.copy()
+    st.subheader("Recent Customers")
+    st.dataframe(df.tail(10), use_container_width=True, hide_index=True)
 
-if search:
-    filtered = df[
-        df["Name"].str.contains(search, case=False, na=False) |
-        df["Phone"].str.contains(search, na=False)
-    ]
+# ---------------- CUSTOMERS PAGE ----------------
+elif page == "Customers":
+    st.title("👥 Customers")
 
-# ---------------- TABLE ----------------
-st.subheader("Customer List")
+    search = st.text_input("Search by name or phone")
 
-st.dataframe(
-    filtered,
-    use_container_width=True,
-    hide_index=True
-)
+    filtered = df.copy()
 
-# ---------------- FOOTER ----------------
-st.markdown("---")
-st.caption("© Comrade CRM • Streamlit App")
+    if search:
+        filtered = df[
+            df["Name"].str.contains(search, case=False, na=False) |
+            df["Phone"].str.contains(search, na=False)
+        ]
+
+    st.dataframe(filtered, use_container_width=True, hide_index=True)
+
+# ---------------- ANALYTICS ----------------
+elif page == "Analytics":
+    st.title("📈 Analytics")
+
+    if len(df) == 0:
+        st.info("No data available yet")
+    else:
+        status_counts = df["Status"].value_counts()
+
+        st.bar_chart(status_counts)
+
+        st.markdown("### Status Breakdown")
+
+        for k, v in status_counts.items():
+            st.write(f"**{k}** : {v}")
