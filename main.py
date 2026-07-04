@@ -134,28 +134,30 @@ elif page == "Customers":
         fit_columns_on_grid_load=True
     )
 
-    selected = grid_response["selected_rows"]
+selected = grid_response["selected_rows"]
 
-    # ---------------- ACTION PANEL ----------------
-    if selected:
-        st.markdown("---")
-        st.subheader("Selected Customer")
+# ---------------- ACTION PANEL ----------------
+if selected is not None and len(selected) > 0:
+    st.markdown("---")
+    st.subheader("Selected Customer")
 
-        row = selected[0]
+    row = selected[0]
 
-        col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns(3)
 
-        with col1:
-            if st.button("✏️ Edit Selected"):
-                st.session_state["edit_id"] = row["id"]
+    with col1:
+        if st.button("✏️ Edit Selected"):
+            st.session_state["edit_id"] = row["id"]
+            st.rerun()
 
-        with col2:
-            if st.button("🗑️ Delete Selected"):
-                delete_customer(row["id"])
-                st.rerun()
+    with col2:
+        if st.button("🗑️ Delete Selected"):
+            delete_customer(row["id"])
+            st.rerun()
 
-        with col3:
-            st.info(f"Selected: {row['name']}")
+    with col3:
+        st.info(f"Selected: {row['name']}")
+
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
     st.title("📊 Analytics")
