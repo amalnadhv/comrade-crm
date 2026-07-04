@@ -54,7 +54,6 @@ def delete_customer(id):
     cur = conn.cursor()
 
     cur.execute("DELETE FROM customers WHERE id=?", (id,))
-
     conn.commit()
     conn.close()
 
