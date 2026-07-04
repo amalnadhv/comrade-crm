@@ -84,27 +84,33 @@ elif page == "Customers":
      # ---------------- HEADER ----------------
     c1, c2, c3, c4, c5, c6 = st.columns([2,2,3,2,2,2])
     
-    st.markdown(
-        """
-        <div style="
-            background: #1e3a8a;
-            padding: 10px;
-            border-radius: 6px;
-            color: white;
-            font-weight: bold;
-            margin-bottom: 10px;
-            display: flex;
-        ">
-            <div style="width: 18%;">Name</div>
-            <div style="width: 18%;">Phone</div>
-            <div style="width: 22%;">Email</div>
-            <div style="width: 15%;">Company</div>
-            <div style="width: 12%;">Status</div>
-            <div style="width: 15%;">Actions</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <style>
+    
+    /* Edit button */
+    div[data-testid="column"] button[kind="secondary"]:first-child {
+        background-color: #3b82f6 !important;
+        color: white !important;
+        border-radius: 6px !important;
+        border: none !important;
+    }
+    
+    /* Delete button */
+    div[data-testid="column"] button[kind="secondary"]:last-child {
+        background-color: #ef4444 !important;
+        color: white !important;
+        border-radius: 6px !important;
+        border: none !important;
+    }
+    
+    /* Hover effect */
+    div[data-testid="column"] button:hover {
+        opacity: 0.85;
+    }
+    
+    </style>
+    """, unsafe_allow_html=True)
+    
     # ---------------- ROWS ----------------
     for row in df.itertuples():
 
