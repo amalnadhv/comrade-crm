@@ -3,6 +3,36 @@ import pandas as pd
 
 st.markdown("""
 <style>
+/* Sidebar radio selected item */
+div[data-testid="stSidebar"] label[data-baseweb="radio"] div {
+    color: #cbd5e1;
+}
+
+/* Selected radio button highlight */
+div[data-testid="stSidebar"] div[role="radiogroup"] > label[data-checked="true"] {
+    background-color: rgba(99, 102, 241, 0.25);
+    border-radius: 10px;
+    padding: 6px 10px;
+}
+
+/* Hover effect for sidebar items */
+div[data-testid="stSidebar"] label:hover {
+    background-color: rgba(148, 163, 184, 0.15);
+    border-radius: 10px;
+}
+
+/* Selected button / active state feel */
+.stButton button:active {
+    background: rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Optional: selected table row feel (approx) */
+.row-highlight {
+    background-color: rgba(99, 102, 241, 0.15);
+    border-left: 3px solid #6366f1;
+    padding: 8px;
+    border-radius: 8px;
+}
 
 /* Background (deep slate) */
 .stApp {
