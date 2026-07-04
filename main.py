@@ -4,34 +4,7 @@ import os
 
 FILE = "data.csv"
 
-st.set_page_config(
-    page_title="Comrade CRM",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# ---------------- UI HEADER ----------------
-st.markdown(
-    """
-    <style>
-    .main-title {
-        font-size:40px;
-        font-weight:700;
-        color:#1f77b4;
-    }
-    .sub-text {
-        font-size:16px;
-        color:gray;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-st.markdown('<div class="main-title">📊 Comrade CRM Dashboard</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-text">Manage your customers in a simple and clean way</div>', unsafe_allow_html=True)
-
-st.divider()
+st.set_page_config(page_title="Comrade CRM", layout="wide")
 
 # ---------------- LOAD DATA ----------------
 def load_data():
@@ -44,8 +17,21 @@ def save_data(df):
 
 df = load_data()
 
-# ---------------- SIDEBAR INPUT ----------------
-st.sidebar.header("➕ Add Customer")
+# ---------------- HEADER ----------------
+st.markdown(
+    """
+    <div style="padding:15px;background:#1f77b4;border-radius:10px">
+        <h1 style="color:white;margin:0">📊 Comrade CRM</h1>
+        <p style="color:#e0e0e0;margin:0">Simple customer management system</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.write("")
+
+# ---------------- SIDEBAR ----------------
+st.sidebar.title("➕ Add Customer")
 
 name = st.sidebar.text_input("Name")
 phone = st.sidebar.text_input("Phone")
@@ -65,22 +51,21 @@ if st.sidebar.button("Save Customer"):
 
         df = pd.concat([df, new_row], ignore_index=True)
         save_data(df)
-        st.sidebar.success("Customer added!")
+        st.sidebar.success("Saved successfully!")
     else:
-        st.sidebar.error("Name and Phone are required")
+        st.sidebar.error("Name and Phone required")
 
-# ---------------- STATS CARDS ----------------
+# ---------------- METRICS ----------------
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Total Customers", len(df))
-col2.metric("Companies", df["Company"].nunique() if len(df) > 0 else 0)
-col3.metric("Emails", df["Email"].notna().sum())
+col1.metric("👥 Customers", len(df))
+col2.metric("🏢 Companies", df["Company"].nunique() if len(df) > 0 else 0)
+col3.metric("📧 Emails", df["Email"].notna().sum())
 
-st.divider()
+st.write("")
 
 # ---------------- SEARCH ----------------
-st.subheader("🔎 Search Customers")
-search = st.text_input("Type name or phone")
+search = st.text_input("🔎 Search customers")
 
 filtered = df.copy()
 
@@ -91,9 +76,14 @@ if search:
     ]
 
 # ---------------- TABLE ----------------
-st.subheader("📋 Customer Database")
-st.dataframe(filtered, use_container_width=True)
+st.subheader("Customer List")
+
+st.dataframe(
+    filtered,
+    use_container_width=True,
+    hide_index=True
+)
 
 # ---------------- FOOTER ----------------
 st.markdown("---")
-st.caption("Comrade CRM • Built with Streamlit")
+st.caption("© Comrade CRM • Streamlit App")
