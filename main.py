@@ -111,16 +111,19 @@ elif page == "Customers":
                     key=f"status_{i}"
                 )
 
-                if st.button("💾 Save", key=f"save_{i}"):
-                    df.at[i, "Name"] = new_name
-                    df.at[i, "Phone"] = new_phone
-                    df.at[i, "Email"] = new_email
-                    df.at[i, "Company"] = new_company
-                    df.at[i, "Status"] = new_status
-
-                    save_data(df)
-                    st.success("Updated!")
-                    st.rerun()
+            if st.button("💾 Save", key=f"save_{row['ID']}"):
+            
+                update_customer(
+                    row["ID"],
+                    new_name,
+                    new_phone,
+                    new_email,
+                    new_company,
+                    new_status
+                )
+            
+                st.success("Updated successfully!")
+                st.rerun()
 
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
