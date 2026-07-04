@@ -8,9 +8,9 @@ def get_connection():
 
 def init_db():
     conn = get_connection()
-    c = conn.cursor()
+    cur = conn.cursor()
 
-    c.execute("""
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS customers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -27,9 +27,9 @@ def init_db():
 
 def add_customer(name, phone, email, company, status):
     conn = get_connection()
-    c = conn.cursor()
+    cur = conn.cursor()
 
-    c.execute("""
+    cur.execute("""
         INSERT INTO customers (name, phone, email, company, status)
         VALUES (?, ?, ?, ?, ?)
     """, (name, phone, email, company, status))
@@ -40,10 +40,10 @@ def add_customer(name, phone, email, company, status):
 
 def get_customers():
     conn = get_connection()
-    c = conn.cursor()
+    cur = conn.cursor()
 
-    c.execute("SELECT * FROM customers")
-    rows = c.fetchall()
+    cur.execute("SELECT * FROM customers")
+    rows = cur.fetchall()
 
     conn.close()
     return rows
@@ -51,18 +51,19 @@ def get_customers():
 
 def delete_customer(id):
     conn = get_connection()
-    c = conn.cursor()
+    cur = conn.cursor()
 
-    c.execute("DELETE FROM customers WHERE id=?", (id,))
+    cur.execute("DELETE FROM customers WHERE id=?", (id,))
+
     conn.commit()
     conn.close()
 
 
 def update_customer(id, name, phone, email, company, status):
     conn = get_connection()
-    c = conn.cursor()
+    cur = conn.cursor()
 
-    c.execute("""
+    cur.execute("""
         UPDATE customers
         SET name=?, phone=?, email=?, company=?, status=?
         WHERE id=?
