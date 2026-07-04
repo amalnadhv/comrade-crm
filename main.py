@@ -48,10 +48,10 @@ status = st.sidebar.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
 if st.sidebar.button("Save Customer"):
     if name and phone:
         add_customer(name, phone, email, company, status)
-        st.success("Customer added!")
+        st.success("Customer added")
         st.rerun()
     else:
-        st.error("Name and Phone required")
+        st.error("Name & Phone required")
 
 
 # ================= DASHBOARD =================
@@ -77,7 +77,7 @@ if page == "Dashboard":
 elif page == "Customers":
     st.title("👥 Customers")
 
-    df = load_df()   # ALWAYS FRESH DATA
+    df = load_df()
 
     search = st.text_input("🔎 Search")
 
@@ -89,7 +89,7 @@ elif page == "Customers":
 
     col_left, col_right = st.columns([2, 3])
 
-    # ---------------- LEFT LIST ----------------
+    # ---------------- LEFT ----------------
     with col_left:
         st.subheader("List")
 
@@ -99,7 +99,7 @@ elif page == "Customers":
 
             st.caption(f"{row['phone']} | {row['status']}")
 
-    # ---------------- RIGHT DETAILS ----------------
+    # ---------------- RIGHT ----------------
     with col_right:
         st.subheader("Details")
 
@@ -164,9 +164,7 @@ elif page == "Customers":
                                 new_company,
                                 new_status
                             )
-
                             st.session_state["edit_id"] = None
-                            st.success("Updated!")
                             st.rerun()
 
                     with c2:
