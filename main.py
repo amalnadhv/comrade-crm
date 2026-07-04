@@ -80,29 +80,32 @@ elif page == "Customers":
     if "edit_id" not in st.session_state:
         st.session_state["edit_id"] = None
 
-    # ---------------- STYLE (ODOO LIKE) ----------------
+    # ---------------- CLEAN TABLE STYLE ----------------
     st.markdown("""
     <style>
     .crm-header, .crm-row {
         display: flex;
         padding: 10px;
-        border-bottom: 1px solid #2b2b2b;
+        border-bottom: 1px solid #2a2a2a;
         font-size: 14px;
+        align-items: center;
     }
 
     .crm-header {
         font-weight: bold;
         background: #111827;
         border-radius: 6px;
-        margin-bottom: 5px;
+        margin-bottom: 6px;
     }
 
-    .col-name { width: 18%; }
-    .col-phone { width: 15%; }
-    .col-email { width: 22%; }
-    .col-company { width: 15%; }
-    .col-status { width: 12%; }
-    .col-actions { width: 18%; }
+    .col { padding: 4px; }
+
+    .name { width: 18%; }
+    .phone { width: 15%; }
+    .email { width: 22%; }
+    .company { width: 15%; }
+    .status { width: 12%; }
+    .actions { width: 18%; }
 
     .badge {
         padding: 4px 10px;
@@ -123,44 +126,39 @@ elif page == "Customers":
     # ---------------- HEADER ----------------
     st.markdown("""
     <div class="crm-header">
-        <div class="col-name">Name</div>
-        <div class="col-phone">Phone</div>
-        <div class="col-email">Email</div>
-        <div class="col-company">Company</div>
-        <div class="col-status">Status</div>
-        <div class="col-actions">Actions</div>
+        <div class="name">Name</div>
+        <div class="phone">Phone</div>
+        <div class="email">Email</div>
+        <div class="company">Company</div>
+        <div class="status">Status</div>
+        <div class="actions">Actions</div>
     </div>
     """, unsafe_allow_html=True)
 
     # ---------------- ROWS ----------------
     for _, row in df.iterrows():
 
-        status_class = row["status"]
-
         st.markdown(f"""
         <div class="crm-row">
-            <div class="col-name">{row['name']}</div>
-            <div class="col-phone">{row['phone']}</div>
-            <div class="col-email">{row['email']}</div>
-            <div class="col-company">{row['company']}</div>
-            <div class="col-status">
-                <span class="badge {status_class}">
-                    {row['status']}
-                </span>
+            <div class="name">{row['name']}</div>
+            <div class="phone">{row['phone']}</div>
+            <div class="email">{row['email']}</div>
+            <div class="company">{row['company']}</div>
+            <div class="status">
+                <span class="badge {row['status']}">{row['status']}</span>
             </div>
-            <div class="col-actions">ID: {row['id']}</div>
+            <div class="actions">ID: {row['id']}</div>
         </div>
         """, unsafe_allow_html=True)
 
-        c1, c2 = st.columns(2)
+        # ---------------- ACTION BUTTONS ----------------
+        col1, col2 = st.columns([1, 1])
 
-        # ---------------- EDIT ----------------
-        with c1:
+        with col1:
             if st.button("✏️ Edit", key=f"edit_{row['id']}"):
                 st.session_state["edit_id"] = row["id"]
 
-        # ---------------- DELETE ----------------
-        with c2:
+        with col2:
             if st.button("🗑️ Delete", key=f"del_{row['id']}"):
                 delete_customer(row["id"])
                 st.rerun()
@@ -199,8 +197,7 @@ elif page == "Customers":
             with c2:
                 if st.button("❌ Cancel", key=f"cancel_{row['id']}"):
                     st.session_state["edit_id"] = None
-                    st.rerun()
-                    
+                    st.rerun()                    
 # ================= ANALYTICS =================
 elif page == "Analytics":
     st.title("Analytics")
