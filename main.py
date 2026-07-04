@@ -1,45 +1,63 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(
-    page_title="Comrade CRM",
-    layout="wide"
-)
-
 st.markdown("""
 <style>
 
-/* App background */
+/* Background (deep slate) */
 .stApp {
-    background: #0f172a;
-    color: #f8fafc;
+    background: linear-gradient(135deg, #0b1220, #0f172a);
+    color: #e5e7eb;
 }
 
-/* Sidebar */
+/* Sidebar (slightly lighter for contrast) */
 section[data-testid="stSidebar"] {
-    background-color: #111827;
+    background: #111c33;
+}
+
+/* Titles */
+h1, h2, h3 {
+    color: #f9fafb;
 }
 
 /* Metric cards */
 div[data-testid="metric-container"] {
-    background-color: #1f2937;
-    border-radius: 12px;
-    padding: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    background: linear-gradient(145deg, #1e293b, #111827);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    border-left: 4px solid #6366f1;
 }
 
-/* Buttons */
+/* Buttons (modern gradient with accent) */
 .stButton button {
-    background: linear-gradient(90deg, #6366f1, #3b82f6);
+    background: linear-gradient(90deg, #f97316, #ef4444);
     color: white;
-    border-radius: 8px;
+    border-radius: 10px;
     border: none;
-    padding: 6px 12px;
+    padding: 7px 14px;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
 }
 
+/* Button hover effect */
 .stButton button:hover {
-    transform: scale(1.02);
-    background: linear-gradient(90deg, #3b82f6, #6366f1);
+    transform: scale(1.05);
+    background: linear-gradient(90deg, #ef4444, #f97316);
+}
+
+/* Input fields */
+input, textarea {
+    background-color: #0f172a !important;
+    color: #f1f5f9 !important;
+    border-radius: 8px !important;
+    border: 1px solid #334155 !important;
+}
+
+/* Table style */
+.dataframe {
+    background-color: #0f172a !important;
+    color: #e5e7eb !important;
 }
 
 </style>
