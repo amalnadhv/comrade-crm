@@ -1,5 +1,70 @@
+import streamlit as st
+import pandas as pd
+
+from database import (
+    init_db,
+    add_customer,
+    update_customer,
+    delete_customer,
+    load_customers_df
+)
+
+# ---------------- INIT ----------------
+init_db()
+
+st.set_page_config(page_title="Comrade CRM", layout="wide")
+
+
+# ---------------- LOAD DATA ----------------
+def load_df():
+    return load_customers_df()
+
+
+# ---------------- SIDEBAR ----------------
+st.sidebar.title("📊 Comrade CRM")
+
+page = st.sidebar.radio("Navigation", ["Dashboard", "Customers", "Analytics"])
+
+st.sidebar.markdown("---")
+
+st.sidebar.subheader("➕ Add Customer")
+
+name = st.sidebar.text_input("Name")
+phone = st.sidebar.text_input("Phone")
+email = st.sidebar.text_input("Email")
+company = st.sidebar.text_input("Company")
+status = st.sidebar.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
+
+if st.sidebar.button("Save Customer"):
+    if name and phone:
+        add_customer(name, phone, email, company, status)
+        st.success("Customer added!")
+        st.rerun()
+    else:
+        st.error("Name & Phone required")
+
+
+# ================= DASHBOARD =================
+if page == "Dashboard":
+    st.title("Dashboard")
+
+    df = load_df()
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("Total", len(df))
+    col2.metric("New", len(df[df["status"] == "New"]) if not df.empty else 0)
+    col3.metric("Won", len(df[df["status"] == "Won"]) if not df.empty else 0)
+    col4.metric("Lost", len(df[df["status"] == "Lost"]) if not df.empty else 0)
+
+    st.markdown("---")
+
+    st.dataframe(df, use_container_width=True)
+
+
+# ================= CUSTOMERS =================
 elif page == "Customers":
-    st.title("👥 Customers")
+    st.title("Customers")
 
     df = load_df()
 
@@ -14,27 +79,15 @@ elif page == "Customers":
     if "edit_id" not in st.session_state:
         st.session_state["edit_id"] = None
 
-    # ---------------- DISPLAY AS CARDS (SAFE UI) ----------------
     for _, row in df.iterrows():
 
-        st.markdown(
-            f"""
-            <div style="
-                background: #111827;
-                padding: 12px;
-                border-radius: 10px;
-                margin-bottom: 10px;
-                color: white;
-            ">
-                <b>{row['name']}</b><br>
-                📞 {row['phone']}<br>
-                ✉️ {row['email']}<br>
-                🏢 {row['company']}<br>
-                🔖 {row['status']}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.write("---")
+
+        st.write("**Name:**", row["name"])
+        st.write("**Phone:**", row["phone"])
+        st.write("**Email:**", row["email"])
+        st.write("**Company:**", row["company"])
+        st.write("**Status:**", row["status"])
 
         c1, c2 = st.columns(2)
 
@@ -52,13 +105,12 @@ elif page == "Customers":
         # ---------------- EDIT FORM ----------------
         if st.session_state["edit_id"] == row["id"]:
 
-            st.markdown("### ✏️ Edit Customer")
+            st.markdown("### Edit Customer")
 
             new_name = st.text_input("Name", row["name"])
             new_phone = st.text_input("Phone", row["phone"])
             new_email = st.text_input("Email", row["email"])
             new_company = st.text_input("Company", row["company"])
-
             new_status = st.selectbox(
                 "Status",
                 ["New", "Contacted", "Won", "Lost"],
@@ -84,3 +136,15 @@ elif page == "Customers":
                 if st.button("❌ Cancel", key=f"cancel_{row['id']}"):
                     st.session_state["edit_id"] = None
                     st.rerun()
+
+
+# ================= ANALYTICS =================
+elif page == "Analytics":
+    st.title("Analytics")
+
+    df = load_df()
+
+    if df.empty:
+        st.info("No data")
+    else:
+        st.bar_chart(df["status"].value_counts())
