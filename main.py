@@ -111,10 +111,10 @@ elif page == "Customers":
                     key=f"status_{i}"
                 )
 
-            if st.button("💾 Save", key=f"save_{row['ID']}"):
+            if st.button("💾 Save", key=f"save_{row['id']}"):
             
                 update_customer(
-                    row["ID"],
+                    row["id"],
                     new_name,
                     new_phone,
                     new_email,
