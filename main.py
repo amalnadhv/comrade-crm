@@ -104,93 +104,58 @@ elif page == "Customers":
 
     df = load_df()
 
-    search = st.text_input("Search customers")
+    # ---------------- SEARCH ----------------
+    search = st.text_input("🔍 Search customers")
 
     if search:
         df = df[
             df["name"].str.contains(search, case=False, na=False) |
-            df["phone"].str.contains(search, case=False, na=False)
+            df["phone"].str.contains(search, case=False, na=False) |
+            df["email"].str.contains(search, case=False, na=False)
         ]
 
-    # ---------------- HEADER ----------------
-    c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 3, 2, 2, 2])
-    c1.write("Name")
-    c2.write("Phone")
-    c3.write("Email")
-    c4.write("Company")
-    c5.write("Status")
-    c6.write("Actions")
+    # ---------------- AG GRID ----------------
+    from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
-    # ---------------- ROWS ----------------
-    for row in df.itertuples():
+    gb = GridOptionsBuilder.from_dataframe(df)
 
-        c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 3, 2, 2, 2])
+    gb.configure_pagination(paginationAutoPageSize=True)
+    gb.configure_default_column(editable=False, sortable=True, filter=True)
 
-        c1.write(row.name)
-        c2.write(row.phone)
-        c3.write(row.email)
-        c4.write(row.company)
+    gb.configure_selection("single", use_checkbox=True)
 
-        status_colors = {
-            "New": "🔵 New",
-            "Contacted": "🟠 Contacted",
-            "Won": "🟢 Won",
-            "Lost": "🔴 Lost"
-        }
-        c5.write(status_colors.get(row.status, row.status))
+    grid_options = gb.build()
 
-        # ---------------- ACTIONS ----------------
-        with c6:
-            col_edit, col_del = st.columns([1, 1])
+    grid_response = AgGrid(
+        df,
+        gridOptions=grid_options,
+        update_mode=GridUpdateMode.SELECTION_CHANGED,
+        height=400,
+        fit_columns_on_grid_load=True
+    )
 
-            with col_edit:
-                if st.button("✏️ Edit", key=f"edit_{row.id}"):
-                    st.session_state["edit_id"] = row.id
-                    st.rerun()
+    selected = grid_response["selected_rows"]
 
-            with col_del:
-                if st.button("🗑️ Delete", key=f"del_{row.id}"):
-                    delete_customer(row.id)
-                    st.rerun()
+    # ---------------- ACTION PANEL ----------------
+    if selected:
+        st.markdown("---")
+        st.subheader("Selected Customer")
 
-        # ---------------- EDIT MODE ----------------
-        if st.session_state.get("edit_id") == row.id:
+        row = selected[0]
 
-            st.markdown("---")
-            st.subheader(f"✏️ Editing: {row.name}")
+        col1, col2, col3 = st.columns(3)
 
-            new_name = st.text_input("Name", row.name, key=f"name_{row.id}")
-            new_phone = st.text_input("Phone", row.phone, key=f"phone_{row.id}")
-            new_email = st.text_input("Email", row.email, key=f"email_{row.id}")
-            new_company = st.text_input("Company", row.company, key=f"company_{row.id}")
+        with col1:
+            if st.button("✏️ Edit Selected"):
+                st.session_state["edit_id"] = row["id"]
 
-            new_status = st.selectbox(
-                "Status",
-                ["New", "Contacted", "Won", "Lost"],
-                index=["New", "Contacted", "Won", "Lost"].index(row.status),
-                key=f"status_{row.id}"
-            )
+        with col2:
+            if st.button("🗑️ Delete Selected"):
+                delete_customer(row["id"])
+                st.rerun()
 
-            c1, c2 = st.columns(2)
-
-            with c1:
-                if st.button("💾 Save", key=f"save_{row.id}"):
-                    update_customer(
-                        row.id,
-                        new_name,
-                        new_phone,
-                        new_email,
-                        new_company,
-                        new_status
-                    )
-                    st.session_state["edit_id"] = None
-                    st.rerun()
-
-            with c2:
-                if st.button("Cancel", key=f"cancel_{row.id}"):
-                    st.session_state["edit_id"] = None
-                    st.rerun()
-
+        with col3:
+            st.info(f"Selected: {row['name']}")
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
     st.title("📊 Analytics")
