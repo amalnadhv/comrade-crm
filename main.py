@@ -81,116 +81,54 @@ elif page == "Customers":
     if "edit_id" not in st.session_state:
         st.session_state["edit_id"] = None
 
-    # ---------------- PROFESSIONAL STYLE ----------------
-    st.markdown("""
-    <style>
-
-    /* Page spacing */
-    .block-container {
-        padding-top: 1rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-    }
-
-    /* Header */
-    .crm-header {
-        background: #0f172a;
-        color: #e2e8f0;
-        padding: 10px 12px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 13px;
-    }
-
-    /* Rows */
-    .crm-row {
-        padding: 10px 12px;
-        border-bottom: 1px solid #1f2937;
-        font-size: 13px;
-    }
-
-    .crm-row:hover {
-        background: #111827;
-    }
-
-    /* Edit highlight */
-    .edit-active {
-        background: #1e293b !important;
-        border-left: 3px solid #3b82f6;
-    }
-
-    /* Status badge */
-    .badge {
-        padding: 3px 10px;
-        border-radius: 10px;
-        font-size: 11px;
-        color: white;
-        display: inline-block;
-    }
-
-    .New { background: #3b82f6; }
-    .Contacted { background: #f59e0b; }
-    .Won { background: #10b981; }
-    .Lost { background: #ef4444; }
-
-    /* Buttons (compact SaaS style) */
-    button[kind="secondary"] {
-        padding: 4px 8px !important;
-        font-size: 12px !important;
-        border-radius: 6px !important;
-    }
-
-    </style>
-    """, unsafe_allow_html=True)
-
     # ---------------- HEADER ----------------
-    h1, h2, h3, h4, h5, h6 = st.columns([2.2, 2.2, 3, 2.2, 1.6, 1.6])
+    c1, c2, c3, c4, c5, c6 = st.columns([2,2,3,2,2,2])
 
-    h1.markdown("**Name**")
-    h2.markdown("**Phone**")
-    h3.markdown("**Email**")
-    h4.markdown("**Company**")
-    h5.markdown("**Status**")
-    h6.markdown("**Actions**")
+    c1.markdown("**Name**")
+    c2.markdown("**Phone**")
+    c3.markdown("**Email**")
+    c4.markdown("**Company**")
+    c5.markdown("**Status**")
+    c6.markdown("**Actions**")
 
     st.divider()
 
     # ---------------- ROWS ----------------
-    for idx, row in enumerate(df.itertuples()):
+    for row in df.itertuples():
 
-        is_edit = st.session_state.get("edit_id") == row.id
+        c1, c2, c3, c4, c5, c6 = st.columns([2,2,3,2,2,2])
 
-        row_style = "crm-row edit-active" if is_edit else "crm-row"
+        c1.write(row.name)
+        c2.write(row.phone)
+        c3.write(row.email)
+        c4.write(row.company)
 
-        st.markdown(f"""
-        <div class="{row_style}">
-            <div style="display:flex; gap:10px;">
-                <div style="width:18%"><b>{row.name}</b></div>
-                <div style="width:18%">{row.phone}</div>
-                <div style="width:25%">{row.email}</div>
-                <div style="width:18%">{row.company}</div>
-                <div style="width:10%">
-                    <span class="badge {row.status}">{row.status}</span>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # simple status color (minimal + clean)
+        status_colors = {
+            "New": "🔵 New",
+            "Contacted": "🟠 Contacted",
+            "Won": "🟢 Won",
+            "Lost": "🔴 Lost"
+        }
+        c5.write(status_colors.get(row.status, row.status))
 
-        c1, c2 = st.columns([1,1])
+        # ACTIONS INLINE (THIS IS THE KEY FIX)
+        with c6:
+            b1, b2 = st.columns(2)
 
-        with c1:
-            if st.button("Edit", key=f"edit_{row.id}"):
-                st.session_state["edit_id"] = row.id
+            with b1:
+                if st.button("Edit", key=f"edit_{row.id}"):
+                    st.session_state["edit_id"] = row.id
 
-        with c2:
-            if st.button("Delete", key=f"del_{row.id}"):
-                delete_customer(row.id)
-                st.rerun()
+            with b2:
+                if st.button("Delete", key=f"del_{row.id}"):
+                    delete_customer(row.id)
+                    st.rerun()
 
-        # ---------------- EDIT MODE ----------------
+        # ---------------- EDIT ----------------
         if st.session_state.get("edit_id") == row.id:
 
-            st.markdown("### Edit Customer")
+            st.info("Editing customer")
 
             new_name = st.text_input("Name", row.name)
             new_phone = st.text_input("Phone", row.phone)
