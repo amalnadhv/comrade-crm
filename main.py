@@ -80,102 +80,63 @@ elif page == "Customers":
     if "edit_id" not in st.session_state:
         st.session_state["edit_id"] = None
 
-    # ---------------- STYLE ----------------
-    st.markdown("""
-    <style>
+    # ---------------- HEADER (COLUMNS ONLY) ----------------
+    h1, h2, h3, h4, h5, h6 = st.columns([2,2,3,2,2,2])
 
-    .header {
-        background: #1e3a8a;
-        padding: 10px;
-        border-radius: 8px;
-        color: white;
-        font-weight: bold;
-        display: flex;
-        margin-bottom: 8px;
-    }
+    h1.markdown("**Name**")
+    h2.markdown("**Phone**")
+    h3.markdown("**Email**")
+    h4.markdown("**Company**")
+    h5.markdown("**Status**")
+    h6.markdown("**Actions**")
 
-    .row {
-        background: #111827;
-        padding: 10px;
-        border-radius: 8px;
-        display: flex;
-        margin-bottom: 6px;
-        align-items: center;
-    }
-
-    .col-name { width: 18%; }
-    .col-phone { width: 15%; }
-    .col-email { width: 22%; }
-    .col-company { width: 15%; }
-    .col-status { width: 12%; }
-    .col-actions { width: 18%; }
-
-    .badge {
-        padding: 4px 10px;
-        border-radius: 12px;
-        color: white;
-        font-size: 12px;
-    }
-
-    .New { background: #3b82f6; }
-    .Contacted { background: #f59e0b; }
-    .Won { background: #10b981; }
-    .Lost { background: #ef4444; }
-
-    .edit-box {
-        background: #0f172a;
-        padding: 12px;
-        border-radius: 10px;
-        border: 1px solid #334155;
-        margin-bottom: 10px;
-    }
-
-    </style>
-    """, unsafe_allow_html=True)
-
-    # ---------------- HEADER ----------------
-    st.markdown("""
-    <div class="header">
-        <div class="col-name">Name</div>
-        <div class="col-phone">Phone</div>
-        <div class="col-email">Email</div>
-        <div class="col-company">Company</div>
-        <div class="col-status">Status</div>
-        <div class="col-actions">Actions</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("---")
 
     # ---------------- ROWS ----------------
     for _, row in df.iterrows():
 
-        st.markdown(f"""
-        <div class="row">
-            <div class="col-name">{row['name']}</div>
-            <div class="col-phone">{row['phone']}</div>
-            <div class="col-email">{row['email']}</div>
-            <div class="col-company">{row['company']}</div>
-            <div class="col-status">
-                <span class="badge {row['status']}">{row['status']}</span>
-            </div>
-            <div class="col-actions">ID: {row['id']}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        c1, c2 = st.columns(2)
+        c1, c2, c3, c4, c5, c6 = st.columns([2,2,3,2,2,2])
 
         with c1:
-            if st.button("✏️ Edit", key=f"edit_{row['id']}"):
-                st.session_state["edit_id"] = row["id"]
+            st.markdown(f"**{row['name']}**")
 
         with c2:
-            if st.button("🗑️ Delete", key=f"del_{row['id']}"):
-                delete_customer(row["id"])
-                st.rerun()
+            st.write(row["phone"])
 
-        # ---------------- EDIT BOX ----------------
+        with c3:
+            st.write(row["email"])
+
+        with c4:
+            st.write(row["company"])
+
+        with c5:
+            color = {
+                "New": "#3b82f6",
+                "Contacted": "#f59e0b",
+                "Won": "#10b981",
+                "Lost": "#ef4444"
+            }.get(row["status"], "#999")
+
+            st.markdown(
+                f"<span style='background:{color};padding:4px 10px;border-radius:12px;color:white;font-size:12px'>{row['status']}</span>",
+                unsafe_allow_html=True
+            )
+
+        with c6:
+            b1, b2 = st.columns(2)
+
+            with b1:
+                if st.button("✏️", key=f"edit_{row['id']}"):
+                    st.session_state["edit_id"] = row["id"]
+
+            with b2:
+                if st.button("🗑️", key=f"del_{row['id']}"):
+                    delete_customer(row["id"])
+                    st.rerun()
+
+        # ---------------- EDIT PANEL ----------------
         if st.session_state["edit_id"] == row["id"]:
 
-            st.markdown('<div class="edit-box">', unsafe_allow_html=True)
             st.markdown("### ✏️ Edit Customer")
 
             new_name = st.text_input("Name", row["name"])
@@ -208,9 +169,6 @@ elif page == "Customers":
                 if st.button("❌ Cancel", key=f"cancel_{row['id']}"):
                     st.session_state["edit_id"] = None
                     st.rerun()
-
-            st.markdown('</div>', unsafe_allow_html=True)
-
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
     st.title("📊 Analytics")
