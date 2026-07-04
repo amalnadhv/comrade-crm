@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 from database import (
     init_db,
@@ -15,7 +14,6 @@ init_db()
 
 st.set_page_config(page_title="Comrade CRM", layout="wide")
 
-
 # ---------------- LOAD DATA ----------------
 def load_df():
     rows = get_customers()
@@ -23,8 +21,11 @@ def load_df():
         "id", "name", "phone", "email", "company", "status"
     ])
 
-
 df = load_df()
+
+# ---------------- SESSION STATE ----------------
+if "edit_id" not in st.session_state:
+    st.session_state["edit_id"] = None
 
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("📊 CRM")
@@ -49,7 +50,6 @@ if st.sidebar.button("Save Customer"):
     else:
         st.error("Name and Phone required")
 
-
 # ---------------- DASHBOARD ----------------
 if page == "Dashboard":
     st.title("📌 Dashboard")
@@ -63,9 +63,7 @@ if page == "Dashboard":
 
     st.dataframe(df, use_container_width=True)
 
-
 # ---------------- CUSTOMERS ----------------
-
 elif page == "Customers":
     st.title("Customers")
 
@@ -79,22 +77,25 @@ elif page == "Customers":
             df["phone"].str.contains(search, case=False, na=False)
         ]
 
-    if "edit_id" not in st.session_state:
-        st.session_state["edit_id"] = None
-
     # ---------------- HEADER ----------------
-      
+    c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 3, 2, 2, 2])
+    c1.write("Name")
+    c2.write("Phone")
+    c3.write("Email")
+    c4.write("Company")
+    c5.write("Status")
+    c6.write("Actions")
+
     # ---------------- ROWS ----------------
     for row in df.itertuples():
 
-        c1, c2, c3, c4, c5, c6 = st.columns([2,2,3,2,2,2])
+        c1, c2, c3, c4, c5, c6 = st.columns([2, 2, 3, 2, 2, 2])
 
         c1.write(row.name)
         c2.write(row.phone)
         c3.write(row.email)
         c4.write(row.company)
 
-        # simple status color (minimal + clean)
         status_colors = {
             "New": "🔵 New",
             "Contacted": "🟠 Contacted",
@@ -103,44 +104,42 @@ elif page == "Customers":
         }
         c5.write(status_colors.get(row.status, row.status))
 
-        # ACTIONS INLINE (THIS IS THE KEY FIX)
+        # ---------------- ACTIONS ----------------
         with c6:
-            col_edit, col_del = st.columns([1,1])
-        
-            with col_edit:
-                st.button(
-                    "✏️ Edit",
-                    key=f"edit_{row.id}",
-                    type="primary"
-                )
-        
-            with col_del:
-                st.button(
-                    "🗑️ Delete",
-                    key=f"del_{row.id}",
-                    type="secondary"
-                )
+            col_edit, col_del = st.columns([1, 1])
 
-        # ---------------- EDIT ----------------
+            with col_edit:
+                if st.button("✏️ Edit", key=f"edit_{row.id}"):
+                    st.session_state["edit_id"] = row.id
+                    st.rerun()
+
+            with col_del:
+                if st.button("🗑️ Delete", key=f"del_{row.id}"):
+                    delete_customer(row.id)
+                    st.rerun()
+
+        # ---------------- EDIT MODE ----------------
         if st.session_state.get("edit_id") == row.id:
 
-            st.info("Editing customer")
+            st.markdown("---")
+            st.subheader(f"✏️ Editing: {row.name}")
 
-            new_name = st.text_input("Name", row.name)
-            new_phone = st.text_input("Phone", row.phone)
-            new_email = st.text_input("Email", row.email)
-            new_company = st.text_input("Company", row.company)
+            new_name = st.text_input("Name", row.name, key=f"name_{row.id}")
+            new_phone = st.text_input("Phone", row.phone, key=f"phone_{row.id}")
+            new_email = st.text_input("Email", row.email, key=f"email_{row.id}")
+            new_company = st.text_input("Company", row.company, key=f"company_{row.id}")
 
             new_status = st.selectbox(
                 "Status",
                 ["New", "Contacted", "Won", "Lost"],
-                index=["New", "Contacted", "Won", "Lost"].index(row.status)
+                index=["New", "Contacted", "Won", "Lost"].index(row.status),
+                key=f"status_{row.id}"
             )
 
             c1, c2 = st.columns(2)
 
             with c1:
-                if st.button("Save", key=f"save_{row.id}"):
+                if st.button("💾 Save", key=f"save_{row.id}"):
                     update_customer(
                         row.id,
                         new_name,
