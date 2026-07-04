@@ -65,34 +65,6 @@ if page == "Dashboard":
 
 # ---------------- CUSTOMERS ----------------
 
-st.markdown("""
-<style>
-
-/* Edit button */
-div[data-testid="column"] button[kind="secondary"]:first-child {
-    background-color: #3b82f6 !important;
-    color: white !important;
-    border-radius: 6px !important;
-    border: none !important;
-}
-
-/* Delete button */
-div[data-testid="column"] button[kind="secondary"]:last-child {
-    background-color: #ef4444 !important;
-    color: white !important;
-    border-radius: 6px !important;
-    border: none !important;
-}
-
-/* Hover effect */
-div[data-testid="column"] button:hover {
-    opacity: 0.85;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-
 elif page == "Customers":
     st.title("Customers")
 
