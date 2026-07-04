@@ -68,19 +68,59 @@ if page == "Dashboard":
 
 # ---------------- CUSTOMERS PAGE ----------------
 elif page == "Customers":
-    st.title("👥 Customers")
+    st.title("👥 Customers Management")
 
-    search = st.text_input("Search by name or phone")
+    search = st.text_input("🔎 Search by name or phone")
 
     filtered = df.copy()
 
     if search:
         filtered = df[
-            df["Name"].str.contains(search, case=False, na=False) |
-            df["Phone"].str.contains(search, na=False)
+            filtered["Name"].str.contains(search, case=False, na=False) |
+            filtered["Phone"].str.contains(search, na=False)
         ]
 
-    st.dataframe(filtered, use_container_width=True, hide_index=True)
+    st.write("")
+
+    for i, row in filtered.iterrows():
+        with st.container():
+            col1, col2, col3, col4, col5, col6 = st.columns([2,2,2,2,2,1])
+
+            col1.write(row["Name"])
+            col2.write(row["Phone"])
+            col3.write(row["Email"])
+            col4.write(row["Company"])
+            col5.write(row["Status"])
+
+            # ---------------- DELETE ----------------
+            if col6.button("🗑️", key=f"del_{i}"):
+                df.drop(i, inplace=True)
+                save_data(df)
+                st.rerun()
+
+            # ---------------- EDIT EXPANDER ----------------
+            with st.expander("✏️ Edit"):
+                new_name = st.text_input("Name", row["Name"], key=f"name_{i}")
+                new_phone = st.text_input("Phone", row["Phone"], key=f"phone_{i}")
+                new_email = st.text_input("Email", row["Email"], key=f"email_{i}")
+                new_company = st.text_input("Company", row["Company"], key=f"company_{i}")
+                new_status = st.selectbox(
+                    "Status",
+                    ["New", "Contacted", "Won", "Lost"],
+                    index=["New", "Contacted", "Won", "Lost"].index(row["Status"]),
+                    key=f"status_{i}"
+                )
+
+                if st.button("💾 Save", key=f"save_{i}"):
+                    df.at[i, "Name"] = new_name
+                    df.at[i, "Phone"] = new_phone
+                    df.at[i, "Email"] = new_email
+                    df.at[i, "Company"] = new_company
+                    df.at[i, "Status"] = new_status
+
+                    save_data(df)
+                    st.success("Updated!")
+                    st.rerun()
 
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
