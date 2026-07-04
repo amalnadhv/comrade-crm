@@ -12,33 +12,40 @@ from database import (
 st.markdown("""
 <style>
 
-/* Edit button */
-div.stButton > button[kind="primary"] {
-    background-color: #2563eb;
-    color: white;
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-weight: 600;
+/* EDIT */
+button[key^="edit_"] {
+    background-color: #2563eb !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
 }
 
-/* Hover effect */
-div.stButton > button:hover {
-    background-color: #1d4ed8;
-    color: white;
+/* DELETE */
+button[key^="del_"] {
+    background-color: #ef4444 !important;
+    color: white !important;
+    border-radius: 8px !important;
 }
 
-/* Delete button styling using button text selector */
-div.stButton > button:contains("Delete") {
-    background-color: #ef4444;
-    color: white;
-    border-radius: 8px;
+/* SAVE */
+button[key^="save_"] {
+    background-color: #facc15 !important;
+    color: black !important;
+    border-radius: 8px !important;
 }
 
-/* Save button */
-div.stButton > button:contains("Save") {
-    background-color: #10b981;
-    color: white;
-    border-radius: 8px;
+/* CANCEL */
+button[key^="cancel_"] {
+    background-color: #ec4899 !important;
+    color: white !important;
+    border-radius: 8px !important;
+}
+
+/* Hover effect (works) */
+button:hover {
+    opacity: 0.85;
+    transform: scale(1.03);
+    transition: 0.2s;
 }
 
 </style>
