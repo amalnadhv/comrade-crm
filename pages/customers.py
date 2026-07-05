@@ -147,6 +147,7 @@ def customers_page():
                     st.rerun()
 
             with c2:
+             if role == "Admin":
                 if st.button("🗑️ Delete", key=f"del_{row.id}"):
                     delete_customer(row.id)
                     st.rerun()
