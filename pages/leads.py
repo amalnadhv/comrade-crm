@@ -1,13 +1,23 @@
 import streamlit as st
 import pandas as pd
-from database import get_leads, add_lead, convert_lead_to_customer, delete_customer
+from database import (
+    get_leads,
+    add_lead,
+    convert_lead_to_customer,
+    delete_lead
+)
 
 
 def leads_page():
 
     st.title("🎯 Leads")
 
-    # ---------------- LOAD ----------------
+    # ---------------- SUCCESS MESSAGE ----------------
+    if st.session_state.get("lead_saved"):
+        st.success("✅ Lead saved successfully!")
+        st.session_state["lead_saved"] = False
+
+    # ---------------- LOAD DATA ----------------
     df = get_leads()
 
     if df is None:
@@ -21,9 +31,34 @@ def leads_page():
         contact = st.text_input("Contact Person")
         phone = st.text_input("Phone")
         email = st.text_input("Email")
-        source = st.text_input("Source")
+
+        # -------- SOURCE (Dropdown + Custom) --------
+        source_options = [
+            "Website",
+            "Facebook",
+            "Instagram",
+            "LinkedIn",
+            "Referral",
+            "Cold Call",
+            "Advertisement",
+            "Walk-in",
+            "Other"
+        ]
+
+        source_choice = st.selectbox("Source", source_options)
+
+        source_custom = ""
+        if source_choice == "Other":
+            source_custom = st.text_input("Enter Source")
+
+        source = source_custom if source_choice == "Other" else source_choice
+
+        # -------- STATUS --------
         status = st.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
-        followup = st.text_input("Follow-up Date")
+
+        # -------- DATE PICKER --------
+        followup = st.date_input("Follow-up Date")
+
         remarks = st.text_area("Remarks")
         assigned_to = st.text_input("Assign To (username)")
 
@@ -31,11 +66,18 @@ def leads_page():
 
         if submitted:
             add_lead(
-                company, contact, phone, email,
-                source, status, followup, remarks,
+                company,
+                contact,
+                phone,
+                email,
+                source,
+                status,
+                str(followup),
+                remarks,
                 assigned_to
             )
-            st.success("Lead added!")
+
+            st.session_state["lead_saved"] = True
             st.rerun()
 
     st.markdown("---")
@@ -67,6 +109,7 @@ def leads_page():
 
         c1, c2 = st.columns(2)
 
+        # ---------------- CONVERT ----------------
         with c1:
             if st.button("➡ Convert", key=f"conv_{row.id}"):
 
@@ -77,11 +120,17 @@ def leads_page():
                         row.email,
                         row.company
                     )
-                    st.success("Converted!")
+                    st.success("Converted to customer!")
+                    st.rerun()
                 else:
-                    st.error("Only Admin can convert")
+                    st.error("Only Admin can convert leads")
 
+        # ---------------- DELETE ----------------
         with c2:
-            if st.button("🗑 Delete", key=f"del_{row.id}") and role == "Admin":
-                delete_customer(row.id)
-                st.rerun()
+            if st.button("🗑 Delete", key=f"del_{row.id}"):
+
+                if role == "Admin":
+                    delete_lead(row.id)
+                    st.rerun()
+                else:
+                    st.error("Only Admin can delete leads")
