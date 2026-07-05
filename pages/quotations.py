@@ -7,7 +7,6 @@ import sqlite3
 from database import add_quotation, get_quotations, get_customers
 from utils.pdf_generator import generate_quotation_pdf
 
-
 DB_NAME = "crm.db"
 
 
@@ -50,7 +49,7 @@ def quotations_page():
 
     st.title("💼 Quotations")
 
-    # ================= SESSION INIT =================
+    # session init
     if "quote_items" not in st.session_state:
         st.session_state.quote_items = []
 
@@ -66,7 +65,7 @@ def quotations_page():
     if "edit_status" not in st.session_state:
         st.session_state.edit_status = "Draft"
 
-    # ================= DATA =================
+    # data
     df = get_quotations()
 
     customers = get_customers()
@@ -78,18 +77,18 @@ def quotations_page():
     customer_map = {r.id: f"{r.name} ({r.company})" for r in customers.itertuples()}
     customer_options = list(customer_map.keys())
 
-    # ================= CREATE NEW =================
+    # create new
     col1, col2 = st.columns(2)
 
     if col1.button("➕ Create New Quotation"):
         st.session_state.edit_id = None
-        st.session_state.edit_loaded = False
         st.session_state.quote_items = []
+        st.session_state.edit_loaded = False
         st.session_state.edit_customer = None
         st.session_state.edit_status = "Draft"
         st.rerun()
 
-    # ================= LOAD EDIT =================
+    # load edit
     if st.session_state.edit_id and not st.session_state.edit_loaded:
 
         match = df[df["id"] == st.session_state.edit_id]
@@ -107,13 +106,9 @@ def quotations_page():
 
         st.session_state.edit_loaded = True
 
-    # ================= MODE =================
-    if st.session_state.edit_id:
-        st.subheader("🟠 Edit Quotation")
-    else:
-        st.subheader("🔵 Create New Quotation")
+    # mode
+    st.subheader("🟠 Edit Quotation" if st.session_state.edit_id else "🔵 Create New Quotation")
 
-    # ================= DEFAULT CUSTOMER =================
     default_customer = customer_options[0]
 
     if st.session_state.edit_id:
@@ -123,7 +118,7 @@ def quotations_page():
             customer_options[0]
         )
 
-    # ================= CUSTOMER =================
+    # customer
     customer_id = st.selectbox(
         "Customer",
         customer_options,
@@ -132,7 +127,7 @@ def quotations_page():
         key="customer_select"
     )
 
-    # ================= STATUS =================
+    # status
     status = st.selectbox(
         "Status",
         ["Draft", "Sent", "Approved", "Rejected"],
@@ -144,7 +139,7 @@ def quotations_page():
         key="status_select"
     )
 
-    # ================= ITEM INPUT =================
+    # item input
     st.markdown("### Items")
 
     item_input = st.text_input("Item", key="item_input")
@@ -152,16 +147,14 @@ def quotations_page():
     price_input = st.number_input("Price", value=0.0, key="price_input")
 
     if st.button("➕ Add Item"):
-
         st.session_state.quote_items.append({
             "item": item_input,
             "qty": qty_input,
             "price": price_input
         })
-
         st.rerun()
 
-    # ================= ITEM LIST =================
+    # item list
     subtotal = 0
     updated_items = []
 
@@ -188,7 +181,7 @@ def quotations_page():
 
     st.markdown("---")
 
-    # ================= TOTAL =================
+    # totals
     discount = st.number_input("Discount %", value=0.0, key="discount")
     tax = st.number_input("Tax %", value=0.0, key="tax")
 
@@ -198,7 +191,7 @@ def quotations_page():
     st.success(f"Subtotal: {subtotal:.2f}")
     st.success(f"Total: {total:.2f}")
 
-    # ================= SAVE =================
+    # save
     if st.button("💾 Save Quotation"):
 
         customer_name = customer_map[customer_id]
@@ -218,7 +211,6 @@ def quotations_page():
             )
 
             st.success("Updated successfully!")
-
             st.session_state.edit_id = None
             st.session_state.edit_loaded = False
             st.session_state.edit_customer = None
@@ -243,7 +235,7 @@ def quotations_page():
         st.session_state.quote_items = []
         st.rerun()
 
-    # ================= LIST =================
+    # list
     st.markdown("---")
     st.subheader("All Quotations")
 
@@ -267,32 +259,27 @@ def quotations_page():
             delete_quotation(row["id"])
             st.rerun()
 
-        if c3.button("📄 PDF", key=f"p_{row['id']}"):
+        # ================= PDF FIXED =================
+        safe_row = row.to_dict()
 
+        items = safe_row.get("items", [])
+
+        if isinstance(items, str):
             try:
-                safe_row = row.to_dict()
+                items = json.loads(items)
+            except:
+                items = []
 
-                items = safe_row.get("items", [])
+        safe_row["items"] = items
 
-                if isinstance(items, str):
-                    try:
-                        items = json.loads(items)
-                    except json.JSONDecodeError:
-                        items = []
+        pdf_buffer = generate_quotation_pdf(safe_row)
 
-                safe_row["items"] = items
-
-                pdf_buffer = generate_quotation_pdf(safe_row)
-
-                st.download_button(
-                    label="📄 Download PDF",
-                    data=pdf_buffer,
-                    file_name=f"quotation_{row['id']}.pdf",
-                    mime="application/pdf",
-                    key=f"pdf_{row['id']}"
-                )
-
-            except Exception as e:
-                st.error(f"PDF Error: {e}")
+        c3.download_button(
+            label="📄 PDF",
+            data=pdf_buffer,
+            file_name=f"quotation_{row['id']}.pdf",
+            mime="application/pdf",
+            key=f"pdf_{row['id']}"
+        )
 
         st.markdown("---")
