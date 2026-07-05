@@ -19,33 +19,37 @@ def load_df():
     )
 
 
+# ---------------- MESSAGE SYSTEM ----------------
+def show_message(msg):
+    st.session_state["msg"] = msg
+    st.session_state["msg_time"] = time.time()
+
+
+def render_message():
+    if st.session_state.get("msg"):
+        st.success(st.session_state["msg"])
+
+        # auto clear after 3 seconds
+        if time.time() - st.session_state["msg_time"] > 3:
+            st.session_state["msg"] = None
+            st.session_state["msg_time"] = None
+            st.rerun()
+
+
+# ---------------- RESET ADD FORM ----------------
+def reset_add_form():
+    keys = ["add_name", "add_phone", "add_email", "add_company", "add_status"]
+    for k in keys:
+        if k in st.session_state:
+            del st.session_state[k]
+
+
 # ---------------- PAGE ----------------
 def customers_page():
 
     role = st.session_state.user["role"]
 
     st.title("👥 Customers")
-
-    # ---------------- SUCCESS MESSAGE HANDLER ----------------
-    if "message" not in st.session_state:
-        st.session_state.message = None
-
-    if "message_time" not in st.session_state:
-        st.session_state.message_time = None
-
-    def show_message(text):
-        st.session_state.message = text
-        st.session_state.message_time = time.time()
-
-    def render_message():
-        if st.session_state.message:
-            st.success(st.session_state.message)
-
-            # auto clear after 3 seconds
-            if time.time() - st.session_state.message_time > 3:
-                st.session_state.message = None
-                st.session_state.message_time = None
-                st.rerun()
 
     render_message()
 
@@ -69,8 +73,13 @@ def customers_page():
 
             if name and phone:
                 add_customer(name, phone, email, company, status)
+
+                reset_add_form()   # 🔥 THIS FIXES YOUR ISSUE
+
                 show_message("Customer added successfully ✅")
+
                 st.rerun()
+
             else:
                 show_message("Name and Phone are required ❌")
                 st.rerun()
@@ -159,7 +168,6 @@ def customers_page():
                         new_status
                     )
 
-                    # CLEAR SCREEN COMPLETELY
                     st.session_state.edit_id = None
                     show_message("Customer updated successfully ✅")
 
