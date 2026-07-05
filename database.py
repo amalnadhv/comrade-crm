@@ -1,9 +1,5 @@
 import sqlite3
 import pandas as pd
-import os
-
-if os.path.exists("crm.db"):
-    os.remove("crm.db")
     
 DB_NAME = "crm.db"
 
