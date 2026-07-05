@@ -37,7 +37,20 @@ def init_db():
 
     conn.commit()
     conn.close()
-
+    
+# ---------------- QUOTATIONS ----------------
+cur.execute("""
+CREATE TABLE IF NOT EXISTS quotations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_name TEXT,
+    amount REAL,
+    discount REAL,
+    tax REAL,
+    total REAL,
+    status TEXT,
+    created_on TEXT
+)
+""")
 
 # ---------------- CUSTOMERS ----------------
 def add_customer(name, phone, email, company, status):
@@ -202,3 +215,23 @@ def init_db():
 
     conn.commit()
     conn.close()
+
+def add_quotation(customer_name, amount, discount, tax, total, status, created_on):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO quotations
+        (customer_name, amount, discount, tax, total, status, created_on)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (customer_name, amount, discount, tax, total, status, created_on))
+
+    conn.commit()
+    conn.close()
+
+def get_quotations():
+    conn = sqlite3.connect(DB_NAME)
+    df = pd.read_sql_query("SELECT * FROM quotations", conn)
+    conn.close()
+    return df
+    
