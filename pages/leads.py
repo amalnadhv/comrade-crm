@@ -20,13 +20,13 @@ def leads_page():
     # ---------------- LOAD LEADS ----------------
     df = get_leads()
 
-    if df is None or df.empty:
+    if df is None:
         df = pd.DataFrame()
 
     # ---------------- ADD LEAD ----------------
     st.subheader("➕ Add Lead")
 
-    with st.form("add_lead"):
+    with st.form("add_lead_form"):
 
         company = st.text_input("Company")
         contact = st.text_input("Contact Person")
@@ -39,16 +39,20 @@ def leads_page():
             "Referral", "Cold Call", "Advertisement", "Walk-in", "Other"
         ]
 
-        source_choice = st.selectbox("Source", source_options)
+        source_choice = st.selectbox("Source", source_options, key="source_select")
 
         source_custom = ""
         if source_choice == "Other":
-            source_custom = st.text_input("Enter Source")
+            source_custom = st.text_input("Enter Source", key="custom_source")
 
         source = source_custom if source_choice == "Other" else source_choice
 
         # STATUS
-        status = st.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
+        status = st.selectbox(
+            "Status",
+            ["New", "Contacted", "Won", "Lost"],
+            key="status_select"
+        )
 
         # FOLLOWUP DATE
         followup_date = st.date_input("Follow-up Date")
@@ -56,7 +60,7 @@ def leads_page():
         remarks = st.text_area("Remarks")
         assigned_to = st.text_input("Assign To (username)")
 
-        submitted = st.form_submit_button("Save Lead")
+        submitted = st.form_submit_button("💾 Save Lead")
 
         if submitted:
 
@@ -78,7 +82,7 @@ def leads_page():
                 st.rerun()
 
             else:
-                st.warning("Company and Contact are required")
+                st.warning("⚠️ Company and Contact are required")
 
     st.markdown("---")
 
@@ -90,16 +94,17 @@ def leads_page():
         return
 
     # ---------------- ROLE ----------------
-    role = st.session_state.get("user", {}).get("role", "User")
-    username = st.session_state.get("user", {}).get("username", "")
+    user = st.session_state.get("user", {})
+    role = user.get("role", "User")
+    username = user.get("username", "")
 
-    if role != "Admin":
+    if role != "Admin" and "assigned_to" in df.columns:
         df = df[df["assigned_to"] == username]
 
     # ---------------- DISPLAY ----------------
     for row in df.itertuples():
 
-        col1, col2, col3, col4, col5 = st.columns(5)
+        col1, col2, col3, col4, col5 = st.columns([2,2,2,1,2])
 
         col1.write(row.company)
         col2.write(row.contact_person)
@@ -115,7 +120,6 @@ def leads_page():
 
                 if role == "Admin":
 
-                    # Move to customers
                     convert_lead_to_customer(
                         row.contact_person,
                         row.phone,
@@ -123,14 +127,13 @@ def leads_page():
                         row.company
                     )
 
-                    # Remove from leads
                     delete_lead(row.id)
 
-                    st.success("Lead converted to customer!")
+                    st.success("✅ Lead converted to customer!")
                     st.rerun()
 
                 else:
-                    st.error("Only Admin can convert leads")
+                    st.error("❌ Only Admin can convert leads")
 
         # ---------------- DELETE ----------------
         with c2:
@@ -138,7 +141,7 @@ def leads_page():
 
                 if role == "Admin":
                     delete_lead(row.id)
-                    st.success("Lead deleted")
+                    st.success("🗑 Lead deleted")
                     st.rerun()
                 else:
-                    st.error("Only Admin can delete leads")
+                    st.error("❌ Only Admin can delete leads")
