@@ -250,3 +250,12 @@ def add_assigned_column():
 
     conn.commit()
     conn.close()
+
+def delete_lead(lead_id):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM leads WHERE id=?", (lead_id,))
+
+    conn.commit()
+    conn.close()
