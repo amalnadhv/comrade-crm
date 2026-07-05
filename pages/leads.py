@@ -7,10 +7,16 @@ from database import add_lead, get_leads
 def leads_page():
     
     role = st.session_state.user["role"]
+    current_user = st.session_state.user["username"]
     st.title("🎯 Leads")
-
+    assigned_to = st.text_input("Assign To (username)")
+    
     # ---------------- LOAD DATA ----------------
     df = get_leads()
+
+    if not df.empty:
+        if role != "Admin":
+            df = df[df["assigned_to"] == current_user]
 
     # Convert to DataFrame safely
     if df is None or df.empty:
@@ -46,16 +52,17 @@ def leads_page():
 
         if st.button("Save Lead"):
             if company and phone:
-                add_lead(
-                    company,
-                    contact_person,
-                    phone,
-                    email,
-                    source,
-                    status,
-                    str(followup_date),
-                    remarks
-                )
+                    add_lead(
+                        company,
+                        contact_person,
+                        phone,
+                        email,
+                        source,
+                        status,
+                        str(followup_date),
+                        remarks,
+                        assigned_to
+                    )
                 st.success("Lead added successfully!")
                 st.rerun()
             else:
@@ -110,6 +117,7 @@ for row in df.itertuples():
     col2.write(row.contact_person)
     col3.write(row.phone)
     col4.write(row.source)
+    col5.write(row.assigned_to)
     col5.write(status_colors.get(row.status, row.status))
 
     with col6:
