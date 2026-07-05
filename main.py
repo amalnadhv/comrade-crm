@@ -11,7 +11,6 @@ from pages.reports import reports_page
 from pages.settings import settings_page
 
 
-# ---------------- INIT ----------------
 st.set_page_config(page_title="Comrade CRM", layout="wide")
 init_db()
 
@@ -21,18 +20,9 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 
-# ---------------- CSS ----------------
-def load_css():
-    with open("assets/style.css") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-load_css()
-
-
 # ---------------- LOGIN ----------------
 def login():
-
-    st.title("🔐 Comrade CRM Login")
+    st.title("🔐 Login")
 
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
@@ -44,9 +34,8 @@ def login():
             st.session_state.user = {
                 "id": user[0],
                 "username": user[1],
-                "role": user[2]   # ✅ FIXED
+                "role": user[2]
             }
-            st.success("Login successful!")
             st.rerun()
         else:
             st.error("Invalid credentials")
@@ -55,48 +44,48 @@ def login():
 # ---------------- APP ----------------
 def app():
 
-    st.sidebar.title("Comrade CRM")
-
-    st.sidebar.write(f"👤 {st.session_state.user['username']}")
+    st.sidebar.title("📊 Comrade CRM")
 
     role = st.session_state.user["role"]
+
+    st.sidebar.write(f"👤 {st.session_state.user['username']}")
 
     if st.sidebar.button("Logout"):
         st.session_state.user = None
         st.rerun()
 
-    # ---------------- ROLE BASED MENU ----------------
-    if role == "Admin":
-        page = st.sidebar.radio(
-            "Navigation",
-            ["Dashboard", "Customers", "Leads", "Follow-ups", "Quotations", "Reports", "Settings"]
-        )
-    else:
-        page = st.sidebar.radio(
-            "Navigation",
-            ["Dashboard", "Customers", "Leads", "Follow-ups"]
-        )
+    # ---------------- SINGLE SOURCE OF TRUTH ----------------
+    page = st.sidebar.radio(
+        "Navigation",
+        ["Dashboard", "Customers", "Leads", "Follow-ups", "Quotations", "Reports", "Settings"]
+    )
 
     st.sidebar.markdown("---")
 
-    # ---------------- ROUTING ----------------
+    # ---------------- PAGE ROUTING (CRITICAL PART) ----------------
     if page == "Dashboard":
         dashboard_page()
+
     elif page == "Customers":
         customers_page()
+
     elif page == "Leads":
         leads_page()
+
     elif page == "Follow-ups":
         followups_page()
+
     elif page == "Quotations":
         quotations_page()
+
     elif page == "Reports":
         reports_page()
+
     elif page == "Settings":
         settings_page()
 
 
-# ---------------- ENTRY ----------------
+# ---------------- ENTRY POINT ----------------
 if st.session_state.user is None:
     login()
 else:
