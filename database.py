@@ -7,8 +7,8 @@ DB_NAME = "crm.db"
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
-    add_assigned_column()
-    # Customers table
+
+    # ---------------- CUSTOMERS ----------------
     cur.execute("""
     CREATE TABLE IF NOT EXISTS customers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,7 +20,7 @@ def init_db():
     )
     """)
 
-    # Leads table (future module)
+    # ---------------- LEADS ----------------
     cur.execute("""
     CREATE TABLE IF NOT EXISTS leads (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,60 +31,59 @@ def init_db():
         source TEXT,
         status TEXT,
         followup_date TEXT,
+        remarks TEXT,
+        assigned_to TEXT
+    )
+    """)
+
+    # ---------------- FOLLOWUPS ----------------
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS followups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id INTEGER,
+        title TEXT,
+        followup_date TEXT,
+        status TEXT,
         remarks TEXT
     )
     """)
 
+    # ---------------- QUOTATIONS ----------------
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS quotations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_name TEXT,
+        amount REAL,
+        discount REAL,
+        tax REAL,
+        total REAL,
+        status TEXT,
+        created_on TEXT
+    )
+    """)
+
+    # ---------------- USERS ----------------
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        role TEXT
+    )
+    """)
+
+    # default admin
+    cur.execute("SELECT * FROM users WHERE username='admin'")
+    if not cur.fetchone():
+        cur.execute("""
+            INSERT INTO users (username, password, role)
+            VALUES ('admin', 'admin123', 'Admin')
+        """)
+
     conn.commit()
     conn.close()
-    
-# ---------------- QUOTATIONS ----------------
-cur.execute("""
-CREATE TABLE IF NOT EXISTS quotations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    customer_name TEXT,
-    amount REAL,
-    discount REAL,
-    tax REAL,
-    total REAL,
-    status TEXT,
-    created_on TEXT
-)
-""")
-# ---------------- USERS ----------------
-cur.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
-    password TEXT,
-    role TEXT
-)
-""")
 
-# Create default admin if not exists
-cur.execute("SELECT * FROM users WHERE username='admin'")
-if not cur.fetchone():
-    cur.execute("""
-        INSERT INTO users (username, password, role)
-        VALUES ('admin', 'admin123', 'Admin')
-    """)
 
-cur.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
-    password TEXT,
-    role TEXT
-)
-""")
-
-cur.execute("SELECT * FROM users WHERE username='admin'")
-if not cur.fetchone():
-    cur.execute("""
-        INSERT INTO users (username, password, role)
-        VALUES ('admin', 'admin123', 'Admin')
-    """)
-    
 # ---------------- CUSTOMERS ----------------
 def add_customer(name, phone, email, company, status):
     conn = sqlite3.connect(DB_NAME)
@@ -129,10 +128,11 @@ def delete_customer(customer_id):
     cur = conn.cursor()
 
     cur.execute("DELETE FROM customers WHERE id=?", (customer_id,))
-
     conn.commit()
     conn.close()
 
+
+# ---------------- USERS ----------------
 def add_user(username, password, role="Sales"):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -145,21 +145,7 @@ def add_user(username, password, role="Sales"):
     conn.commit()
     conn.close()
 
-# ---------------- LEADS (READY FOR NEXT STEP) ----------------
-def add_lead(company, contact_person, phone, email, source, status, followup_date, remarks):
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
 
-    cur.execute("""
-        INSERT INTO leads 
-        (company, contact_person, phone, email, source, status, followup_date, remarks)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (company, contact_person, phone, email, source, status, followup_date, remarks))
-
-    conn.commit()
-    conn.close()
-
-# ---------------- USERS / AUTH ----------------
 def validate_user(username, password):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -172,13 +158,30 @@ def validate_user(username, password):
     user = cur.fetchone()
     conn.close()
     return user
-    
+
+
+# ---------------- LEADS ----------------
+def add_lead(company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO leads 
+        (company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to))
+
+    conn.commit()
+    conn.close()
+
+
 def get_leads():
     conn = sqlite3.connect(DB_NAME)
     df = pd.read_sql_query("SELECT * FROM leads", conn)
     conn.close()
     return df
-    
+
+
 def convert_lead_to_customer(name, phone, email, company, status="New"):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -190,25 +193,9 @@ def convert_lead_to_customer(name, phone, email, company, status="New"):
 
     conn.commit()
     conn.close()
-    
-def init_followups_table():
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS followups (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        lead_id INTEGER,
-        title TEXT,
-        followup_date TEXT,
-        status TEXT,
-        remarks TEXT
-    )
-    """)
 
-    conn.commit()
-    conn.close()
-    
+# ---------------- FOLLOWUPS ----------------
 def add_followup(lead_id, title, followup_date, status, remarks):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -221,73 +208,15 @@ def add_followup(lead_id, title, followup_date, status, remarks):
     conn.commit()
     conn.close()
 
+
 def get_followups():
     conn = sqlite3.connect(DB_NAME)
     df = pd.read_sql_query("SELECT * FROM followups", conn)
     conn.close()
     return df
 
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
 
-    # Customers
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS customers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        phone TEXT,
-        email TEXT,
-        company TEXT,
-        status TEXT
-    )
-    """)
-
-    # Leads
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS leads (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        company TEXT,
-        contact_person TEXT,
-        phone TEXT,
-        email TEXT,
-        source TEXT,
-        status TEXT,
-        followup_date TEXT,
-        remarks TEXT
-    )
-    """)
-
-    # Followups
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS followups (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        lead_id INTEGER,
-        title TEXT,
-        followup_date TEXT,
-        status TEXT,
-        remarks TEXT
-    )
-    """)
-
-    conn.commit()
-    conn.close()
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS leads (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        company TEXT,
-        contact_person TEXT,
-        phone TEXT,
-        email TEXT,
-        source TEXT,
-        status TEXT,
-        followup_date TEXT,
-        remarks TEXT,
-        assigned_to TEXT
-    )
-    """)
-
+# ---------------- QUOTATIONS ----------------
 def add_quotation(customer_name, amount, discount, tax, total, status, created_on):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -301,26 +230,15 @@ def add_quotation(customer_name, amount, discount, tax, total, status, created_o
     conn.commit()
     conn.close()
 
+
 def get_quotations():
     conn = sqlite3.connect(DB_NAME)
     df = pd.read_sql_query("SELECT * FROM quotations", conn)
     conn.close()
     return df
 
-def validate_user(username, password):
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
 
-    cur.execute("""
-        SELECT * FROM users
-        WHERE username=? AND password=?
-    """, (username, password))
-
-    user = cur.fetchone()
-    conn.close()
-
-    return user
-
+# ---------------- MIGRATION HELPERS ----------------
 def add_assigned_column():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -329,19 +247,6 @@ def add_assigned_column():
         cur.execute("ALTER TABLE leads ADD COLUMN assigned_to TEXT")
     except:
         pass
-
-    conn.commit()
-    conn.close()
-
-def add_lead(company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to):
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-
-    cur.execute("""
-        INSERT INTO leads 
-        (company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to))
 
     conn.commit()
     conn.close()
