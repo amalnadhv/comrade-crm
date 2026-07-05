@@ -2,7 +2,10 @@ import streamlit as st
 import pandas as pd
 
 from database import get_customers, get_leads, get_followups
+from datetime import date
 
+start_date = st.date_input("Start Date", value=date.today())
+end_date = st.date_input("End Date", value=date.today())
 
 def dashboard_page():
 
