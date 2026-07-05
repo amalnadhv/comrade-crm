@@ -8,6 +8,7 @@ from pages.leads import leads_page
 from pages.followups import followups_page
 from pages.quotations import quotations_page
 from pages.reports import reports_page
+from pages.settings import settings_page
 
 import streamlit as st
 
