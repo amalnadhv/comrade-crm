@@ -9,7 +9,14 @@ from pages.followups import followups_page
 from pages.quotations import quotations_page
 from pages.reports import reports_page
 
+import streamlit as st
 
+def settings_page():
+
+    if st.session_state.user["role"] != "Admin":
+        st.error("Access denied")
+        return
+        
 # ---------------- INIT ----------------
 st.set_page_config(page_title="Comrade CRM", layout="wide")
 init_db()
