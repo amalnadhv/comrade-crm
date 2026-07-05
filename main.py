@@ -59,6 +59,17 @@ def app():
         st.session_state.user = None
         st.rerun()
 
+    if role == "Admin":
+        page = st.sidebar.radio(
+            "Navigation",
+            ["Dashboard", "Customers", "Leads", "Follow-ups", "Quotations", "Reports", "Settings"]
+        )
+    else:
+        page = st.sidebar.radio(
+            "Navigation",
+            ["Dashboard", "Customers", "Leads", "Follow-ups"]
+        )
+
     page = st.sidebar.radio(
         "Navigation",
         ["Dashboard", "Customers", "Leads", "Follow-ups", "Quotations", "Reports"]
