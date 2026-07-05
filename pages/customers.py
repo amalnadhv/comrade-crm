@@ -45,10 +45,15 @@ def customers_page():
 
             if name and phone:
                 add_customer(name, phone, email, company, status)
-                st.success("Customer added successfully.")
+                st.session_state["add_success"] = True
                 st.rerun()
             else:
                 st.error("Name and Phone are required.")
+
+    # ---------------- ADD SUCCESS MESSAGE ----------------
+    if st.session_state.get("add_success"):
+        st.success("Customer added successfully ✅")
+        st.session_state["add_success"] = False
 
     st.markdown("---")
 
@@ -66,8 +71,8 @@ def customers_page():
     if "edit_id" not in st.session_state:
         st.session_state.edit_id = None
 
-    if "edit_saved" not in st.session_state:
-        st.session_state.edit_saved = False
+    if "edit_success" not in st.session_state:
+        st.session_state.edit_success = False
 
     # ---------------- EDIT FORM ----------------
     if st.session_state.edit_id:
@@ -137,9 +142,9 @@ def customers_page():
                         new_status
                     )
 
-                    # CLOSE EDIT SCREEN PROPERLY
+                    # CLOSE EDIT FORM CLEANLY
                     st.session_state.edit_id = None
-                    st.session_state.edit_saved = True
+                    st.session_state.edit_success = True
 
                     st.rerun()
 
@@ -151,10 +156,10 @@ def customers_page():
                     st.session_state.edit_id = None
                     st.rerun()
 
-    # ---------------- SUCCESS MESSAGE AFTER CLOSE ----------------
-    if st.session_state.edit_saved:
-        st.toast("Customer updated successfully ✅")
-        st.session_state.edit_saved = False
+    # ---------------- EDIT SUCCESS MESSAGE ----------------
+    if st.session_state.get("edit_success"):
+        st.success("Customer updated successfully ✅")
+        st.session_state["edit_success"] = False
 
     st.markdown("---")
 
@@ -204,7 +209,6 @@ def customers_page():
 
             c1, c2 = st.columns(2)
 
-            # EDIT BUTTON
             with c1:
 
                 if st.button("✏️ Edit", key=f"edit_btn_{row.id}"):
@@ -212,7 +216,6 @@ def customers_page():
                     st.session_state.edit_id = row.id
                     st.rerun()
 
-            # DELETE BUTTON
             with c2:
 
                 if role == "Admin":
