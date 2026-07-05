@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-
+import io
 from database import (
     add_customer,
     get_customers,
@@ -99,7 +99,18 @@ def customers_page():
                     st.rerun()
 
     st.markdown("---")
-
+    
+    st.markdown("### 📤 Export Customers")
+    
+    csv = df.to_csv(index=False).encode('utf-8')
+    
+    st.download_button(
+        label="⬇ Download Customers CSV",
+        data=csv,
+        file_name="customers.csv",
+        mime="text/csv"
+    )
+    
     # ---------------- TABLE VIEW ----------------
     st.subheader("Customer List")
 
