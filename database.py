@@ -259,3 +259,14 @@ def delete_lead(lead_id):
 
     conn.commit()
     conn.close()
+
+def delete_followup(followup_id):
+    import sqlite3
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM followups WHERE id=?", (followup_id,))
+
+    conn.commit()
+    conn.close()
