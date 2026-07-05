@@ -70,7 +70,13 @@ def app():
     ### Sales & Lead Management
     ---
     """)
-    
+
+    st.session_state.user = {
+        "id": user[0],
+        "username": user[1],
+        "role": user[2]
+    }
+
     st.sidebar.markdown(f"""
     👤 Logged in as:  
     **{st.session_state.user['username']}**
