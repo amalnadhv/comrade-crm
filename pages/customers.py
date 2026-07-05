@@ -13,10 +13,6 @@ from database import (
 # ---------------- LOAD DATA ----------------
 def load_df():
     rows = get_customers()
-
-    if not rows:
-        return pd.DataFrame(columns=["id", "name", "phone", "email", "company", "status"])
-
     return pd.DataFrame(
         rows,
         columns=["id", "name", "phone", "email", "company", "status"]
@@ -30,30 +26,28 @@ def show_message(msg):
 
 
 def render_message():
-    msg = st.session_state.get("msg")
-    msg_time = st.session_state.get("msg_time")
+    if st.session_state.get("msg"):
+        st.success(st.session_state["msg"])
 
-    if msg:
-        st.success(msg)
-
-        if msg_time and time.time() - msg_time > 3:
+        if time.time() - st.session_state["msg_time"] > 3:
             st.session_state["msg"] = None
             st.session_state["msg_time"] = None
             st.rerun()
 
 
-# ---------------- RESET FORM ----------------
+# ---------------- RESET ADD FORM ----------------
 def reset_add_form():
-    for k in ["add_name", "add_phone", "add_email", "add_company", "add_status"]:
+    keys = ["add_name", "add_phone", "add_email", "add_company", "add_status"]
+    for k in keys:
         st.session_state.pop(k, None)
 
 
 # ---------------- PAGE ----------------
 def customers_page():
 
-    st.title("👥 Customers")
+    role = st.session_state.user["role"]
 
-    role = st.session_state.get("user", {}).get("role", "User")
+    st.title("👥 Customers")
 
     render_message()
 
@@ -73,14 +67,17 @@ def customers_page():
             key="add_status"
         )
 
-        if st.button("💾 Save Customer", key="save_customer_btn"):
+        if st.button("💾 Save Customer", key="save_customer"):
 
             if name and phone:
 
                 add_customer(name, phone, email, company, status)
 
+                # CLEAR FORM
                 reset_add_form()
+
                 show_message("Customer added successfully ✅")
+
                 st.rerun()
 
             else:
@@ -92,7 +89,7 @@ def customers_page():
     # ---------------- SEARCH ----------------
     search = st.text_input("🔍 Search customers", key="customer_search")
 
-    if search and not df.empty:
+    if search:
         df = df[
             df["name"].str.contains(search, case=False, na=False)
             | df["phone"].str.contains(search, case=False, na=False)
@@ -103,10 +100,11 @@ def customers_page():
     if "edit_id" not in st.session_state:
         st.session_state.edit_id = None
 
-    # ---------------- EDIT ----------------
-    if st.session_state.edit_id is not None:
+    # ---------------- EDIT FORM ----------------
+    if st.session_state.get("edit_id") is not None:
 
-        edit_row = df[df["id"] == st.session_state.edit_id]
+        edit_id = st.session_state.edit_id
+        edit_row = df[df["id"] == edit_id]
 
         if not edit_row.empty:
 
@@ -115,27 +113,30 @@ def customers_page():
             st.markdown("---")
             st.subheader(f"✏️ Edit Customer: {edit_row['name']}")
 
-            new_name = st.text_input("Name", value=edit_row["name"], key="edit_name")
-            new_phone = st.text_input("Phone", value=edit_row["phone"], key="edit_phone")
-            new_email = st.text_input("Email", value=edit_row["email"], key="edit_email")
-            new_company = st.text_input("Company", value=edit_row["company"], key="edit_company")
+            new_name = st.text_input("Name", value=edit_row["name"], key=f"edit_name_{edit_id}")
+            new_phone = st.text_input("Phone", value=edit_row["phone"], key=f"edit_phone_{edit_id}")
+            new_email = st.text_input("Email", value=edit_row["email"], key=f"edit_email_{edit_id}")
+            new_company = st.text_input("Company", value=edit_row["company"], key=f"edit_company_{edit_id}")
 
             status_list = ["New", "Contacted", "Won", "Lost"]
+
+            current_status = edit_row["status"] if edit_row["status"] in status_list else "New"
 
             new_status = st.selectbox(
                 "Status",
                 status_list,
-                index=status_list.index(edit_row["status"]) if edit_row["status"] in status_list else 0,
-                key="edit_status"
+                index=status_list.index(current_status),
+                key=f"edit_status_{edit_id}"
             )
 
             col1, col2 = st.columns(2)
 
             with col1:
-                if st.button("💾 Save Changes", key="save_edit"):
+
+                if st.button("💾 Save Changes", key=f"save_edit_{edit_id}"):
 
                     update_customer(
-                        st.session_state.edit_id,
+                        edit_id,
                         new_name,
                         new_phone,
                         new_email,
@@ -145,10 +146,13 @@ def customers_page():
 
                     st.session_state.edit_id = None
                     show_message("Customer updated successfully ✅")
+
                     st.rerun()
 
             with col2:
-                if st.button("❌ Cancel", key="cancel_edit"):
+
+                if st.button("❌ Cancel", key=f"cancel_edit_{edit_id}"):
+
                     st.session_state.edit_id = None
                     st.rerun()
 
@@ -160,10 +164,11 @@ def customers_page():
     csv = df.to_csv(index=False).encode("utf-8")
 
     st.download_button(
-        "⬇ Download CSV",
+        label="⬇ Download Customers CSV",
         data=csv,
         file_name="customers.csv",
-        mime="text/csv"
+        mime="text/csv",
+        key="download_customers"
     )
 
     st.markdown("---")
@@ -190,19 +195,22 @@ def customers_page():
         col2.write(row.phone)
         col3.write(row.email)
         col4.write(row.company)
+
         col5.write(status_colors.get(row.status, row.status))
 
         with col6:
+
             c1, c2 = st.columns(2)
 
             with c1:
-                if st.button("✏️", key=f"edit_{row.id}"):
+                if st.button("✏️ Edit", key=f"edit_btn_{row.id}"):
+
                     st.session_state.edit_id = row.id
                     st.rerun()
 
             with c2:
                 if role == "Admin":
-                    if st.button("🗑️", key=f"del_{row.id}"):
+                    if st.button("🗑️ Delete", key=f"delete_btn_{row.id}"):
 
                         delete_customer(row.id)
                         show_message("Customer deleted 🗑️")
