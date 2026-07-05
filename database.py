@@ -62,6 +62,8 @@ def init_db():
     )
     """)
 
+    cur.execute("ALTER TABLE quotations ADD COLUMN items TEXT")
+    
     # ---------------- USERS ----------------
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
