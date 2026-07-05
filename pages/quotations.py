@@ -66,8 +66,8 @@ def quotations_page():
 
         st.success(f"💰 Total: {total:.2f}")
 
-       if st.button("Save Quotation"):
-
+     if st.button("Save Quotation"):
+    
         if not st.session_state.quote_items:
             st.error("Please add items first")
             return
@@ -91,7 +91,7 @@ def quotations_page():
         st.session_state.quote_items = []
         st.success("Quotation saved successfully!")
         st.rerun()
-
+    
     st.markdown("---")
 
     # ---------------- LIST ----------------
