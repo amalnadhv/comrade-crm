@@ -296,6 +296,6 @@ def quotations_page():
                 )
 
             except Exception as e:
-            st.error(f"PDF Error: {e}")
+                st.error(f"PDF Error: {e}")
                 
             st.markdown("---")
