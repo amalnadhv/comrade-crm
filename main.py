@@ -39,7 +39,7 @@ def login():
                 "role": user[2]
             }
 
-            st.session_state.page = "Dashboard"  # IMPORTANT FIX
+            st.session_state.page = "Dashboard"
             st.rerun()
 
         else:
@@ -50,7 +50,6 @@ def login():
 def app():
 
     st.sidebar.title("📊 Comrade CRM")
-
     st.sidebar.write(f"👤 {st.session_state.user['username']}")
 
     # logout
@@ -62,11 +61,18 @@ def app():
     # ---------------- MENU ----------------
     menu = ["Dashboard", "Customers", "Leads", "Follow-ups", "Quotations", "Reports", "Settings"]
 
-    st.session_state.page = st.sidebar.radio(
+    # ensure valid page
+    if st.session_state.page not in menu:
+        st.session_state.page = "Dashboard"
+
+    # IMPORTANT FIX: DO NOT use key here
+    selected_page = st.sidebar.radio(
         "Navigation",
         menu,
         index=menu.index(st.session_state.page)
     )
+
+    st.session_state.page = selected_page
 
     st.sidebar.markdown("---")
 
