@@ -68,14 +68,14 @@ def init_db():
     )
     """)
 
-    conn.commit()
-    conn.close()
-
     cur.execute("PRAGMA table_info(quotations)")
     columns = [col[1] for col in cur.fetchall()]
 
     if "items" not in columns:
         cur.execute("ALTER TABLE quotations ADD COLUMN items TEXT")
+
+    conn.commit()
+    conn.close()
     
     # ---------------- USERS ----------------
     cur.execute("""
