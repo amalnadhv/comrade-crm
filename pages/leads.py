@@ -37,69 +37,80 @@ def leads_page():
             if submit and company and contact:
 
                 add_lead(
-                    company, contact, phone, email,
-                    source, status, str(followup_date),
-                    remarks, assigned_to
+                    company,
+                    contact,
+                    phone,
+                    email,
+                    source,
+                    status,
+                    str(followup_date),
+                    remarks,
+                    assigned_to
                 )
 
                 st.success("Lead saved!")
                 st.rerun()
 
     st.markdown("---")
+
+    # ---------------- LEADS GRID ----------------
     st.subheader("📋 All Leads")
 
     if df.empty:
         st.info("No leads found")
         return
 
-    for row in df.itertuples():
+    cols_per_row = 3
+    rows = [df.iloc[i:i + cols_per_row] for i in range(0, len(df), cols_per_row)]
 
-        company_img = f"https://ui-avatars.com/api/?name={row.company}&background=0D8ABC&color=fff&size=64"
-        person_img = f"https://ui-avatars.com/api/?name={row.contact_person}&background=FF6B6B&color=fff&size=64"
+    for row_group in rows:
 
-        with st.container(border=True):
+        cols = st.columns(cols_per_row)
 
-            # ---------------- TOP SECTION ----------------
-            col_img, col_main, col_meta = st.columns([1, 4, 2])
+        for col, row in zip(cols, row_group.itertuples()):
 
-            with col_img:
-                st.image(company_img, width=60)
+            company_img = f"https://ui-avatars.com/api/?name={row.company}&background=0D8ABC&color=fff&size=64"
+            person_img = f"https://ui-avatars.com/api/?name={row.contact_person}&background=FF6B6B&color=fff&size=64"
 
-            with col_main:
-                st.markdown(f"### 🏢 {row.company}")
-                st.markdown(f"👤 **{row.contact_person}**")
-                st.caption(f"📞 {row.phone or '-'} | ✉️ {row.email or '-'}")
+            with col:
 
-            with col_meta:
-                st.markdown(f"🏷️ **{row.status}**")
-                st.caption(f"📍 {row.assigned_to or 'Unassigned'}")
+                with st.container(border=True):
 
-                st.image(person_img, width=40)
+                    # -------- IMAGE + TITLE --------
+                    st.image(company_img, width=55)
 
-            st.markdown("---")
+                    st.markdown(f"### 🏢 {row.company}")
+                    st.caption(f"👤 {row.contact_person}")
 
-            # ---------------- ACTIONS ----------------
-            b1, b2, _ = st.columns([1, 1, 6])
+                    # -------- DETAILS --------
+                    st.markdown(f"📞 {row.phone or '-'}")
+                    st.markdown(f"✉️ {row.email or '-'}")
 
-            with b1:
-                if st.button("➡ Convert", key=f"conv_{row.id}"):
+                    st.markdown(f"🏷️ **{row.status}**")
+                    st.caption(f"📍 Assigned: {row.assigned_to or 'Unassigned'}")
 
-                    add_customer(
-                        row.contact_person,
-                        row.phone,
-                        row.email,
-                        row.company,
-                        "New"
-                    )
+                    st.image(person_img, width=30)
 
-                    delete_lead(row.id)
+                    st.markdown("---")
 
-                    st.success("Converted to Customer")
-                    st.rerun()
+                    # -------- ACTIONS --------
+                    if st.button("➡ Convert", key=f"conv_{row.id}"):
 
-            with b2:
-                if st.button("🗑 Delete", key=f"del_{row.id}"):
+                        add_customer(
+                            row.contact_person,
+                            row.phone,
+                            row.email,
+                            row.company,
+                            "New"
+                        )
 
-                    delete_lead(row.id)
-                    st.warning("Lead deleted")
-                    st.rerun()
+                        delete_lead(row.id)
+
+                        st.success("Converted to Customer")
+                        st.rerun()
+
+                    if st.button("🗑 Delete", key=f"del_{row.id}"):
+
+                        delete_lead(row.id)
+                        st.warning("Lead deleted")
+                        st.rerun()
