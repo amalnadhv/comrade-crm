@@ -14,7 +14,7 @@ from database import (
 
 def followups_page():
 
-    st.title("📅 Follow-ups")
+    st.title("📅 Follow-ups Dashboard")
 
     # ---------------- LOAD DATA ----------------
     df = get_followups()
@@ -56,15 +56,15 @@ def followups_page():
         if type_choice == "Lead":
             selected_id = st.selectbox(
                 "Select Lead",
-                list(lead_map.keys()),
-                format_func=lambda x: lead_map[x],
+                list(lead_map.keys()) if lead_map else [],
+                format_func=lambda x: lead_map.get(x, ""),
                 key="add_lead"
             )
         else:
             selected_id = st.selectbox(
                 "Select Customer",
-                list(customer_map.keys()),
-                format_func=lambda x: customer_map[x],
+                list(customer_map.keys()) if customer_map else [],
+                format_func=lambda x: customer_map.get(x, ""),
                 key="add_customer"
             )
 
@@ -104,80 +104,108 @@ def followups_page():
 
     st.markdown("---")
 
-    # ---------------- DISPLAY ----------------
     if df.empty:
         st.info("No follow-ups found")
         return
 
-    st.subheader("📅 All Follow-ups")
+    # ---------------- STATUS BADGES ----------------
+    status_badge = {
+        "Pending": "🟠 Pending",
+        "Done": "🟢 Done",
+        "Overdue": "🔴 Overdue"
+    }
 
     # ---------------- EDIT STATE ----------------
     if "edit_id" not in st.session_state:
         st.session_state.edit_id = None
 
-    for row in df.itertuples():
+    # ---------------- GRID VIEW ----------------
+    st.subheader("📅 All Follow-ups")
 
-        col1, col2, col3, col4, col5, col6 = st.columns([1,2,2,2,2,2])
+    cols_per_row = 3
+    rows = [df.iloc[i:i + cols_per_row] for i in range(0, len(df), cols_per_row)]
 
-        col1.write(row.id)
-        col2.write(row.lead_id)
-        col3.write(row.title)
-        col4.write(row.followup_date)
-        col5.write(row.status)
+    for row_group in rows:
 
-        # ---------------- ACTIONS ----------------
-        with col6:
-            edit_btn, delete_btn = st.columns(2)
+        cols = st.columns(cols_per_row)
 
-            # EDIT BUTTON
-            with edit_btn:
-                if st.button("✏️", key=f"edit_{row.id}"):
-                    st.session_state.edit_id = row.id
+        for col, row in zip(cols, row_group.itertuples()):
 
-            # DELETE BUTTON
-            with delete_btn:
-                if st.button("🗑", key=f"del_{row.id}"):
-                    delete_followup(row.id)
-                    st.rerun()
+            with col:
 
-        # ---------------- EDIT PANEL ----------------
-        if st.session_state.edit_id == row.id:
+                with st.container(border=True):
 
-            st.info(f"Editing Follow-up ID: {row.id}")
+                    # -------- HEADER --------
+                    st.markdown(f"### 📌 {row.title}")
 
-            new_title = st.text_input(
-                "Title",
-                value=row.title,
-                key=f"title_{row.id}"
-            )
+                    st.caption(f"📅 {row.followup_date}")
+                    st.markdown(f"🏷️ {status_badge.get(row.status, row.status)}")
+
+                    st.markdown(f"🔗 ID: {row.lead_id}")
+
+                    if row.remarks:
+                        st.caption(f"📝 {row.remarks}")
+
+                    st.markdown("---")
+
+                    # -------- ACTIONS --------
+                    b1, b2 = st.columns(2)
+
+                    with b1:
+                        if st.button("✏️", key=f"edit_{row.id}"):
+
+                            st.session_state.edit_id = row.id
+                            st.rerun()
+
+                    with b2:
+                        if st.button("🗑", key=f"del_{row.id}"):
+
+                            delete_followup(row.id)
+                            st.warning("Deleted")
+                            st.rerun()
+
+    # ---------------- EDIT PANEL ----------------
+    if st.session_state.edit_id is not None:
+
+        edit_id = st.session_state.edit_id
+        edit_row = df[df["id"] == edit_id]
+
+        if not edit_row.empty:
+
+            edit_row = edit_row.iloc[0]
+
+            st.markdown("---")
+            st.subheader("✏️ Edit Follow-up")
+
+            new_title = st.text_input("Title", value=edit_row["title"], key=f"title_{edit_id}")
 
             new_date = st.date_input(
                 "Date",
-                value=pd.to_datetime(row.followup_date),
-                key=f"date_{row.id}"
+                value=pd.to_datetime(edit_row["followup_date"]),
+                key=f"date_{edit_id}"
             )
 
             new_status = st.selectbox(
                 "Status",
                 ["Pending", "Done", "Overdue"],
-                index=["Pending", "Done", "Overdue"].index(row.status),
-                key=f"status_{row.id}"
+                index=["Pending", "Done", "Overdue"].index(edit_row["status"]),
+                key=f"status_{edit_id}"
             )
 
             new_remarks = st.text_area(
                 "Remarks",
-                value=row.remarks,
-                key=f"remarks_{row.id}"
+                value=edit_row["remarks"],
+                key=f"remarks_{edit_id}"
             )
 
             c1, c2 = st.columns(2)
 
             with c1:
-                if st.button("💾 Update", key=f"save_{row.id}"):
+                if st.button("💾 Update", key=f"save_{edit_id}"):
 
                     update_followup(
-                        row.id,
-                        row.lead_id,
+                        edit_id,
+                        edit_row["lead_id"],
                         new_title,
                         str(new_date),
                         new_status,
@@ -185,11 +213,11 @@ def followups_page():
                     )
 
                     st.session_state.edit_id = None
-                    st.success("Updated successfully!")
+                    st.success("Updated successfully")
                     st.rerun()
 
             with c2:
-                if st.button("❌ Cancel", key=f"cancel_{row.id}"):
+                if st.button("❌ Cancel", key=f"cancel_{edit_id}"):
 
                     st.session_state.edit_id = None
                     st.rerun()
@@ -205,4 +233,29 @@ def followups_page():
     if today_df.empty:
         st.info("No follow-ups today")
     else:
-        st.dataframe(today_df, use_container_width=True)
+
+        cols = st.columns(3)
+
+        for col, row in zip(cols, today_df.itertuples()):
+
+            with col:
+
+                with st.container(border=True):
+
+                    st.markdown(f"### 📌 {row.title}")
+                    st.markdown(f"📅 {row.followup_date}")
+                    st.markdown(f"🏷️ {status_badge.get(row.status, row.status)}")
+
+                    if st.button("✔ Mark Done", key=f"done_{row.id}"):
+
+                        update_followup(
+                            row.id,
+                            row.lead_id,
+                            row.title,
+                            row.followup_date,
+                            "Done",
+                            row.remarks
+                        )
+
+                        st.success("Marked as Done")
+                        st.rerun()
