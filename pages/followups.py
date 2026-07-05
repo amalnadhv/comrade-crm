@@ -2,36 +2,27 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 
-from database import add_followup, get_followups, get_leads, get_customers
+from database import (
+    add_followup,
+    get_followups,
+    get_leads,
+    get_customers,
+    delete_followup
+)
 
 
 def followups_page():
 
     st.title("📅 Follow-ups")
 
-    # ---------------- LOAD FOLLOWUPS ----------------
+    # ---------------- LOAD ----------------
     df = get_followups()
 
     if df is None:
         df = pd.DataFrame()
 
-    # ---------------- FIX: LEADS ----------------
+    # ---------------- LEADS ----------------
     leads = get_leads()
-    if leads is None:
-        leads = pd.DataFrame()
-
-    # ---------------- FIX: CUSTOMERS ----------------
-    customers = get_customers()
-
-    # 👉 IMPORTANT FIX: convert list → DataFrame
-    if customers is None:
-        customers = pd.DataFrame()
-    else:
-        customers = pd.DataFrame(
-            customers,
-            columns=["id", "name", "phone", "email", "company", "status"]
-        )
-
     if leads is None:
         leads = pd.DataFrame()
     else:
@@ -39,6 +30,16 @@ def followups_page():
             leads,
             columns=["id", "company", "contact_person", "phone", "email",
                      "source", "status", "followup_date", "remarks", "assigned_to"]
+        )
+
+    # ---------------- CUSTOMERS ----------------
+    customers = get_customers()
+    if customers is None:
+        customers = pd.DataFrame()
+    else:
+        customers = pd.DataFrame(
+            customers,
+            columns=["id", "name", "phone", "email", "company", "status"]
         )
 
     # ---------------- MAPS ----------------
@@ -87,10 +88,9 @@ def followups_page():
 
         remarks = st.text_area("Remarks")
 
-        if st.button("Save Follow-up"):
+        if st.button("➕ Save Follow-up"):
 
             if title:
-
                 add_followup(
                     selected_id,
                     title,
@@ -113,11 +113,28 @@ def followups_page():
         return
 
     st.subheader("📅 All Follow-ups")
-    st.dataframe(df, use_container_width=True)
+
+    for row in df.itertuples():
+
+        col1, col2, col3, col4, col5, col6 = st.columns([2,2,2,2,2,1])
+
+        col1.write(row.id)
+        col2.write(row.lead_id)
+        col3.write(row.title)
+        col4.write(row.followup_date)
+        col5.write(row.status)
+
+        # ---------------- DELETE ----------------
+        with col6:
+            if st.button("🗑", key=f"del_{row.id}"):
+
+                delete_followup(row.id)
+                st.rerun()
 
     # ---------------- TODAY ----------------
     today = str(date.today())
 
+    st.markdown("---")
     st.subheader("🔥 Today's Follow-ups")
 
     today_df = df[df["followup_date"] == today]
