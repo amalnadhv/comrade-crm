@@ -235,51 +235,87 @@ def quotations_page():
         st.session_state.quote_items = []
         st.rerun()
 
-    # list
-    st.markdown("---")
-    st.subheader("All Quotations")
+# ================= MODERN QUOTATION LIST UI =================
+st.markdown("---")
+st.subheader("📋 All Quotations")
 
-    df = get_quotations()
+df = get_quotations()
 
-    for _, row in df.iterrows():
+if df is None or len(df) == 0:
+    st.info("No quotations found")
+    return
 
-        st.markdown(f"""
-        ### {row['customer_name']}
-        **Total:** {row['total']} | **Status:** {row['status']}
-        """)
+status_badge = {
+    "Draft": "🟡 Draft",
+    "Sent": "🔵 Sent",
+    "Approved": "🟢 Approved",
+    "Rejected": "🔴 Rejected"
+}
 
-        c1, c2, c3 = st.columns(3)
+# 3 cards per row (modern SaaS layout)
+cols_per_row = 3
+rows = [df.iloc[i:i + cols_per_row] for i in range(0, len(df), cols_per_row)]
 
-        if c1.button("✏ Edit", key=f"e_{row['id']}"):
-            st.session_state.edit_id = row["id"]
-            st.session_state.edit_loaded = False
-            st.rerun()
+for group in rows:
 
-        if c2.button("🗑 Delete", key=f"d_{row['id']}"):
-            delete_quotation(row["id"])
-            st.rerun()
+    cols = st.columns(cols_per_row)
 
-        # ================= PDF FIXED =================
-        safe_row = row.to_dict()
+    for col, row in zip(cols, group.itertuples()):
 
-        items = safe_row.get("items", [])
+        with col:
 
-        if isinstance(items, str):
-            try:
-                items = json.loads(items)
-            except:
-                items = []
+            # CARD UI
+            with st.container(border=True):
 
-        safe_row["items"] = items
+                # ---------------- HEADER ----------------
+                st.markdown(f"### 💼 {row.customer_name}")
+                st.caption(f"🆔 ID: {row.id}")
 
-        pdf_buffer = generate_quotation_pdf(safe_row)
+                # ---------------- STATUS ----------------
+                st.markdown(f"🏷️ {status_badge.get(row.status, row.status)}")
 
-        c3.download_button(
-            label="📄 PDF",
-            data=pdf_buffer,
-            file_name=f"quotation_{row['id']}.pdf",
-            mime="application/pdf",
-            key=f"pdf_{row['id']}"
-        )
+                # ---------------- AMOUNTS ----------------
+                st.markdown(f"💰 **Total:** {row.total}")
+                st.caption(f"📦 Subtotal: {row.subtotal}")
 
+                st.markdown("---")
+
+                # ---------------- ACTION ROW ----------------
+                a1, a2, a3 = st.columns(3)
+
+                with a1:
+                    if st.button("✏️", key=f"edit_{row.id}"):
+                        st.session_state.edit_id = row.id
+                        st.session_state.edit_loaded = False
+                        st.rerun()
+
+                with a2:
+                    if st.button("🗑️", key=f"del_{row.id}"):
+                        delete_quotation(row.id)
+                        st.rerun()
+
+                with a3:
+
+                    # SAFE JSON parsing (UNCHANGED LOGIC)
+                    safe_row = row.to_dict()
+
+                    items = safe_row.get("items", [])
+
+                    if isinstance(items, str):
+                        try:
+                            items = json.loads(items)
+                        except:
+                            items = []
+
+                    safe_row["items"] = items
+
+                    pdf_buffer = generate_quotation_pdf(safe_row)
+
+                    st.download_button(
+                        "📄",
+                        data=pdf_buffer,
+                        file_name=f"quotation_{row.id}.pdf",
+                        mime="application/pdf",
+                        key=f"pdf_{row.id}"
+                    )
         st.markdown("---")
