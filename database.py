@@ -1,17 +1,14 @@
 import sqlite3
-import os
+import pandas as pd
 
-DB_NAME = os.path.join(os.getcwd(), "crm.db")
+DB_NAME = "crm.db"
 
-
-def get_connection():
-    return sqlite3.connect(DB_NAME, check_same_thread=False)
-
-
+# ---------------- INIT DB ----------------
 def init_db():
-    conn = get_connection()
+    conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
+    # Customers table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS customers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,12 +20,28 @@ def init_db():
     )
     """)
 
+    # Leads table (future module)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS leads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company TEXT,
+        contact_person TEXT,
+        phone TEXT,
+        email TEXT,
+        source TEXT,
+        status TEXT,
+        followup_date TEXT,
+        remarks TEXT
+    )
+    """)
+
     conn.commit()
     conn.close()
 
 
+# ---------------- CUSTOMERS ----------------
 def add_customer(name, phone, email, company, status):
-    conn = get_connection()
+    conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
     cur.execute("""
@@ -41,41 +54,57 @@ def add_customer(name, phone, email, company, status):
 
 
 def get_customers():
-    conn = get_connection()
+    conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM customers ORDER BY id DESC")
+    cur.execute("SELECT * FROM customers")
     rows = cur.fetchall()
 
     conn.close()
     return rows
 
 
-def update_customer(id, name, phone, email, company, status):
-    conn = get_connection()
+def update_customer(customer_id, name, phone, email, company, status):
+    conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
     cur.execute("""
         UPDATE customers
         SET name=?, phone=?, email=?, company=?, status=?
         WHERE id=?
-    """, (name, phone, email, company, status, id))
+    """, (name, phone, email, company, status, customer_id))
 
     conn.commit()
     conn.close()
 
 
-def delete_customer(id):
-    conn = get_connection()
+def delete_customer(customer_id):
+    conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
-    cur.execute("DELETE FROM customers WHERE id=?", (id,))
+    cur.execute("DELETE FROM customers WHERE id=?", (customer_id,))
 
     conn.commit()
     conn.close()
 
 
-def load_customers_df():
-    import pandas as pd
-    rows = get_customers()
-    return pd.DataFrame(rows, columns=["id", "name", "phone", "email", "company", "status"])
+# ---------------- LEADS (READY FOR NEXT STEP) ----------------
+def add_lead(company, contact_person, phone, email, source, status, followup_date, remarks):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO leads 
+        (company, contact_person, phone, email, source, status, followup_date, remarks)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (company, contact_person, phone, email, source, status, followup_date, remarks))
+
+    conn.commit()
+    conn.close()
+
+
+def get_leads():
+    conn = sqlite3.connect(DB_NAME)
+    df = pd.read_sql_query("SELECT * FROM leads", conn)
+    conn.close()
+    return df
