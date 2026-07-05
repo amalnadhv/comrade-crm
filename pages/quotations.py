@@ -13,15 +13,11 @@ def quotations_page():
     if "quote_items" not in st.session_state:
         st.session_state.quote_items = []
 
-    # ---------------- LOAD DATA ----------------
-    df = get_quotations()
-    if df is None:
-        df = pd.DataFrame()
-
+    # ---------------- LOAD CUSTOMERS ----------------
     customers = get_customers()
+
     if customers is None:
         customers = pd.DataFrame()
-
     else:
         customers = pd.DataFrame(
             customers,
@@ -75,12 +71,12 @@ def quotations_page():
                 st.error("Enter item name")
 
         # ---------------- SHOW ITEMS ----------------
+        subtotal = 0
+
         if st.session_state.quote_items:
             st.subheader("🧾 Items")
 
-            subtotal = 0
-
-            for i, item in enumerate(st.session_state.quote_items):
+            for item in st.session_state.quote_items:
                 col1, col2, col3, col4 = st.columns(4)
 
                 col1.write(item["item"])
@@ -89,9 +85,7 @@ def quotations_page():
                 col4.write(item["total"])
 
                 subtotal += item["total"]
-
         else:
-            subtotal = 0
             st.info("No items added yet")
 
         st.markdown("---")
@@ -109,6 +103,8 @@ def quotations_page():
             status = st.selectbox("Status", ["Draft", "Sent", "Approved", "Rejected"])
 
         # ---------------- VERSION ----------------
+        df = get_quotations()
+
         existing_versions = df[df["customer_name"] == customer_map.get(customer_id, "")]
         version = f"V{len(existing_versions) + 1}"
 
@@ -149,6 +145,9 @@ def quotations_page():
     # ---------------- LIST ----------------
     st.markdown("---")
     st.subheader("All Quotations")
+
+    # 🔥 FIX: ALWAYS REFRESH DATA HERE
+    df = get_quotations()
 
     if df.empty:
         st.info("No quotations found")
