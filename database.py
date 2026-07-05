@@ -325,4 +325,17 @@ def update_followup(followup_id, lead_id, title, followup_date, status, remarks)
     conn.commit()
     conn.close()
 
-    
+
+def get_customers():
+    import sqlite3
+    import pandas as pd
+
+    conn = sqlite3.connect(DB_NAME)
+
+    df = pd.read_sql_query(
+        "SELECT * FROM customers",
+        conn
+    )
+
+    conn.close()
+    return df
