@@ -1,4 +1,10 @@
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+)
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
@@ -6,55 +12,77 @@ from io import BytesIO
 
 def generate_quotation_pdf(data):
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer)
 
-    elements = []
+    doc = SimpleDocTemplate(buffer)
     styles = getSampleStyleSheet()
 
+    elements = []
+
     # Title
-    title = Paragraph("QUOTATION", styles["Title"])
-    elements.append(title)
-    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("QUOTATION", styles["Title"]))
+    elements.append(Spacer(1, 15))
 
-    # Customer Info
-    info = Paragraph(f"Customer: {data['customer_name']}", styles["Normal"])
-    elements.append(info)
-    elements.append(Spacer(1, 12))
+    # Customer
+    elements.append(
+        Paragraph(f"<b>Customer:</b> {data.get('customer_name', '')}", styles["Normal"])
+    )
+    elements.append(Spacer(1, 15))
 
-    # Items Table
+    # Table
     table_data = [["Item", "Qty", "Price", "Total"]]
 
-    for item in data["items"]:
+    items = data.get("items", [])
+
+    subtotal = 0
+
+    for item in items:
+
+        qty = float(item.get("qty", 0))
+        price = float(item.get("price", 0))
+        total = qty * price
+
+        subtotal += total
+
         table_data.append([
-            item["item"],
-            item["qty"],
-            item["price"],
-            item["total"]
+            str(item.get("item", "")),
+            qty,
+            f"{price:.2f}",
+            f"{total:.2f}"
         ])
 
     table = Table(table_data)
+
     table.setStyle(TableStyle([
-        ("BACKGROUND", (0,0), (-1,0), colors.grey),
-        ("TEXTCOLOR", (0,0), (-1,0), colors.white),
-        ("GRID", (0,0), (-1,-1), 0.5, colors.black),
-        ("PADDING", (0,0), (-1,-1), 6),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.darkblue),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+        ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
     ]))
 
     elements.append(table)
-    elements.append(Spacer(1, 12))
 
-    # Summary
+    elements.append(Spacer(1, 15))
+
+    discount = float(data.get("discount", 0))
+    tax = float(data.get("tax", 0))
+    total = float(data.get("total", subtotal))
+
     summary = Paragraph(
-        f"Subtotal: {data['subtotal']} <br/>"
-        f"Discount: {data['discount']}% <br/>"
-        f"Tax: {data['tax']}% <br/>"
-        f"Total: {data['total']}",
-        styles["Normal"]
+        f"""
+        <b>Subtotal:</b> {subtotal:.2f}<br/>
+        <b>Discount:</b> {discount:.2f}%<br/>
+        <b>Tax:</b> {tax:.2f}%<br/>
+        <b>Grand Total:</b> {total:.2f}
+        """,
+        styles["Normal"],
     )
 
     elements.append(summary)
 
     doc.build(elements)
+
     buffer.seek(0)
 
     return buffer
