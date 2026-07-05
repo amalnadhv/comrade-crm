@@ -3,8 +3,8 @@ import streamlit as st
 from database import init_db, validate_user
 
 from pages.dashboard import dashboard_page
-from pages.customers import customers_page
 from pages.leads import leads_page
+from pages.customers import customers_page
 from pages.followups import followups_page
 from pages.quotations import quotations_page
 from pages.reports import reports_page
@@ -50,6 +50,28 @@ def login():
 # ---------------- APP ----------------
 def app():
 
+    # ---------------- CSS (BUTTON DESIGN) ----------------
+    st.markdown("""
+    <style>
+    div.stButton > button {
+        width: 100%;
+        height: 45px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    div.stButton > button:hover {
+        transform: scale(1.02);
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+    }
+
+    section[data-testid="stSidebar"] div.stButton {
+        margin-bottom: 6px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # ---------------- SIDEBAR ----------------
     st.sidebar.title("📊 Comrade CRM")
     st.sidebar.write(f"👤 {st.session_state.user['username']}")
@@ -58,10 +80,11 @@ def app():
         st.session_state.user = None
         st.rerun()
 
+    # ---------------- MENU (LEADS ABOVE CUSTOMERS) ----------------
     menu = {
         "Dashboard": dashboard_page,
-        "Customers": customers_page,
         "Leads": leads_page,
+        "Customers": customers_page,
         "Follow-ups": followups_page,
         "Quotations": quotations_page,
         "Reports": reports_page,
@@ -69,10 +92,21 @@ def app():
     }
 
     st.sidebar.markdown("---")
+    st.sidebar.markdown("## 📌 Navigation")
 
-    # ---------------- NAVIGATION ----------------
+    # ---------------- BUTTON NAVIGATION ----------------
+    colors = {
+        "Dashboard": "#4CAF50",
+        "Leads": "#2196F3",
+        "Customers": "#FF9800",
+        "Follow-ups": "#9C27B0",
+        "Quotations": "#00BCD4",
+        "Reports": "#607D8B",
+        "Settings": "#F44336"
+    }
+
     for label in menu.keys():
-        if st.sidebar.button(label):
+        if st.sidebar.button(f"⬤ {label}", key=label):
             st.session_state.page = label
             st.rerun()
 
