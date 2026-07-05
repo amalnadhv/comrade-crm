@@ -1,147 +1,82 @@
 import streamlit as st
 import pandas as pd
-from database import (
-    get_leads,
-    add_lead,
-    convert_lead_to_customer,
-    delete_lead
-)
+from database import get_leads, add_lead, delete_lead, add_customer
 
 
 def leads_page():
 
     st.title("🎯 Leads")
 
-    # ---------------- SUCCESS MESSAGE ----------------
-    if st.session_state.get("lead_saved"):
-        st.success("✅ Lead saved successfully!")
-        st.session_state["lead_saved"] = False
-
-    # ---------------- LOAD LEADS ----------------
     df = get_leads()
-
     if df is None:
         df = pd.DataFrame()
 
-    # ---------------- ADD LEAD ----------------
     st.subheader("➕ Add Lead")
 
-    with st.form("add_lead_form"):
+    with st.form("add_lead"):
 
         company = st.text_input("Company")
         contact = st.text_input("Contact Person")
         phone = st.text_input("Phone")
         email = st.text_input("Email")
 
-        # SOURCE
-        source_options = [
-            "Website", "Facebook", "Instagram", "LinkedIn",
-            "Referral", "Cold Call", "Advertisement", "Walk-in", "Other"
-        ]
-
-        source_choice = st.selectbox("Source", source_options, key="source_select")
-
-        source_custom = ""
-        if source_choice == "Other":
-            source_custom = st.text_input("Enter Source", key="custom_source")
-
-        source = source_custom if source_choice == "Other" else source_choice
-
-        # STATUS
-        status = st.selectbox(
-            "Status",
-            ["New", "Contacted", "Won", "Lost"],
-            key="status_select"
-        )
-
-        # FOLLOWUP DATE
+        source = st.selectbox("Source", ["Website", "Facebook", "Referral", "Other"])
+        status = st.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
         followup_date = st.date_input("Follow-up Date")
-
         remarks = st.text_area("Remarks")
-        assigned_to = st.text_input("Assign To (username)")
+        assigned_to = st.text_input("Assign To")
 
-        submitted = st.form_submit_button("💾 Save Lead")
+        submit = st.form_submit_button("Save Lead")
 
-        if submitted:
+        if submit and company and contact:
 
-            if company and contact:
+            add_lead(
+                company, contact, phone, email,
+                source, status, str(followup_date),
+                remarks, assigned_to
+            )
 
-                add_lead(
-                    company,
-                    contact,
-                    phone,
-                    email,
-                    source,
-                    status,
-                    str(followup_date),
-                    remarks,
-                    assigned_to
-                )
-
-                st.session_state["lead_saved"] = True
-                st.rerun()
-
-            else:
-                st.warning("⚠️ Company and Contact are required")
+            st.success("Lead saved!")
+            st.rerun()
 
     st.markdown("---")
 
-    # ---------------- TABLE ----------------
-    st.subheader("📋 All Leads")
+    st.subheader("📋 Leads")
 
     if df.empty:
         st.info("No leads found")
         return
 
-    # ---------------- ROLE ----------------
-    user = st.session_state.get("user", {})
-    role = user.get("role", "User")
-    username = user.get("username", "")
-
-    if role != "Admin" and "assigned_to" in df.columns:
-        df = df[df["assigned_to"] == username]
-
-    # ---------------- DISPLAY ----------------
     for row in df.itertuples():
 
-        col1, col2, col3, col4, col5 = st.columns([2,2,2,1,2])
+        col1, col2, col3, col4 = st.columns(4)
 
         col1.write(row.company)
         col2.write(row.contact_person)
-        col3.write(row.phone)
-        col4.write(row.status)
-        col5.write(row.assigned_to)
+        col3.write(row.status)
+        col4.write(row.assigned_to)
 
         c1, c2 = st.columns(2)
 
-        # ---------------- CONVERT ----------------
         with c1:
             if st.button("➡ Convert", key=f"conv_{row.id}"):
 
-                if role == "Admin":
+                add_customer(
+                    row.contact_person,
+                    row.phone,
+                    row.email,
+                    row.company,
+                    "New"
+                )
 
-                    convert_lead_to_customer(
-                        row.contact_person,
-                        row.phone,
-                        row.email,
-                        row.company
-                    )
+                delete_lead(row.id)
 
-                    delete_lead(row.id)
+                st.success("Converted to Customer")
+                st.rerun()
 
-                    st.success("✅ Lead converted to customer!")
-                    st.rerun()
-
-                else:
-                    st.error("❌ Only Admin can convert leads")
-
-        # ---------------- DELETE ----------------
         with c2:
             if st.button("🗑 Delete", key=f"del_{row.id}"):
 
-                if role == "Admin":
-                    delete_lead(row.id)
-                    st.success("🗑 Lead deleted")
-                    st.rerun()
-                else:
-                    st.error("❌ Only Admin can delete leads")
+                delete_lead(row.id)
+                st.warning("Lead deleted")
+                st.rerun()
