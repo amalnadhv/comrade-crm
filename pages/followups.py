@@ -7,7 +7,8 @@ from database import (
     get_followups,
     get_leads,
     get_customers,
-    delete_followup
+    delete_followup,
+    update_followup
 )
 
 
@@ -15,13 +16,12 @@ def followups_page():
 
     st.title("📅 Follow-ups")
 
-    # ---------------- LOAD ----------------
     df = get_followups()
 
     if df is None:
         df = pd.DataFrame()
 
-    # ---------------- LEADS ----------------
+    # ---------------- LOAD LEADS ----------------
     leads = get_leads()
     if leads is None:
         leads = pd.DataFrame()
@@ -32,7 +32,7 @@ def followups_page():
                      "source", "status", "followup_date", "remarks", "assigned_to"]
         )
 
-    # ---------------- CUSTOMERS ----------------
+    # ---------------- LOAD CUSTOMERS ----------------
     customers = get_customers()
     if customers is None:
         customers = pd.DataFrame()
@@ -65,16 +65,12 @@ def followups_page():
                 options=list(lead_map.keys()),
                 format_func=lambda x: lead_map[x]
             )
-
-        elif type_choice == "Customer" and customer_map:
+        else:
             selected_id = st.selectbox(
                 "Select Customer",
                 options=list(customer_map.keys()),
                 format_func=lambda x: customer_map[x]
             )
-        else:
-            st.warning("No data available")
-            return
 
         title = st.text_input("Title")
 
@@ -89,7 +85,6 @@ def followups_page():
         remarks = st.text_area("Remarks")
 
         if st.button("➕ Save Follow-up"):
-
             if title:
                 add_followup(
                     selected_id,
@@ -98,10 +93,8 @@ def followups_page():
                     status,
                     remarks
                 )
-
                 st.success("Follow-up added!")
                 st.rerun()
-
             else:
                 st.error("Title is required")
 
@@ -116,7 +109,7 @@ def followups_page():
 
     for row in df.itertuples():
 
-        col1, col2, col3, col4, col5, col6 = st.columns([2,2,2,2,2,1])
+        col1, col2, col3, col4, col5, col6 = st.columns([2,2,2,2,2,2])
 
         col1.write(row.id)
         col2.write(row.lead_id)
@@ -124,12 +117,40 @@ def followups_page():
         col4.write(row.followup_date)
         col5.write(row.status)
 
-        # ---------------- DELETE ----------------
+        # ---------------- EDIT ----------------
         with col6:
-            if st.button("🗑", key=f"del_{row.id}"):
+            edit, delete = st.columns(2)
 
-                delete_followup(row.id)
-                st.rerun()
+            # EDIT BUTTON
+            with edit:
+                if st.button("✏️", key=f"edit_{row.id}"):
+
+                    with st.expander("Edit Follow-up", expanded=True):
+
+                        new_title = st.text_input("Title", row.title)
+                        new_date = st.date_input("Date", value=pd.to_datetime(row.followup_date))
+                        new_status = st.selectbox("Status", ["Pending", "Done", "Overdue"], index=0)
+                        new_remarks = st.text_area("Remarks", row.remarks)
+
+                        if st.button("Update", key=f"upd_{row.id}"):
+
+                            update_followup(
+                                row.id,
+                                row.lead_id,
+                                new_title,
+                                str(new_date),
+                                new_status,
+                                new_remarks
+                            )
+
+                            st.success("Updated!")
+                            st.rerun()
+
+            # DELETE BUTTON
+            with delete:
+                if st.button("🗑", key=f"del_{row.id}"):
+                    delete_followup(row.id)
+                    st.rerun()
 
     # ---------------- TODAY ----------------
     today = str(date.today())
