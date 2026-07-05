@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
+import json
 
 from database import add_quotation, get_quotations, get_customers
 
 
 def quotations_page():
 
-    st.title("💼 Quotations")
+    st.title("💼 Quotations (Pro Version)")
 
     df = get_quotations()
     if df is None:
@@ -30,61 +31,111 @@ def quotations_page():
         for row in customers.itertuples():
             customer_map[row.id] = f"{row.name} ({row.company})"
 
-    # ---------------- ADD QUOTATION ----------------
-    with st.expander("➕ Create Quotation"):
+    # ---------------- SESSION ITEMS ----------------
+    if "items" not in st.session_state:
+        st.session_state.items = []
 
-        if not customer_map:
-            st.warning("No customers found")
-            return
+    # ---------------- ADD ITEMS ----------------
+    with st.expander("➕ Add Items"):
 
-        customer_id = st.selectbox(
-            "Select Customer",
-            list(customer_map.keys()),
-            format_func=lambda x: customer_map[x]
-        )
-
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
         with col1:
-            amount = st.number_input("Amount", min_value=0.0, step=100.0)
-            discount = st.number_input("Discount (%)", min_value=0.0, max_value=100.0, step=1.0)
+            item_name = st.text_input("Item Name")
 
         with col2:
-            tax = st.number_input("Tax (%)", min_value=0.0, max_value=100.0, step=1.0)
-            status = st.selectbox("Status", ["Draft", "Sent", "Approved", "Rejected"])
+            qty = st.number_input("Qty", min_value=1, step=1)
 
-        # ---------------- VERSION LOGIC ----------------
-        existing_versions = df[df["customer_name"] == customer_map.get(customer_id, "")]
+        with col3:
+            price = st.number_input("Price", min_value=0.0)
 
-        next_version = f"V{len(existing_versions) + 1}"
+        if st.button("Add Item"):
 
-        st.info(f"📌 Version: {next_version}")
+            if item_name:
+                st.session_state.items.append({
+                    "item": item_name,
+                    "qty": qty,
+                    "price": price,
+                    "total": qty * price
+                })
 
-        # ---------------- CALCULATION ----------------
-        discounted_amount = amount - (amount * discount / 100)
-        total = discounted_amount + (discounted_amount * tax / 100)
+                st.success("Item added!")
+                st.rerun()
 
-        st.success(f"💰 Total: {total:.2f}")
+    # ---------------- SHOW ITEMS ----------------
+    if st.session_state.items:
 
-        if st.button("Save Quotation"):
+        st.subheader("🧾 Quotation Items")
 
-            customer_name = customer_map[customer_id]
+        subtotal = 0
 
-            add_quotation(
-                customer_name,
-                amount,
-                discount,
-                tax,
-                total,
-                status,
-                str(date.today()),
-                next_version
-            )
+        for i, item in enumerate(st.session_state.items):
 
-            st.success("Quotation saved!")
-            st.rerun()
+            c1, c2, c3, c4, c5 = st.columns(5)
+
+            c1.write(item["item"])
+            c2.write(item["qty"])
+            c3.write(item["price"])
+            c4.write(item["total"])
+
+            subtotal += item["total"]
+
+            if c5.button("❌", key=f"del_item_{i}"):
+
+                st.session_state.items.pop(i)
+                st.rerun()
+
+    else:
+        subtotal = 0
 
     st.markdown("---")
+
+    # ---------------- CUSTOMER ----------------
+    if not customer_map:
+        st.warning("No customers available")
+        return
+
+    customer_id = st.selectbox(
+        "Select Customer",
+        list(customer_map.keys()),
+        format_func=lambda x: customer_map[x]
+    )
+
+    discount = st.number_input("Discount (%)", 0.0, 100.0, 0.0)
+    tax = st.number_input("Tax (%)", 0.0, 100.0, 0.0)
+    status = st.selectbox("Status", ["Draft", "Sent", "Approved", "Rejected"])
+
+    version = f"V{len(df) + 1}"
+
+    st.info(f"📌 Version: {version}")
+
+    # ---------------- CALCULATION ----------------
+    after_discount = subtotal - (subtotal * discount / 100)
+    total = after_discount + (after_discount * tax / 100)
+
+    st.success(f"Subtotal: {subtotal}")
+    st.success(f"Total: {total}")
+
+    # ---------------- SAVE ----------------
+    if st.button("💾 Save Quotation"):
+
+        customer_name = customer_map[customer_id]
+
+        add_quotation(
+            customer_name,
+            st.session_state.items,
+            subtotal,
+            discount,
+            tax,
+            total,
+            status,
+            str(date.today()),
+            version
+        )
+
+        st.session_state.items = []
+        st.success("Quotation saved successfully!")
+        st.rerun()
 
     # ---------------- LIST ----------------
     st.subheader("All Quotations")
@@ -93,4 +144,18 @@ def quotations_page():
         st.info("No quotations found")
         return
 
-    st.dataframe(df, use_container_width=True)
+    for row in df.itertuples():
+
+        with st.expander(f"{row.customer_name} - {row.version}"):
+
+            st.write("Status:", row.status)
+            st.write("Total:", row.total)
+            st.write("Date:", row.created_on)
+
+            st.write("Items:")
+
+            try:
+                items = json.loads(row.items)
+                st.table(items)
+            except:
+                st.error("Invalid items data")
