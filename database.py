@@ -8,6 +8,22 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS quotations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_name TEXT,
+        items TEXT,
+        subtotal REAL,
+        discount REAL,
+        tax REAL,
+        total REAL,
+        status TEXT,
+        created_on TEXT,
+        version TEXT
+    )
+    """)
+    
     # ---------------- CUSTOMERS ----------------
     cur.execute("""
     CREATE TABLE IF NOT EXISTS customers (
