@@ -267,17 +267,33 @@ def quotations_page():
             delete_quotation(row["id"])
             st.rerun()
 
-        if c3.button("📄 PDF", key=f"p_{row['id']}"):
-            try:
-                pdf_file = generate_quotation_pdf(row)
+     if c3.button("📄 PDF", key=f"p_{row['id']}"):
 
-                with open(pdf_file, "rb") as f:
-                    st.download_button(
-                        "Download PDF",
-                        f,
-                        file_name=f"quotation_{row['id']}.pdf"
-                    )
-            except Exception as e:
-                st.error(f"PDF Error: {e}")
+        try:
+            # ---------------- SAFE ITEMS PARSING ----------------
+            items = row.get("items", [])
+    
+            if isinstance(items, str):
+                try:
+                    items = json.loads(items)
+                except:
+                    items = []
+    
+            # rebuild row safely for PDF
+            safe_row = dict(row)
+            safe_row["items"] = items
+    
+            # ---------------- GENERATE PDF ----------------
+            pdf_file = generate_quotation_pdf(safe_row)
+    
+            with open(pdf_file, "rb") as f:
+                st.download_button(
+                    "Download PDF",
+                    f,
+                    file_name=f"quotation_{row['id']}.pdf"
+                )
 
-        st.markdown("---")
+        except Exception as e:
+            st.error(f"PDF Error: {e}")
+
+         st.markdown("---")
