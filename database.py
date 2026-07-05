@@ -159,7 +159,20 @@ def add_lead(company, contact_person, phone, email, source, status, followup_dat
     conn.commit()
     conn.close()
 
+# ---------------- USERS / AUTH ----------------
+def validate_user(username, password):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
 
+    cur.execute("""
+        SELECT id, username, role FROM users
+        WHERE username=? AND password=?
+    """, (username, password))
+
+    user = cur.fetchone()
+    conn.close()
+    return user
+    
 def get_leads():
     conn = sqlite3.connect(DB_NAME)
     df = pd.read_sql_query("SELECT * FROM leads", conn)
