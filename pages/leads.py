@@ -5,43 +5,48 @@ from database import get_leads, add_lead, delete_lead, add_customer
 
 def leads_page():
 
-    st.title("🎯 Leads")
+    st.title("🎯 Leads Dashboard")
 
     df = get_leads()
     if df is None:
         df = pd.DataFrame()
 
-    st.subheader("➕ Add Lead")
+    # ---------------- ADD LEAD ----------------
+    with st.expander("➕ Add New Lead", expanded=False):
 
-    with st.form("add_lead"):
+        with st.form("add_lead"):
 
-        company = st.text_input("Company")
-        contact = st.text_input("Contact Person")
-        phone = st.text_input("Phone")
-        email = st.text_input("Email")
+            col1, col2 = st.columns(2)
 
-        source = st.selectbox("Source", ["Website", "Facebook", "Referral", "Other"])
-        status = st.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
-        followup_date = st.date_input("Follow-up Date")
-        remarks = st.text_area("Remarks")
-        assigned_to = st.text_input("Assign To")
+            with col1:
+                company = st.text_input("Company")
+                contact = st.text_input("Contact Person")
+                phone = st.text_input("Phone")
+                email = st.text_input("Email")
 
-        submit = st.form_submit_button("Save Lead")
+            with col2:
+                source = st.selectbox("Source", ["Website", "Facebook", "Referral", "Other"])
+                status = st.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
+                followup_date = st.date_input("Follow-up Date")
+                assigned_to = st.text_input("Assign To")
 
-        if submit and company and contact:
+            remarks = st.text_area("Remarks")
 
-            add_lead(
-                company, contact, phone, email,
-                source, status, str(followup_date),
-                remarks, assigned_to
-            )
+            submit = st.form_submit_button("💾 Save Lead")
 
-            st.success("Lead saved!")
-            st.rerun()
+            if submit and company and contact:
+
+                add_lead(
+                    company, contact, phone, email,
+                    source, status, str(followup_date),
+                    remarks, assigned_to
+                )
+
+                st.success("Lead saved!")
+                st.rerun()
 
     st.markdown("---")
-
-    st.subheader("📋 Leads")
+    st.subheader("📋 All Leads")
 
     if df.empty:
         st.info("No leads found")
@@ -49,34 +54,52 @@ def leads_page():
 
     for row in df.itertuples():
 
-        col1, col2, col3, col4 = st.columns(4)
+        company_img = f"https://ui-avatars.com/api/?name={row.company}&background=0D8ABC&color=fff&size=64"
+        person_img = f"https://ui-avatars.com/api/?name={row.contact_person}&background=FF6B6B&color=fff&size=64"
 
-        col1.write(row.company)
-        col2.write(row.contact_person)
-        col3.write(row.status)
-        col4.write(row.assigned_to)
+        with st.container(border=True):
 
-        c1, c2 = st.columns(2)
+            # ---------------- TOP SECTION ----------------
+            col_img, col_main, col_meta = st.columns([1, 4, 2])
 
-        with c1:
-            if st.button("➡ Convert", key=f"conv_{row.id}"):
+            with col_img:
+                st.image(company_img, width=60)
 
-                add_customer(
-                    row.contact_person,
-                    row.phone,
-                    row.email,
-                    row.company,
-                    "New"
-                )
+            with col_main:
+                st.markdown(f"### 🏢 {row.company}")
+                st.markdown(f"👤 **{row.contact_person}**")
+                st.caption(f"📞 {row.phone or '-'} | ✉️ {row.email or '-'}")
 
-                delete_lead(row.id)
+            with col_meta:
+                st.markdown(f"🏷️ **{row.status}**")
+                st.caption(f"📍 {row.assigned_to or 'Unassigned'}")
 
-                st.success("Converted to Customer")
-                st.rerun()
+                st.image(person_img, width=40)
 
-        with c2:
-            if st.button("🗑 Delete", key=f"del_{row.id}"):
+            st.markdown("---")
 
-                delete_lead(row.id)
-                st.warning("Lead deleted")
-                st.rerun()
+            # ---------------- ACTIONS ----------------
+            b1, b2, _ = st.columns([1, 1, 6])
+
+            with b1:
+                if st.button("➡ Convert", key=f"conv_{row.id}"):
+
+                    add_customer(
+                        row.contact_person,
+                        row.phone,
+                        row.email,
+                        row.company,
+                        "New"
+                    )
+
+                    delete_lead(row.id)
+
+                    st.success("Converted to Customer")
+                    st.rerun()
+
+            with b2:
+                if st.button("🗑 Delete", key=f"del_{row.id}"):
+
+                    delete_lead(row.id)
+                    st.warning("Lead deleted")
+                    st.rerun()
