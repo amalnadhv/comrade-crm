@@ -1,0 +1,34 @@
+/* Global background */
+body {
+    background-color: #0f172a;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #111827;
+}
+
+/* Buttons */
+.stButton > button {
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+/* Primary buttons */
+.stButton > button[kind="primary"] {
+    background-color: #2563eb;
+    color: white;
+}
+
+/* Success */
+.stButton > button[kind="secondary"] {
+    background-color: #10b981;
+    color: white;
+}
+
+/* Cards feel */
+div[data-testid="stMetric"] {
+    background-color: #1f2937;
+    padding: 10px;
+    border-radius: 10px;
+}
