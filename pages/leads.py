@@ -4,7 +4,7 @@ from database import (
     get_leads,
     add_lead,
     convert_lead_to_customer,
-    delete_customer
+    delete_lead
 )
 
 
@@ -17,7 +17,7 @@ def leads_page():
         st.success("✅ Lead saved successfully!")
         st.session_state["lead_saved"] = False
 
-    # ---------------- LOAD DATA ----------------
+    # ---------------- LOAD LEADS ----------------
     df = get_leads()
 
     if df is None or df.empty:
@@ -33,17 +33,10 @@ def leads_page():
         phone = st.text_input("Phone")
         email = st.text_input("Email")
 
-        # -------- SOURCE --------
+        # SOURCE
         source_options = [
-            "Website",
-            "Facebook",
-            "Instagram",
-            "LinkedIn",
-            "Referral",
-            "Cold Call",
-            "Advertisement",
-            "Walk-in",
-            "Other"
+            "Website", "Facebook", "Instagram", "LinkedIn",
+            "Referral", "Cold Call", "Advertisement", "Walk-in", "Other"
         ]
 
         source_choice = st.selectbox("Source", source_options)
@@ -54,10 +47,10 @@ def leads_page():
 
         source = source_custom if source_choice == "Other" else source_choice
 
-        # -------- STATUS --------
+        # STATUS
         status = st.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
 
-        # -------- FOLLOWUP DATE (MATCH DB COLUMN) --------
+        # FOLLOWUP DATE
         followup_date = st.date_input("Follow-up Date")
 
         remarks = st.text_area("Remarks")
@@ -66,6 +59,7 @@ def leads_page():
         submitted = st.form_submit_button("Save Lead")
 
         if submitted:
+
             if company and contact:
 
                 add_lead(
@@ -75,7 +69,7 @@ def leads_page():
                     email,
                     source,
                     status,
-                    str(followup_date),   # IMPORTANT FIX
+                    str(followup_date),
                     remarks,
                     assigned_to
                 )
@@ -84,7 +78,7 @@ def leads_page():
                 st.rerun()
 
             else:
-                st.warning("Company and Contact are required!")
+                st.warning("Company and Contact are required")
 
     st.markdown("---")
 
@@ -95,7 +89,7 @@ def leads_page():
         st.info("No leads found")
         return
 
-    # ---------------- USER FILTER ----------------
+    # ---------------- ROLE ----------------
     role = st.session_state.get("user", {}).get("role", "User")
     username = st.session_state.get("user", {}).get("username", "")
 
@@ -120,23 +114,31 @@ def leads_page():
             if st.button("➡ Convert", key=f"conv_{row.id}"):
 
                 if role == "Admin":
+
+                    # Move to customers
                     convert_lead_to_customer(
                         row.contact_person,
                         row.phone,
                         row.email,
                         row.company
                     )
-                    st.success("Converted to customer!")
-                    st.rerun()
-                else:
-                    st.error("Only Admin can convert")
 
-        # ---------------- DELETE (FIXED) ----------------
+                    # Remove from leads
+                    delete_lead(row.id)
+
+                    st.success("Lead converted to customer!")
+                    st.rerun()
+
+                else:
+                    st.error("Only Admin can convert leads")
+
+        # ---------------- DELETE ----------------
         with c2:
             if st.button("🗑 Delete", key=f"del_{row.id}"):
 
                 if role == "Admin":
-                    delete_customer(row.id)   # (keep as-is since DB has no delete_lead)
+                    delete_lead(row.id)
+                    st.success("Lead deleted")
                     st.rerun()
                 else:
                     st.error("Only Admin can delete leads")
