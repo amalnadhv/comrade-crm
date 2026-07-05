@@ -1,6 +1,11 @@
 import streamlit as st
 from database import add_user
+from utils.backup import backup_db
 
+if st.button("📦 Backup Database"):
+    file = backup_db()
+    st.success(f"Backup created: {file}")
+    
 def settings_page():
 
     st.title("⚙ Settings")
