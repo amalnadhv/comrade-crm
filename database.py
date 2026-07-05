@@ -120,3 +120,85 @@ def convert_lead_to_customer(name, phone, email, company, status="New"):
 
     conn.commit()
     conn.close()
+    
+def init_followups_table():
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS followups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id INTEGER,
+        title TEXT,
+        followup_date TEXT,
+        status TEXT,
+        remarks TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+    
+def add_followup(lead_id, title, followup_date, status, remarks):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO followups (lead_id, title, followup_date, status, remarks)
+        VALUES (?, ?, ?, ?, ?)
+    """, (lead_id, title, followup_date, status, remarks))
+
+    conn.commit()
+    conn.close()
+
+def get_followups():
+    conn = sqlite3.connect(DB_NAME)
+    df = pd.read_sql_query("SELECT * FROM followups", conn)
+    conn.close()
+    return df
+
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    # Customers
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS customers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        phone TEXT,
+        email TEXT,
+        company TEXT,
+        status TEXT
+    )
+    """)
+
+    # Leads
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS leads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company TEXT,
+        contact_person TEXT,
+        phone TEXT,
+        email TEXT,
+        source TEXT,
+        status TEXT,
+        followup_date TEXT,
+        remarks TEXT
+    )
+    """)
+
+    # Followups
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS followups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id INTEGER,
+        title TEXT,
+        followup_date TEXT,
+        status TEXT,
+        remarks TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
