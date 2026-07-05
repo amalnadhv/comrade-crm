@@ -1,51 +1,44 @@
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Table,
-    TableStyle,
-    Paragraph,
-    Spacer,
-)
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
 
 
 def generate_quotation_pdf(data):
+
     buffer = BytesIO()
-
     doc = SimpleDocTemplate(buffer)
-    styles = getSampleStyleSheet()
 
+    styles = getSampleStyleSheet()
     elements = []
 
-    # Title
-    elements.append(Paragraph("QUOTATION", styles["Title"]))
-    elements.append(Spacer(1, 15))
+    # ================= HEADER =================
+    elements.append(Paragraph("<b>COMRADE CRM</b>", styles["Title"]))
+    elements.append(Paragraph("QUOTATION / ESTIMATE", styles["Title"]))
+    elements.append(Spacer(1, 12))
 
-    # Customer
-    elements.append(
-        Paragraph(f"<b>Customer:</b> {data.get('customer_name', '')}", styles["Normal"])
-    )
-    elements.append(Spacer(1, 15))
+    # ================= CUSTOMER INFO =================
+    customer_block = f"""
+    <b>Customer:</b> {data.get('customer_name', '')} <br/>
+    """
+    elements.append(Paragraph(customer_block, styles["Normal"]))
+    elements.append(Spacer(1, 12))
 
-    # Table
+    # ================= ITEMS TABLE =================
     table_data = [["Item", "Qty", "Price", "Total"]]
 
     items = data.get("items", [])
-
     subtotal = 0
 
-    for item in items:
-
-        qty = float(item.get("qty", 0))
-        price = float(item.get("price", 0))
+    for it in items:
+        qty = float(it.get("qty", 0))
+        price = float(it.get("price", 0))
         total = qty * price
-
         subtotal += total
 
         table_data.append([
-            str(item.get("item", "")),
-            qty,
+            str(it.get("item", "")),
+            str(qty),
             f"{price:.2f}",
             f"{total:.2f}"
         ])
@@ -56,33 +49,50 @@ def generate_quotation_pdf(data):
         ("BACKGROUND", (0, 0), (-1, 0), colors.darkblue),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-        ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
         ("ALIGN", (1, 1), (-1, -1), "CENTER"),
-        ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.whitesmoke),
     ]))
 
     elements.append(table)
-
     elements.append(Spacer(1, 15))
 
+    # ================= SUMMARY =================
     discount = float(data.get("discount", 0))
     tax = float(data.get("tax", 0))
-    total = float(data.get("total", subtotal))
 
-    summary = Paragraph(
-        f"""
-        <b>Subtotal:</b> {subtotal:.2f}<br/>
-        <b>Discount:</b> {discount:.2f}%<br/>
-        <b>Tax:</b> {tax:.2f}%<br/>
-        <b>Grand Total:</b> {total:.2f}
-        """,
-        styles["Normal"],
-    )
+    after_discount = subtotal - (subtotal * discount / 100)
+    grand_total = after_discount + (after_discount * tax / 100)
 
-    elements.append(summary)
+    summary = f"""
+    <b>Subtotal:</b> {subtotal:.2f} <br/>
+    <b>Discount:</b> {discount:.2f}% <br/>
+    <b>Tax:</b> {tax:.2f}% <br/>
+    <b>Grand Total:</b> {grand_total:.2f}
+    """
+
+    elements.append(Paragraph(summary, styles["Normal"]))
+    elements.append(Spacer(1, 20))
+
+    # ================= SIGNATURE BLOCK =================
+    signature_table = Table([
+        ["Approved By", "Agreed By"],
+        ["__________________", "__________________"]
+    ])
+
+    signature_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("TOPPADDING", (0, 0), (-1, -1), 20),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 20),
+    ]))
+
+    elements.append(signature_table)
+    elements.append(Spacer(1, 20))
+
+    # ================= FOOTER =================
+    elements.append(Paragraph("Thank you for your business!", styles["Italic"]))
 
     doc.build(elements)
-
     buffer.seek(0)
 
     return buffer
