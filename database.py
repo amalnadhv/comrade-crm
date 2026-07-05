@@ -4,6 +4,7 @@ import json
 
 DB_NAME = "crm.db"
 
+
 # ---------------- INIT DB ----------------
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -19,7 +20,6 @@ def init_db():
     )
     """)
 
-    # default admin
     cur.execute("SELECT * FROM users WHERE username='admin'")
     if not cur.fetchone():
         cur.execute("""
@@ -87,6 +87,21 @@ def init_db():
     conn.close()
 
 
+# ---------------- USERS ----------------
+def validate_user(username, password):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, username, role FROM users
+        WHERE username=? AND password=?
+    """, (username, password))
+
+    user = cur.fetchone()
+    conn.close()
+    return user
+
+
 # ---------------- CUSTOMERS ----------------
 def get_customers():
     conn = sqlite3.connect(DB_NAME)
@@ -135,19 +150,6 @@ def delete_lead(lead_id):
     cur = conn.cursor()
 
     cur.execute("DELETE FROM leads WHERE id=?", (lead_id,))
-
-    conn.commit()
-    conn.close()
-
-
-def convert_lead_to_customer(name, phone, email, company, status="New"):
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-
-    cur.execute("""
-        INSERT INTO customers (name, phone, email, company, status)
-        VALUES (?, ?, ?, ?, ?)
-    """, (name, phone, email, company, status))
 
     conn.commit()
     conn.close()
