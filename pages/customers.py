@@ -69,20 +69,26 @@ def customers_page():
             key="add_status"
         )
 
-        if st.button("💾 Save Customer", key="save_customer"):
+     if st.button("💾 Save Customer", key="save_customer"):
 
-            if name and phone:
-                add_customer(name, phone, email, company, status)
-
-                reset_add_form()   # 🔥 THIS FIXES YOUR ISSUE
-
-                show_message("Customer added successfully ✅")
-
-                st.rerun()
-
-            else:
-                show_message("Name and Phone are required ❌")
-                st.rerun()
+        if name and phone:
+    
+            add_customer(name, phone, email, company, status)
+    
+            # 🔥 CLEAR ADD FORM STATE
+            for key in ["add_name", "add_phone", "add_email", "add_company"]:
+                if key in st.session_state:
+                    st.session_state[key] = ""
+    
+            if "add_status" in st.session_state:
+                st.session_state["add_status"] = "New"
+    
+            st.session_state["add_success"] = True
+            st.rerun()
+    
+        else:
+            st.session_state["add_success"] = False
+            st.error("Name and Phone are required.")
 
     st.markdown("---")
 
