@@ -1,9 +1,11 @@
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import (
+    SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Table
+)
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4
+from reportlab.lib.enums import TA_RIGHT, TA_CENTER, TA_LEFT
 from io import BytesIO
-from datetime import date
 
 
 def generate_quotation_pdf(data):
@@ -19,46 +21,82 @@ def generate_quotation_pdf(data):
     )
 
     styles = getSampleStyleSheet()
+
+    # ================= CUSTOM STYLES =================
+    title_style = ParagraphStyle(
+        "title",
+        fontSize=18,
+        textColor=colors.white,
+        alignment=TA_LEFT,
+        fontName="Helvetica-Bold"
+    )
+
+    sub_style = ParagraphStyle(
+        "sub",
+        fontSize=10,
+        textColor=colors.white,
+        alignment=TA_RIGHT
+    )
+
+    normal_bold = ParagraphStyle(
+        "bold",
+        fontSize=10,
+        fontName="Helvetica-Bold"
+    )
+
     elements = []
 
-    # ================= HEADER =================
+    # ================= HEADER (MODERN BAR) =================
     header = Table([
-        ["COMRADE CRM", f"QUOTATION #{data.get('id', 'N/A')}"]
-    ])
+        [
+            Paragraph("COMRADE CRM<br/><font size=9>Quotation System</font>", title_style),
+            Paragraph(f"QUOTATION # {data.get('id', 'N/A')}", sub_style)
+        ]
+    ], colWidths=[300, 240])
 
     header.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0B2D5B")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-        ("FONTSIZE", (0, 0), (-1, -1), 14),
-        ("PADDING", (0, 0), (-1, -1), 12),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#0B2D5B")),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#0B2D5B")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 15),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 15),
+        ("TOPPADDING", (0, 0), (-1, -1), 12),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
     ]))
 
     elements.append(header)
-    elements.append(Spacer(1, 15))
+    elements.append(Spacer(1, 18))
 
-    # ================= CUSTOMER BOX =================
-    customer = Table([
-        ["Bill To:", data.get("customer_name", "")]
-    ])
+    # ================= CUSTOMER INFO (CLEAN BOX) =================
+    customer_table = Table([
+        [
+            Paragraph("<b>Bill To</b><br/>" + data.get("customer_name", ""), styles["Normal"]),
+            Paragraph(
+                f"Date: {data.get('date', '')}<br/>"
+                f"Phone: {data.get('phone', '')}<br/>"
+                f"Email: {data.get('email', '')}",
+                styles["Normal"]
+            )
+        ]
+    ], colWidths=[270, 270])
 
-    customer.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
-        ("BOX", (0, 0), (-1, -1), 1, colors.black),
+    customer_table.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#CCCCCC")),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("PADDING", (0, 0), (-1, -1), 10),
     ]))
 
-    elements.append(customer)
+    elements.append(customer_table)
     elements.append(Spacer(1, 15))
 
-    # ================= ITEMS =================
-    table_data = [["#", "Item", "Qty", "Price", "Total"]]
+    # ================= ITEMS TABLE =================
+    table_data = [["#", "Description", "Qty", "Unit Price", "Total"]]
 
     items = data.get("items", [])
     subtotal = 0
 
     for i, it in enumerate(items, start=1):
-
         qty = float(it.get("qty", 0))
         price = float(it.get("price", 0))
         total = qty * price
@@ -67,61 +105,84 @@ def generate_quotation_pdf(data):
         table_data.append([
             str(i),
             it.get("item", ""),
-            f"{qty}",
+            str(qty),
             f"AED {price:.2f}",
             f"AED {total:.2f}"
         ])
 
-    table = Table(table_data, colWidths=[30, 200, 50, 80, 80])
+    item_table = Table(table_data, colWidths=[30, 230, 60, 90, 90])
 
-    table.setStyle(TableStyle([
+    style = TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F4E79")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+
+        ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
+
         ("ALIGN", (2, 1), (-1, -1), "CENTER"),
+        ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+
         ("FONTSIZE", (0, 0), (-1, -1), 9),
         ("PADDING", (0, 0), (-1, -1), 6),
-    ]))
+    ])
 
-    elements.append(table)
-    elements.append(Spacer(1, 15))
+    # Zebra striping
+    for row in range(1, len(table_data)):
+        if row % 2 == 0:
+            style.add("BACKGROUND", (0, row), (-1, row), colors.HexColor("#F5F7FA"))
 
-    # ================= SUMMARY BOX =================
+    item_table.setStyle(style)
+
+    elements.append(item_table)
+    elements.append(Spacer(1, 18))
+
+    # ================= SUMMARY (RIGHT ALIGNED BOX) =================
     discount = float(data.get("discount", 0))
     tax = float(data.get("tax", 0))
 
-    after_discount = subtotal - (subtotal * discount / 100)
-    grand_total = after_discount + (after_discount * tax / 100)
+    discount_amt = subtotal * discount / 100
+    after_discount = subtotal - discount_amt
+    tax_amt = after_discount * tax / 100
+    grand_total = after_discount + tax_amt
 
     summary = Table([
         ["Subtotal", f"AED {subtotal:.2f}"],
-        [f"Discount ({discount}%)", f"- AED {(subtotal * discount / 100):.2f}"],
-        [f"Tax ({tax}%)", f"+ AED {(after_discount * tax / 100):.2f}"],
+        [f"Discount ({discount}%)", f"- AED {discount_amt:.2f}"],
+        [f"Tax ({tax}%)", f"+ AED {tax_amt:.2f}"],
+        ["", ""],
         ["GRAND TOTAL", f"AED {grand_total:.2f}"]
-    ])
+    ], colWidths=[180, 120])
 
     summary.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 1, colors.black),
-        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#D9E1F2")),
-        ("TEXTCOLOR", (0, -1), (-1, -1), colors.black),
+        ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
         ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
-        ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
-        ("PADDING", (0, 0), (-1, -1), 8),
+        ("FONTSIZE", (0, -1), (-1, -1), 11),
+
+        ("LINEABOVE", (0, -2), (-1, -2), 0.5, colors.grey),
+        ("LINEABOVE", (0, -1), (-1, -1), 1, colors.black),
+
+        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#E8EEF7")),
+        ("PADDING", (0, 0), (-1, -1), 6),
     ]))
 
-    elements.append(summary)
+    summary_wrap = Table([[summary]], colWidths=[540])
+    summary_wrap.setStyle(TableStyle([
+        ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+    ]))
+
+    elements.append(summary_wrap)
     elements.append(Spacer(1, 20))
 
-    # ================= SIGNATURE =================
+    # ================= SIGNATURE (CLEAN) =================
     sign = Table([
-        ["Approved By", "Agreed By"],
-        ["__________________", "__________________"]
-    ])
+        ["Authorized Signature", "Customer Signature"],
+        ["__________________________", "__________________________"]
+    ], colWidths=[270, 270])
 
     sign.setStyle(TableStyle([
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-        ("PADDING", (0, 0), (-1, -1), 20),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.grey),
+        ("TOPPADDING", (0, 0), (-1, -1), 20),
     ]))
 
     elements.append(sign)
@@ -129,8 +190,10 @@ def generate_quotation_pdf(data):
 
     # ================= FOOTER =================
     footer = Paragraph(
-        "Thank you for your business. This is a system-generated quotation.",
-        styles["Italic"]
+        "<font size=9 color='grey'>"
+        "Thank you for your business. This quotation is system generated and does not require a signature."
+        "</font>",
+        styles["Normal"]
     )
 
     elements.append(footer)
