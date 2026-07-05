@@ -41,22 +41,27 @@ def customers_page():
             key="add_status"
         )
 
-        if st.button("Save Customer", key="save_customer"):
+       if st.button(
+            "💾 Save Changes",
+            key=f"save_edit_{edit_id}"
+        ):
+        
+            update_customer(
+                edit_id,
+                new_name,
+                new_phone,
+                new_email,
+                new_company,
+                new_status
+            )
 
-            if name and phone:
+    # Close the edit form
+    st.session_state.edit_id = None
 
-                add_customer(
-                    name,
-                    phone,
-                    email,
-                    company,
-                    status
-                )
+    # Show a success message
+    st.toast("Customer updated successfully.")
 
-                st.success("Customer added!")
-
-                st.rerun()
-
+    st.rerun()
             else:
                 st.error("Name and Phone are required.")
 
