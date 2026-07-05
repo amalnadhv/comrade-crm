@@ -7,6 +7,7 @@ import sqlite3
 from database import add_quotation, get_quotations, get_customers
 from utils.pdf_generator import generate_quotation_pdf
 
+
 DB_NAME = "crm.db"
 
 
@@ -50,17 +51,20 @@ def quotations_page():
     st.title("💼 Quotations")
 
     # ================= SESSION INIT =================
-    defaults = {
-        "quote_items": [],
-        "edit_id": None,
-        "edit_loaded": False,
-        "edit_customer": None,
-        "edit_status": "Draft"
-    }
+    if "quote_items" not in st.session_state:
+        st.session_state.quote_items = []
 
-    for k, v in defaults.items():
-        if k not in st.session_state:
-            st.session_state[k] = v
+    if "edit_id" not in st.session_state:
+        st.session_state.edit_id = None
+
+    if "edit_loaded" not in st.session_state:
+        st.session_state.edit_loaded = False
+
+    if "edit_customer" not in st.session_state:
+        st.session_state.edit_customer = None
+
+    if "edit_status" not in st.session_state:
+        st.session_state.edit_status = "Draft"
 
     # ================= DATA =================
     df = get_quotations()
@@ -74,11 +78,10 @@ def quotations_page():
     customer_map = {r.id: f"{r.name} ({r.company})" for r in customers.itertuples()}
     customer_options = list(customer_map.keys())
 
-    # ================= CREATE NEW BUTTON =================
+    # ================= CREATE NEW =================
     col1, col2 = st.columns(2)
 
     if col1.button("➕ Create New Quotation"):
-
         st.session_state.edit_id = None
         st.session_state.edit_loaded = False
         st.session_state.quote_items = []
@@ -86,7 +89,7 @@ def quotations_page():
         st.session_state.edit_status = "Draft"
         st.rerun()
 
-    # ================= LOAD EDIT DATA =================
+    # ================= LOAD EDIT =================
     if st.session_state.edit_id and not st.session_state.edit_loaded:
 
         match = df[df["id"] == st.session_state.edit_id]
@@ -104,7 +107,7 @@ def quotations_page():
 
         st.session_state.edit_loaded = True
 
-    # ================= MODE TITLE =================
+    # ================= MODE =================
     if st.session_state.edit_id:
         st.subheader("🟠 Edit Quotation")
     else:
@@ -144,11 +147,9 @@ def quotations_page():
     # ================= ITEM INPUT =================
     st.markdown("### Items")
 
-    c1, c2, c3 = st.columns(3)
-
-    item_input = c1.text_input("Item", key="item_input")
-    qty_input = c2.number_input("Qty", value=1.0, key="qty_input")
-    price_input = c3.number_input("Price", value=0.0, key="price_input")
+    item_input = st.text_input("Item", key="item_input")
+    qty_input = st.number_input("Qty", value=1.0, key="qty_input")
+    price_input = st.number_input("Price", value=0.0, key="price_input")
 
     if st.button("➕ Add Item"):
 
@@ -157,10 +158,6 @@ def quotations_page():
             "qty": qty_input,
             "price": price_input
         })
-
-        st.session_state.item_input = ""
-        st.session_state.qty_input = 1.0
-        st.session_state.price_input = 0.0
 
         st.rerun()
 
@@ -280,7 +277,6 @@ def quotations_page():
                         f,
                         file_name=f"quotation_{row['id']}.pdf"
                     )
-
             except Exception as e:
                 st.error(f"PDF Error: {e}")
 
