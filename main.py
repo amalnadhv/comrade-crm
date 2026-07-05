@@ -14,7 +14,6 @@ from pages.settings import settings_page
 st.set_page_config(page_title="Comrade CRM", layout="wide")
 init_db()
 
-
 # ---------------- SESSION ----------------
 if "user" not in st.session_state:
     st.session_state.user = None
@@ -51,7 +50,7 @@ def login():
 # ---------------- APP ----------------
 def app():
 
-    # ---------------- SIDEBAR (ONLY AFTER LOGIN) ----------------
+    # ---------------- SIDEBAR ----------------
     st.sidebar.title("📊 Comrade CRM")
     st.sidebar.write(f"👤 {st.session_state.user['username']}")
 
@@ -60,13 +59,13 @@ def app():
         st.rerun()
 
     menu = {
-        "🏠 Dashboard": dashboard_page,
-        "👥 Customers": customers_page,
-        "🧾 Leads": leads_page,
-        "📞 Follow-ups": followups_page,
-        "📑 Quotations": quotations_page,
-        "📊 Reports": reports_page,
-        "⚙️ Settings": settings_page
+        "Dashboard": dashboard_page,
+        "Customers": customers_page,
+        "Leads": leads_page,
+        "Follow-ups": followups_page,
+        "Quotations": quotations_page,
+        "Reports": reports_page,
+        "Settings": settings_page
     }
 
     st.sidebar.markdown("---")
@@ -74,7 +73,7 @@ def app():
     # ---------------- NAVIGATION ----------------
     for label in menu.keys():
         if st.sidebar.button(label):
-            st.session_state.page = label.replace("🏠 ", "").replace("👥 ", "").replace("🧾 ", "").replace("📞 ", "").replace("📑 ", "").replace("📊 ", "").replace("⚙️ ", "")
+            st.session_state.page = label
             st.rerun()
 
     st.sidebar.markdown("---")
@@ -83,12 +82,12 @@ def app():
     if st.session_state.page == "Dashboard":
         dashboard_page()
 
-     elif st.session_state.page == "Leads":
+    elif st.session_state.page == "Leads":
         leads_page()
 
     elif st.session_state.page == "Customers":
         customers_page()
-   
+
     elif st.session_state.page == "Follow-ups":
         followups_page()
 
@@ -102,15 +101,13 @@ def app():
         settings_page()
 
 
-# ---------------- ENTRY POINT (CRITICAL FIX) ----------------
+# ---------------- ENTRY POINT ----------------
 def main():
 
-    # 🔥 BLOCK EVERYTHING BEFORE LOGIN
     if st.session_state.user is None:
         login()
         st.stop()
 
-    # ONLY AFTER LOGIN
     app()
 
 
