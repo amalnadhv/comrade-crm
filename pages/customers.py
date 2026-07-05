@@ -41,37 +41,19 @@ def customers_page():
             key="add_status"
         )
 
-       if st.button(
-            "💾 Save Changes",
-            key=f"save_edit_{edit_id}"
-        ):
-        
-            update_customer(
-                edit_id,
-                new_name,
-                new_phone,
-                new_email,
-                new_company,
-                new_status
-            )
+        if st.button("💾 Save Customer", key="save_customer"):
 
-    # Close the edit form
-    st.session_state.edit_id = None
-
-    # Show a success message
-    st.toast("Customer updated successfully.")
-
-    st.rerun()
+            if name and phone:
+                add_customer(name, phone, email, company, status)
+                st.success("Customer added successfully.")
+                st.rerun()
             else:
                 st.error("Name and Phone are required.")
 
     st.markdown("---")
 
     # ---------------- SEARCH ----------------
-    search = st.text_input(
-        "🔍 Search customers",
-        key="customer_search"
-    )
+    search = st.text_input("🔍 Search customers", key="customer_search")
 
     if search:
         df = df[
@@ -88,7 +70,6 @@ def customers_page():
     if st.session_state.edit_id is not None:
 
         edit_id = st.session_state.edit_id
-
         edit_row = df[df["id"] == edit_id]
 
         if not edit_row.empty:
@@ -96,7 +77,7 @@ def customers_page():
             edit_row = edit_row.iloc[0]
 
             st.markdown("---")
-            st.subheader(f"✏️ Edit Customer : {edit_row['name']}")
+            st.subheader(f"✏️ Edit Customer: {edit_row['name']}")
 
             new_name = st.text_input(
                 "Name",
@@ -122,12 +103,7 @@ def customers_page():
                 key=f"edit_company_{edit_id}"
             )
 
-            status_list = [
-                "New",
-                "Contacted",
-                "Won",
-                "Lost"
-            ]
+            status_list = ["New", "Contacted", "Won", "Lost"]
 
             current_status = (
                 edit_row["status"]
@@ -144,6 +120,7 @@ def customers_page():
 
             col1, col2 = st.columns(2)
 
+            # ---------------- SAVE EDIT ----------------
             with col1:
 
                 if st.button(
@@ -160,12 +137,11 @@ def customers_page():
                         new_status
                     )
 
-                    st.success("Customer updated successfully.")
-
+                    # CLOSE EDIT SCREEN
                     st.session_state.edit_id = None
-
                     st.rerun()
 
+            # ---------------- CANCEL EDIT ----------------
             with col2:
 
                 if st.button(
@@ -174,7 +150,6 @@ def customers_page():
                 ):
 
                     st.session_state.edit_id = None
-
                     st.rerun()
 
     st.markdown("---")
@@ -194,7 +169,7 @@ def customers_page():
 
     st.markdown("---")
 
-    # ---------------- CUSTOMER LIST ----------------
+    # ---------------- TABLE ----------------
     st.subheader("Customer List")
 
     if df.empty:
@@ -219,15 +194,14 @@ def customers_page():
         col3.write(row.email)
         col4.write(row.company)
 
-        col5.write(
-            status_colors.get(row.status, row.status)
-        )
+        col5.write(status_colors.get(row.status, row.status))
 
         with col6:
 
-            btn1, btn2 = st.columns(2)
+            c1, c2 = st.columns(2)
 
-            with btn1:
+            # ---------------- EDIT BUTTON ----------------
+            with c1:
 
                 if st.button(
                     "✏️ Edit",
@@ -237,7 +211,8 @@ def customers_page():
                     st.session_state.edit_id = row.id
                     st.rerun()
 
-            with btn2:
+            # ---------------- DELETE BUTTON ----------------
+            with c2:
 
                 if role == "Admin":
 
