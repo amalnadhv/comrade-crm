@@ -83,12 +83,12 @@ def app():
     if st.session_state.page == "Dashboard":
         dashboard_page()
 
-    elif st.session_state.page == "Customers":
-        customers_page()
-
-    elif st.session_state.page == "Leads":
+     elif st.session_state.page == "Leads":
         leads_page()
 
+    elif st.session_state.page == "Customers":
+        customers_page()
+   
     elif st.session_state.page == "Follow-ups":
         followups_page()
 
