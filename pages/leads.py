@@ -1,11 +1,17 @@
 import streamlit as st
 import pandas as pd
-from database import (
-    get_leads,
-    add_lead,
-    convert_lead_to_customer,
-    delete_lead
-)
+
+# ---------------- SAFE IMPORT ----------------
+try:
+    from database import (
+        get_leads,
+        add_lead,
+        convert_lead_to_customer,
+        delete_lead
+    )
+except Exception as e:
+    st.error(f"Database import error: {e}")
+    st.stop()
 
 
 def leads_page():
@@ -18,9 +24,12 @@ def leads_page():
         st.session_state["lead_saved"] = False
 
     # ---------------- LOAD DATA ----------------
-    df = get_leads()
-
-    if df is None:
+    try:
+        df = get_leads()
+        if df is None:
+            df = pd.DataFrame()
+    except Exception as e:
+        st.error(f"Error loading leads: {e}")
         df = pd.DataFrame()
 
     # ---------------- ADD LEAD ----------------
@@ -32,7 +41,7 @@ def leads_page():
         phone = st.text_input("Phone")
         email = st.text_input("Email")
 
-        # -------- SOURCE (Dropdown + Custom) --------
+        # -------- SOURCE --------
         source_options = [
             "Website",
             "Facebook",
@@ -65,20 +74,29 @@ def leads_page():
         submitted = st.form_submit_button("Save Lead")
 
         if submitted:
-            add_lead(
-                company,
-                contact,
-                phone,
-                email,
-                source,
-                status,
-                str(followup),
-                remarks,
-                assigned_to
-            )
+            if company and contact:
 
-            st.session_state["lead_saved"] = True
-            st.rerun()
+                try:
+                    add_lead(
+                        company,
+                        contact,
+                        phone,
+                        email,
+                        source,
+                        status,
+                        str(followup),
+                        remarks,
+                        assigned_to
+                    )
+
+                    st.session_state["lead_saved"] = True
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"Failed to add lead: {e}")
+
+            else:
+                st.warning("Company and Contact are required!")
 
     st.markdown("---")
 
@@ -89,10 +107,11 @@ def leads_page():
         st.info("No leads found")
         return
 
-    # ---------------- ROLE ----------------
-    role = st.session_state.user["role"]
-    username = st.session_state.user["username"]
+    # ---------------- USER INFO ----------------
+    role = st.session_state.get("user", {}).get("role", "User")
+    username = st.session_state.get("user", {}).get("username", "")
 
+    # Filter for non-admin
     if role != "Admin":
         df = df[df["assigned_to"] == username]
 
@@ -114,23 +133,29 @@ def leads_page():
             if st.button("➡ Convert", key=f"conv_{row.id}"):
 
                 if role == "Admin":
-                    convert_lead_to_customer(
-                        row.contact_person,
-                        row.phone,
-                        row.email,
-                        row.company
-                    )
-                    st.success("Converted to customer!")
-                    st.rerun()
+                    try:
+                        convert_lead_to_customer(
+                            row.contact_person,
+                            row.phone,
+                            row.email,
+                            row.company
+                        )
+                        st.success("Converted to customer!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Conversion failed: {e}")
                 else:
-                    st.error("Only Admin can convert leads")
+                    st.error("Only Admin can convert")
 
         # ---------------- DELETE ----------------
         with c2:
             if st.button("🗑 Delete", key=f"del_{row.id}"):
 
                 if role == "Admin":
-                    delete_lead(row.id)
-                    st.rerun()
+                    try:
+                        delete_lead(row.id)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Delete failed: {e}")
                 else:
-                    st.error("Only Admin can delete leads")
+                    st.error("Only Admin can delete")
