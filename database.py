@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+import json
 
 DB_NAME = "crm.db"
 
@@ -337,6 +338,30 @@ def add_quotation(customer_name, amount, discount, tax, total, status, created_o
         (customer_name, amount, discount, tax, total, status, created_on, version)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (customer_name, amount, discount, tax, total, status, created_on, version))
+
+    conn.commit()
+    conn.close()
+
+def add_quotation(customer_name, items, subtotal, discount, tax, total, status, created_on, version):
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO quotations
+        (customer_name, items, subtotal, discount, tax, total, status, created_on, version)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        customer_name,
+        json.dumps(items),
+        subtotal,
+        discount,
+        tax,
+        total,
+        status,
+        created_on,
+        version
+    ))
 
     conn.commit()
     conn.close()
