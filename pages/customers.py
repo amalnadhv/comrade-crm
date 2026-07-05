@@ -9,7 +9,6 @@ from database import (
     delete_customer
 )
 
-
 # ---------------- LOAD DATA ----------------
 def load_df():
     rows = get_customers()
@@ -73,11 +72,8 @@ def customers_page():
 
                 add_customer(name, phone, email, company, status)
 
-                # CLEAR FORM
                 reset_add_form()
-
                 show_message("Customer added successfully ✅")
-
                 st.rerun()
 
             else:
@@ -94,6 +90,7 @@ def customers_page():
             df["name"].str.contains(search, case=False, na=False)
             | df["phone"].str.contains(search, case=False, na=False)
             | df["email"].str.contains(search, case=False, na=False)
+            | df["company"].str.contains(search, case=False, na=False)
         ]
 
     # ---------------- EDIT STATE ----------------
@@ -132,7 +129,6 @@ def customers_page():
             col1, col2 = st.columns(2)
 
             with col1:
-
                 if st.button("💾 Save Changes", key=f"save_edit_{edit_id}"):
 
                     update_customer(
@@ -146,11 +142,9 @@ def customers_page():
 
                     st.session_state.edit_id = None
                     show_message("Customer updated successfully ✅")
-
                     st.rerun()
 
             with col2:
-
                 if st.button("❌ Cancel", key=f"cancel_edit_{edit_id}"):
 
                     st.session_state.edit_id = None
@@ -173,45 +167,60 @@ def customers_page():
 
     st.markdown("---")
 
-    # ---------------- TABLE ----------------
-    st.subheader("Customer List")
+    # ---------------- MODERN GRID VIEW ----------------
+    st.subheader("👥 Customer List")
 
     if df.empty:
         st.info("No customers found.")
         return
 
-    status_colors = {
+    cols_per_row = 4
+    rows = [df.iloc[i:i + cols_per_row] for i in range(0, len(df), cols_per_row)]
+
+    status_badge = {
         "New": "🔵 New",
         "Contacted": "🟠 Contacted",
         "Won": "🟢 Won",
         "Lost": "🔴 Lost"
     }
 
-    for row in df.itertuples():
+    for row_group in rows:
 
-        col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 3, 2, 2, 2])
+        cols = st.columns(cols_per_row)
 
-        col1.write(row.name)
-        col2.write(row.phone)
-        col3.write(row.email)
-        col4.write(row.company)
+        for col, row in zip(cols, row_group.itertuples()):
 
-        col5.write(status_colors.get(row.status, row.status))
+            avatar = f"https://ui-avatars.com/api/?name={row.name}&background=0D8ABC&color=fff&size=48"
 
-        with col6:
+            with col:
 
-            c1, c2 = st.columns(2)
+                with st.container(border=True):
 
-            with c1:
-                if st.button("✏️ Edit", key=f"edit_btn_{row.id}"):
+                    # -------- HEADER --------
+                    st.image(avatar, width=38)
+                    st.markdown(f"**👤 {row.name}**")
+                    st.caption(f"🏢 {row.company}")
 
-                    st.session_state.edit_id = row.id
-                    st.rerun()
+                    # -------- DETAILS --------
+                    st.markdown(f"📞 {row.phone}")
+                    st.markdown(f"✉️ {row.email}")
+                    st.markdown(f"🏷️ {status_badge.get(row.status, row.status)}")
 
-            with c2:
-                if role == "Admin":
-                    if st.button("🗑️ Delete", key=f"delete_btn_{row.id}"):
+                    st.markdown("---")
 
-                        delete_customer(row.id)
-                        show_message("Customer deleted 🗑️")
-                        st.rerun()
+                    # -------- ACTIONS --------
+                    b1, b2 = st.columns(2)
+
+                    with b1:
+                        if st.button("✏️", key=f"edit_btn_{row.id}"):
+
+                            st.session_state.edit_id = row.id
+                            st.rerun()
+
+                    with b2:
+                        if role == "Admin":
+                            if st.button("🗑️", key=f"del_btn_{row.id}"):
+
+                                delete_customer(row.id)
+                                show_message("Customer deleted 🗑️")
+                                st.rerun()
