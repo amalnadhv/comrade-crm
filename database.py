@@ -221,7 +221,7 @@ def add_quotation(customer_name, items, subtotal, discount, tax, total, status, 
     import json
     import sqlite3
 
-    conn = sqlite3.connect("crm.db")
+    conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
     cur.execute("""
@@ -259,7 +259,7 @@ def add_quotation(customer_name, items, subtotal, discount, tax, total, status, 
 
     conn.commit()
     conn.close()
-
+    
 def get_quotations():
     conn = sqlite3.connect(DB_NAME)
     df = pd.read_sql_query("SELECT * FROM quotations ORDER BY id DESC", conn)
