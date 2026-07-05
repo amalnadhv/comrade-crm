@@ -17,6 +17,12 @@ def dashboard_page():
     ])
 
     leads = get_leads()
+
+    if not leads.empty:
+        leads = leads[
+            (leads["status"].notna())
+        ]
+    
     followups = get_followups()
 
     if leads is None or leads.empty:
