@@ -38,8 +38,6 @@ def login():
                 "username": user[1],
                 "role": user[2]
             }
-
-            st.session_state.page = "Dashboard"
             st.rerun()
         else:
             st.error("Invalid credentials")
@@ -51,53 +49,52 @@ def app():
     st.sidebar.title("📊 Comrade CRM")
     st.sidebar.write(f"👤 {st.session_state.user['username']}")
 
-    if st.sidebar.button("🚪 Logout"):
+    if st.sidebar.button("Logout"):
         st.session_state.user = None
         st.rerun()
 
-    # ---------------- NAVIGATION ----------------
     nav_items = {
-        "🏠 Dashboard": "Dashboard",
-        "👥 Customers": "Customers",
-        "🧾 Leads": "Leads",
-        "📞 Follow-ups": "Follow-ups",
-        "📑 Quotations": "Quotations",
-        "📊 Reports": "Reports",
-        "⚙️ Settings": "Settings"
+        "🏠 Dashboard": dashboard_page,
+        "👥 Customers": customers_page,
+        "🧾 Leads": leads_page,
+        "📞 Follow-ups": followups_page,
+        "📑 Quotations": quotations_page,
+        "📊 Reports": reports_page,
+        "⚙️ Settings": settings_page
     }
 
-    for label, page in nav_items.items():
+    for label, func in nav_items.items():
         if st.sidebar.button(label):
-            st.session_state.page = page
+            st.session_state.page = label.replace("🏠 ", "").replace("👥 ", "").replace("🧾 ", "").replace("📞 ", "").replace("📑 ", "").replace("📊 ", "").replace("⚙️ ", "")
             st.rerun()
 
     st.sidebar.markdown("---")
 
-    # ---------------- PAGE ROUTER ----------------
+    # ROUTER
     if st.session_state.page == "Dashboard":
         dashboard_page()
-
     elif st.session_state.page == "Customers":
         customers_page()
-
     elif st.session_state.page == "Leads":
         leads_page()
-
     elif st.session_state.page == "Follow-ups":
         followups_page()
-
     elif st.session_state.page == "Quotations":
         quotations_page()
-
     elif st.session_state.page == "Reports":
         reports_page()
-
     elif st.session_state.page == "Settings":
         settings_page()
 
 
-# ---------------- ENTRY POINT ----------------
-if st.session_state.user is None:
-    login()
-else:
+# ---------------- ENTRY LOGIC (THIS IS MAIN CONTROL) ----------------
+def main():
+
+    if st.session_state.user is None:
+        login()
+        st.stop()   # 🔥 CRITICAL
+
     app()
+
+
+main()
