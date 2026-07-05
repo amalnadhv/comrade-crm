@@ -60,7 +60,16 @@ def leads_page():
             else:
                 st.error("Company and Phone are required")
 
-    st.markdown("---")
+   st.markdown("### 📤 Export Leads")
+
+    csv = df.to_csv(index=False).encode('utf-8')
+    
+    st.download_button(
+        label="⬇ Download Leads CSV",
+        data=csv,
+        file_name="leads.csv",
+        mime="text/csv"
+    )
 
     # ---------------- SEARCH ----------------
     search = st.text_input("🔍 Search leads")
