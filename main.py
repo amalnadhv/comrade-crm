@@ -10,30 +10,26 @@ from pages.quotations import quotations_page
 from pages.reports import reports_page
 from pages.settings import settings_page
 
-import streamlit as st
 
-def settings_page():
-
-    if st.session_state.user["role"] != "Admin":
-        st.error("Access denied")
-        return
-        
 # ---------------- INIT ----------------
 st.set_page_config(page_title="Comrade CRM", layout="wide")
 init_db()
+
 
 # ---------------- SESSION ----------------
 if "user" not in st.session_state:
     st.session_state.user = None
 
 
+# ---------------- CSS ----------------
 def load_css():
     with open("assets/style.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 load_css()
 
-# ---------------- LOGIN PAGE ----------------
+
+# ---------------- LOGIN ----------------
 def login():
 
     st.title("🔐 Comrade CRM Login")
@@ -48,7 +44,7 @@ def login():
             st.session_state.user = {
                 "id": user[0],
                 "username": user[1],
-                "role": user[3]
+                "role": user[2]   # ✅ FIXED
             }
             st.success("Login successful!")
             st.rerun()
@@ -99,7 +95,8 @@ def app():
     elif page == "Settings":
         settings_page()
 
-# ---------------- ROUTER ----------------
+
+# ---------------- ENTRY ----------------
 if st.session_state.user is None:
     login()
 else:
