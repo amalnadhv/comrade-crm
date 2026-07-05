@@ -16,7 +16,7 @@ from utils.pdf_generator import generate_quotation_pdf
 
 def quotations_page():
 
-    st.title("📄 Quotations Management")
+    st.title("📄 Quotations")
 
     # ---------------- SESSION INIT ----------------
     if "quote_items" not in st.session_state:
@@ -51,13 +51,15 @@ def quotations_page():
         st.subheader("✏️ Edit Quotation")
 
         edit_customer = st.text_input("Customer Name", value=row["customer_name"])
+
         edit_status = st.selectbox(
             "Status",
             ["Draft", "Sent", "Approved", "Rejected"],
-            index=["Draft", "Sent", "Approved", "Rejected"].index(row["status"])
+            index=["Draft", "Sent", "Approved", "Rejected"].index(row["status"]),
+            key="edit_status"
         )
 
-        if st.button("Update Quotation"):
+        if st.button("Update Quotation", key="update_btn"):
 
             update_quotation(
                 qid,
@@ -86,24 +88,25 @@ def quotations_page():
         customer_id = st.selectbox(
             "Select Customer",
             list(customer_map.keys()),
-            format_func=lambda x: customer_map[x]
+            format_func=lambda x: customer_map[x],
+            key="customer_select"
         )
 
-        # ---------------- ITEM ENTRY ----------------
+        # ---------------- ITEM INPUT ----------------
         st.subheader("Add Items")
 
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            item_name = st.text_input("Item Name")
+            item_name = st.text_input("Item Name", key="item_name")
 
         with col2:
-            qty = st.number_input("Qty", min_value=1, step=1)
+            qty = st.number_input("Qty", min_value=1, step=1, key="qty")
 
         with col3:
-            price = st.number_input("Price", min_value=0.0, step=10.0)
+            price = st.number_input("Price", min_value=0.0, step=10.0, key="price")
 
-        if st.button("Add Item"):
+        if st.button("Add Item", key="add_item"):
 
             if item_name.strip():
                 st.session_state.quote_items.append({
@@ -117,13 +120,13 @@ def quotations_page():
             else:
                 st.error("Enter item name")
 
-        # ---------------- SHOW ITEMS ----------------
+        # ---------------- ITEMS DISPLAY ----------------
         subtotal = 0
 
         if st.session_state.quote_items:
             st.subheader("🧾 Items")
 
-            for item in st.session_state.quote_items:
+            for i, item in enumerate(st.session_state.quote_items):
                 col1, col2, col3, col4 = st.columns(4)
 
                 col1.write(item["item"])
@@ -142,18 +145,22 @@ def quotations_page():
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            discount = st.number_input("Discount (%)", 0.0, 100.0, 0.0)
+            discount = st.number_input("Discount (%)", 0.0, 100.0, 0.0, key="discount")
 
         with col2:
-            tax = st.number_input("Tax (%)", 0.0, 100.0, 0.0)
+            tax = st.number_input("Tax (%)", 0.0, 100.0, 0.0, key="tax")
 
         with col3:
-            status = st.selectbox("Status", ["Draft", "Sent", "Approved", "Rejected"])
+            status = st.selectbox(
+                "Status",
+                ["Draft", "Sent", "Approved", "Rejected"],
+                key="status"
+            )
 
         # ---------------- VERSION ----------------
         df = get_quotations()
-        existing_versions = df[df["customer_name"] == customer_map.get(customer_id, "")]
-        version = f"V{len(existing_versions) + 1}"
+        existing = df[df["customer_name"] == customer_map.get(customer_id, "")]
+        version = f"V{len(existing) + 1}"
 
         st.info(f"📌 Version: {version}")
 
@@ -165,7 +172,7 @@ def quotations_page():
         st.success(f"Total: {total:.2f}")
 
         # ---------------- SAVE ----------------
-        if st.button("💾 Save Quotation"):
+        if st.button("💾 Save Quotation", key="save_quote"):
 
             if not st.session_state.quote_items:
                 st.error("Please add items first")
@@ -189,7 +196,7 @@ def quotations_page():
             st.success("Quotation saved successfully!")
             st.rerun()
 
-    # ---------------- LIST ----------------
+    # ---------------- LIST QUOTATIONS ----------------
     st.markdown("---")
     st.subheader("📑 All Quotations")
 
@@ -224,20 +231,17 @@ def quotations_page():
                 # ---------------- ACTIONS ----------------
                 col1, col2, col3 = st.columns(3)
 
-                # EDIT
                 with col1:
                     if st.button("✏️ Edit", key=f"edit_{row.id}"):
                         st.session_state.edit_quote = row.id
                         st.rerun()
 
-                # DELETE
                 with col2:
                     if st.button("🗑️ Delete", key=f"del_{row.id}"):
                         delete_quotation(row.id)
                         st.success("Deleted successfully")
                         st.rerun()
 
-                # PDF
                 with col3:
                     if st.button("📥 PDF", key=f"pdf_{row.id}"):
 
@@ -256,5 +260,6 @@ def quotations_page():
                             st.download_button(
                                 "Download PDF",
                                 f,
-                                file_name=f"quotation_{row.id}.pdf"
+                                file_name=f"quotation_{row.id}.pdf",
+                                key=f"dl_{row.id}"
                             )
