@@ -19,6 +19,12 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 
+def load_css():
+    with open("assets/style.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+load_css()
+
 # ---------------- LOGIN PAGE ----------------
 def login():
 
@@ -58,7 +64,19 @@ def app():
         ["Dashboard", "Customers", "Leads", "Follow-ups", "Quotations", "Reports"]
     )
 
-    st.sidebar.markdown("---")
+   st.sidebar.markdown("""
+    # 💼 Comrade CRM
+    
+    ### Sales & Lead Management
+    ---
+    """)
+    
+    st.sidebar.markdown(f"""
+    👤 Logged in as:  
+    **{st.session_state.user['username']}**
+    
+    Role: `{st.session_state.user['role']}`
+    """)
 
     if page == "Dashboard":
         dashboard_page()
