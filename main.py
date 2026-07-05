@@ -10,9 +10,6 @@ from pages.quotations import quotations_page
 from pages.reports import reports_page
 from pages.settings import settings_page
 
-from database import reset_quotations_table
-reset_quotations_table()
-
 st.set_page_config(page_title="Comrade CRM", layout="wide")
 init_db()
 
