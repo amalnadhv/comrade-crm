@@ -1,16 +1,47 @@
 import streamlit as st
 import pandas as pd
+import json
 from datetime import date
+import sqlite3
 
 from database import add_quotation, get_quotations, get_customers
 
 
-# ================= HELPERS =================
-def calculate_total(items, discount, tax):
-    subtotal = sum(i["qty"] * i["price"] for i in items)
-    after_discount = subtotal - (subtotal * discount / 100)
-    total = after_discount + (after_discount * tax / 100)
-    return subtotal, total
+DB_NAME = "crm.db"
+
+
+# ================= UPDATE QUOTATION =================
+def update_quotation(qid, customer_name, items, subtotal, discount, tax, total, status, version):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE quotations
+        SET customer_name=?, items=?, subtotal=?, discount=?, tax=?, total=?, status=?, version=?
+        WHERE id=?
+    """, (
+        customer_name,
+        json.dumps(items),
+        subtotal,
+        discount,
+        tax,
+        total,
+        status,
+        version,
+        qid
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+# ================= DELETE =================
+def delete_quotation(qid):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute("DELETE FROM quotations WHERE id=?", (qid,))
+    conn.commit()
+    conn.close()
 
 
 # ================= PAGE =================
@@ -22,12 +53,11 @@ def quotations_page():
     if "quote_items" not in st.session_state:
         st.session_state.quote_items = []
 
-    if "edit_quote_id" not in st.session_state:
-        st.session_state.edit_quote_id = None
+    if "edit_id" not in st.session_state:
+        st.session_state.edit_id = None
 
+    # ---------------- DATA ----------------
     df = get_quotations()
-    if df is None:
-        df = pd.DataFrame()
 
     customers = get_customers()
     customers = pd.DataFrame(
@@ -36,157 +66,155 @@ def quotations_page():
     )
 
     customer_map = {
-        row.id: f"{row.name} ({row.company})"
-        for row in customers.itertuples()
+        r.id: f"{r.name} ({r.company})"
+        for r in customers.itertuples()
     }
 
-    # ================= CREATE / EDIT FORM =================
-    st.subheader("➕ Create / Edit Quotation")
-
-    if not customer_map:
-        st.warning("No customers found")
-        return
+    # ================= FORM =================
+    st.subheader("Create / Edit Quotation")
 
     customer_id = st.selectbox(
         "Customer",
         list(customer_map.keys()),
         format_func=lambda x: customer_map[x],
-        key="customer_select"
+        key="customer"
     )
 
-    # -------- ITEM INPUT --------
-    st.markdown("### Add Items")
+    # ---------- ITEMS ----------
+    st.markdown("### Items")
 
-    col1, col2, col3 = st.columns(3)
+    c1, c2, c3 = st.columns(3)
 
-    with col1:
-        item_name = st.text_input("Item Name", key="item_name")
+    item = c1.text_input("Item", key="item")
+    qty = c2.number_input("Qty", 1, step=1, key="qty")
+    price = c3.number_input("Price", 0.0, step=10.0, key="price")
 
-    with col2:
-        qty = st.number_input("Qty", min_value=1, step=1, key="qty")
+    if st.button("Add Item"):
+        st.session_state.quote_items.append({
+            "item": item,
+            "qty": qty,
+            "price": price
+        })
+        st.rerun()
 
-    with col3:
-        price = st.number_input("Price", min_value=0.0, step=10.0, key="price")
-
-    if st.button("➕ Add Item", key="add_item"):
-
-        if item_name.strip():
-            st.session_state.quote_items.append({
-                "item": item_name,
-                "qty": qty,
-                "price": price
-            })
-            st.rerun()
-        else:
-            st.error("Enter item name")
-
-    # -------- SHOW ITEMS (EDITABLE) --------
     subtotal = 0
 
-    if st.session_state.quote_items:
-        st.markdown("### Items")
+    # ---------- ITEM LIST ----------
+    for i, it in enumerate(st.session_state.quote_items):
 
-        for i, item in enumerate(st.session_state.quote_items):
+        cols = st.columns([3,2,2,1])
 
-            c1, c2, c3, c4, c5 = st.columns([3, 2, 2, 2, 1])
+        it["item"] = cols[0].text_input("Item", it["item"], key=f"it{i}")
+        it["qty"] = cols[1].number_input("Qty", value=it["qty"], key=f"q{i}")
+        it["price"] = cols[2].number_input("Price", value=it["price"], key=f"p{i}")
 
-            item["item"] = c1.text_input("Item", item["item"], key=f"item_{i}")
-            item["qty"] = c2.number_input("Qty", value=item["qty"], key=f"qty_{i}")
-            item["price"] = c3.number_input("Price", value=item["price"], key=f"price_{i}")
+        subtotal += it["qty"] * it["price"]
 
-            item_total = item["qty"] * item["price"]
-            c4.write(item_total)
-
-            if c5.button("🗑", key=f"del_{i}"):
-                st.session_state.quote_items.pop(i)
-                st.rerun()
-
-            subtotal += item_total
-    else:
-        st.info("No items added yet")
+        if cols[3].button("❌", key=f"del{i}"):
+            st.session_state.quote_items.pop(i)
+            st.rerun()
 
     st.markdown("---")
 
-    # -------- DISCOUNT / TAX --------
+    # ---------- TAX ----------
     col1, col2, col3 = st.columns(3)
 
-    discount = col1.number_input("Discount (%)", 0.0, 100.0, 0.0, key="discount")
-    tax = col2.number_input("Tax (%)", 0.0, 100.0, 0.0, key="tax")
-    status = col3.selectbox(
-        "Status",
-        ["Draft", "Sent", "Approved", "Rejected"],
-        key="status"
-    )
+    discount = col1.number_input("Discount %", 0.0, 100.0, 0.0)
+    tax = col2.number_input("Tax %", 0.0, 100.0, 0.0)
+    status = col3.selectbox("Status", ["Draft", "Sent", "Approved", "Rejected"])
 
-    subtotal, total = calculate_total(
-        st.session_state.quote_items,
-        discount,
-        tax
-    )
+    after_discount = subtotal - (subtotal * discount / 100)
+    total = after_discount + (after_discount * tax / 100)
 
     st.success(f"Subtotal: {subtotal:.2f}")
     st.success(f"Total: {total:.2f}")
 
-    # ================= SAVE =================
-    if st.button("💾 Save Quotation"):
+    # ================= SAVE / UPDATE =================
+    if st.button("💾 Save / Update"):
 
         if not st.session_state.quote_items:
             st.error("Add items first")
             return
 
-        add_quotation(
-            customer_map[customer_id],
-            st.session_state.quote_items,
-            subtotal,
-            discount,
-            tax,
-            total,
-            status,
-            str(date.today()),
-            "V1"
-        )
+        customer_name = customer_map[customer_id]
+
+        if st.session_state.edit_id:
+
+            update_quotation(
+                st.session_state.edit_id,
+                customer_name,
+                st.session_state.quote_items,
+                subtotal,
+                discount,
+                tax,
+                total,
+                status,
+                "V-EDIT"
+            )
+
+            st.success("Quotation updated!")
+            st.session_state.edit_id = None
+
+        else:
+
+            add_quotation(
+                customer_name,
+                st.session_state.quote_items,
+                subtotal,
+                discount,
+                tax,
+                total,
+                status,
+                str(date.today()),
+                "V1"
+            )
+
+            st.success("Quotation saved!")
 
         st.session_state.quote_items = []
-        st.success("Saved successfully!")
         st.rerun()
 
     # ================= LIST =================
     st.markdown("---")
-    st.subheader("📄 All Quotations")
+    st.subheader("All Quotations")
 
     df = get_quotations()
 
-    if df.empty:
-        st.info("No quotations found")
+    for _, row in df.iterrows():
 
-    else:
+        with st.container():
+            st.markdown(f"""
+            ### {row['customer_name']} ({row['version']})
+            **Total:** {row['total']}  
+            **Status:** {row['status']}  
+            **Date:** {row['created_on']}
+            """)
 
-        for _, row in df.iterrows():
+            c1, c2, c3 = st.columns(3)
 
-            with st.container():
-                st.markdown(f"""
-                ### {row['customer_name']} | {row['version']}
-                **Total:** {row['total']}  
-                **Status:** {row['status']}  
-                **Date:** {row['created_on']}
-                """)
+            # ---------- EDIT ----------
+            if c1.button("✏ Edit", key=f"e{row['id']}"):
 
-                col1, col2 = st.columns(2)
+                st.session_state.quote_items = json.loads(row["items"])
+                st.session_state.edit_id = row["id"]
+                st.rerun()
 
-                # -------- DELETE --------
-                if col1.button("🗑 Delete", key=f"del_quote_{row['id']}"):
-                    import sqlite3
-                    conn = sqlite3.connect("crm.db")
-                    cur = conn.cursor()
-                    cur.execute("DELETE FROM quotations WHERE id=?", (row["id"],))
-                    conn.commit()
-                    conn.close()
-                    st.rerun()
+            # ---------- DELETE ----------
+            if c2.button("🗑 Delete", key=f"d{row['id']}"):
+                delete_quotation(row["id"])
+                st.rerun()
 
-                # -------- EDIT --------
-                if col2.button("✏ Edit", key=f"edit_quote_{row['id']}"):
-                    st.session_state.quote_items = eval(row["items"])  # load items
-                    st.session_state.edit_quote_id = row["id"]
-                    st.rerun()
+            # ---------- PDF ----------
+            if c3.button("📄 PDF", key=f"p{row['id']}"):
 
-                st.markdown("---")
+                from utils.pdf_generator import generate_quotation_pdf
+
+                pdf_path = generate_quotation_pdf(row)
+                st.success("PDF generated!")
+                st.download_button(
+                    "Download PDF",
+                    open(pdf_path, "rb"),
+                    file_name="quotation.pdf"
+                )
+
+            st.markdown("---")
