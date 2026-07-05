@@ -81,7 +81,7 @@ def quotations_page():
 
     customer_options = list(customer_map.keys())
 
-    # ================= LOAD EDIT DATA =================
+    # ================= LOAD EDIT =================
     if st.session_state.edit_id and not st.session_state.edit_loaded:
 
         match = df[df["id"] == st.session_state.edit_id]
@@ -95,7 +95,7 @@ def quotations_page():
 
         st.session_state.edit_loaded = True
 
-    # ================= CUSTOMER DEFAULT =================
+    # ================= DEFAULT CUSTOMER =================
     default_customer = customer_options[0]
 
     if st.session_state.edit_id:
@@ -105,7 +105,7 @@ def quotations_page():
             customer_options[0]
         )
 
-    # ================= UI =================
+    # ================= FORM =================
     st.subheader("Create / Edit Quotation")
 
     customer_id = st.selectbox(
@@ -127,23 +127,24 @@ def quotations_page():
         key="status_select"
     )
 
-    # ================= ITEM INPUT =================
+    # ================= ITEM INPUT (NO VALIDATION) =================
     st.markdown("### Items")
 
     c1, c2, c3 = st.columns(3)
 
     item = c1.text_input("Item", key="item")
-    qty = c2.number_input("Qty", 1, key="qty")
-    price = c3.number_input("Price", 0.0, key="price")
+    qty = c2.number_input("Qty", key="qty")
+    price = c3.number_input("Price", key="price")
 
     if st.button("➕ Add Item"):
-        if item:
-            st.session_state.quote_items.append({
-                "item": item,
-                "qty": qty,
-                "price": price
-            })
-            st.rerun()
+
+        st.session_state.quote_items.append({
+            "item": item,
+            "qty": qty,
+            "price": price
+        })
+
+        st.rerun()
 
     # ================= ITEM LIST =================
     subtotal = 0
@@ -164,9 +165,9 @@ def quotations_page():
 
     st.markdown("---")
 
-    # ================= CALCULATION =================
-    discount = st.number_input("Discount %", 0.0, 100.0, key="discount")
-    tax = st.number_input("Tax %", 0.0, 100.0, key="tax")
+    # ================= TOTAL =================
+    discount = st.number_input("Discount %", key="discount")
+    tax = st.number_input("Tax %", key="tax")
 
     after_discount = subtotal - (subtotal * discount / 100)
     total = after_discount + (after_discount * tax / 100)
