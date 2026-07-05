@@ -273,3 +273,44 @@ def get_quotations():
     df = pd.read_sql_query("SELECT * FROM quotations ORDER BY id DESC", conn)
     conn.close()
     return df
+
+def delete_quotation(quotation_id):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM quotations WHERE id=?", (quotation_id,))
+
+    conn.commit()
+    conn.close()
+
+
+def update_quotation(quotation_id, customer_name, items, subtotal, discount, tax, total, status):
+    import json
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE quotations
+        SET customer_name=?,
+            items=?,
+            subtotal=?,
+            discount=?,
+            tax=?,
+            total=?,
+            status=?
+        WHERE id=?
+    """, (
+        customer_name,
+        json.dumps(items),
+        subtotal,
+        discount,
+        tax,
+        total,
+        status,
+        quotation_id
+    ))
+
+    conn.commit()
+    conn.close()
+    
