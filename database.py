@@ -69,6 +69,22 @@ if not cur.fetchone():
         VALUES ('admin', 'admin123', 'Admin')
     """)
 
+cur.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    password TEXT,
+    role TEXT
+)
+""")
+
+cur.execute("SELECT * FROM users WHERE username='admin'")
+if not cur.fetchone():
+    cur.execute("""
+        INSERT INTO users (username, password, role)
+        VALUES ('admin', 'admin123', 'Admin')
+    """)
+    
 # ---------------- CUSTOMERS ----------------
 def add_customer(name, phone, email, company, status):
     conn = sqlite3.connect(DB_NAME)
@@ -117,6 +133,17 @@ def delete_customer(customer_id):
     conn.commit()
     conn.close()
 
+def add_user(username, password, role="Sales"):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO users (username, password, role)
+        VALUES (?, ?, ?)
+    """, (username, password, role))
+
+    conn.commit()
+    conn.close()
 
 # ---------------- LEADS (READY FOR NEXT STEP) ----------------
 def add_lead(company, contact_person, phone, email, source, status, followup_date, remarks):
