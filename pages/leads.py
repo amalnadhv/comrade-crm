@@ -90,15 +90,41 @@ def leads_page():
         return
 
     # ---------------- LEADS LIST ----------------
-    for row in df.itertuples():
+  from database import delete_customer, convert_lead_to_customer
 
-        col1, col2, col3, col4, col5, col6 = st.columns([2,2,2,2,2,2])
+for row in df.itertuples():
 
-        col1.write(row.company)
-        col2.write(row.contact_person)
-        col3.write(row.phone)
-        col4.write(row.source)
-        col5.write(status_colors.get(row.status, row.status))
+    col1, col2, col3, col4, col5, col6 = st.columns([2,2,2,2,2,2])
 
-        with col6:
-            st.button("View", key=f"view_{row.id}")
+    col1.write(row.company)
+    col2.write(row.contact_person)
+    col3.write(row.phone)
+    col4.write(row.source)
+    col5.write(status_colors.get(row.status, row.status))
+
+    with col6:
+        c1, c2 = st.columns(2)
+
+        with c1:
+            if st.button("👁 View", key=f"view_{row.id}"):
+                st.info(f"""
+                **Company:** {row.company}  
+                **Contact:** {row.contact_person}  
+                **Phone:** {row.phone}  
+                **Email:** {row.email}  
+                **Remarks:** {row.remarks}
+                """)
+
+        with c2:
+            if st.button("➡ Convert", key=f"convert_{row.id}"):
+
+                convert_lead_to_customer(
+                    row.contact_person,
+                    row.phone,
+                    row.email,
+                    row.company,
+                    "New"
+                )
+
+                st.success("Converted to Customer!")
+                st.rerun()
