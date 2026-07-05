@@ -62,10 +62,13 @@ def app():
 
     st.sidebar.write(f"👤 {st.session_state.user['username']}")
 
+    role = st.session_state.user["role"]
+
     if st.sidebar.button("Logout"):
         st.session_state.user = None
         st.rerun()
 
+    # ---------------- ROLE BASED MENU ----------------
     if role == "Admin":
         page = st.sidebar.radio(
             "Navigation",
@@ -77,31 +80,9 @@ def app():
             ["Dashboard", "Customers", "Leads", "Follow-ups"]
         )
 
-    page = st.sidebar.radio(
-        "Navigation",
-        ["Dashboard", "Customers", "Leads", "Follow-ups", "Quotations", "Reports"]
-    )
+    st.sidebar.markdown("---")
 
-   st.sidebar.markdown("""
-    # 💼 Comrade CRM
-    
-    ### Sales & Lead Management
-    ---
-    """)
-
-    st.session_state.user = {
-        "id": user[0],
-        "username": user[1],
-        "role": user[2]
-    }
-
-    st.sidebar.markdown(f"""
-    👤 Logged in as:  
-    **{st.session_state.user['username']}**
-    
-    Role: `{st.session_state.user['role']}`
-    """)
-
+    # ---------------- ROUTING ----------------
     if page == "Dashboard":
         dashboard_page()
     elif page == "Customers":
@@ -114,7 +95,8 @@ def app():
         quotations_page()
     elif page == "Reports":
         reports_page()
-
+    elif page == "Settings":
+        settings_page()
 
 # ---------------- ROUTER ----------------
 if st.session_state.user is None:
