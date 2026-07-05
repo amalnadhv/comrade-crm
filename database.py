@@ -49,18 +49,27 @@ def init_db():
     """)
 
     # ---------------- QUOTATIONS ----------------
+      # DROP OLD TABLE (important for fix)
+    cur.execute("DROP TABLE IF EXISTS quotations")
+
+    # CREATE NEW TABLE
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS quotations (
+    CREATE TABLE quotations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer_name TEXT,
-        amount REAL,
+        items TEXT,
+        subtotal REAL,
         discount REAL,
         tax REAL,
         total REAL,
         status TEXT,
-        created_on TEXT
+        created_on TEXT,
+        version TEXT
     )
     """)
+
+    conn.commit()
+    conn.close()
 
     cur.execute("PRAGMA table_info(quotations)")
     columns = [col[1] for col in cur.fetchall()]
