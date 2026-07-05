@@ -39,13 +39,13 @@ def dashboard_page():
         conversion_rate = round((won_leads / total_leads) * 100, 2)
 
     # ---------------- KPI CARDS ----------------
-    col1, col2, col3, col4, col5 = st.columns(5)
+   col1, col2, col3, col4, col5 = st.columns(5)
 
     col1.metric("👥 Customers", total_customers)
     col2.metric("🎯 Leads", total_leads)
     col3.metric("🏆 Won", won_leads)
     col4.metric("❌ Lost", lost_leads)
-    col5.metric("📅 Pending Follow-ups", pending_followups)
+    col5.metric("📅 Follow-ups", pending_followups)
 
     st.markdown("---")
 
