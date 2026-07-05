@@ -324,3 +324,12 @@ def update_followup(followup_id, lead_id, title, followup_date, status, remarks)
 
     conn.commit()
     conn.close()
+
+def reset_quotations_table():
+    import sqlite3
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute("DROP TABLE IF EXISTS quotations")
+    conn.commit()
+    conn.close()
+    
