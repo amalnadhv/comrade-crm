@@ -19,6 +19,8 @@ def load_df():
 # ---------------- PAGE ----------------
 def customers_page():
 
+    role = st.session_state.user["role"]
+    
     st.title("👥 Customers")
 
     df = load_df()
