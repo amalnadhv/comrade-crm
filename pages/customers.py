@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import time
 
 from database import (
     add_customer,
@@ -25,6 +26,29 @@ def customers_page():
 
     st.title("👥 Customers")
 
+    # ---------------- SUCCESS MESSAGE HANDLER ----------------
+    if "message" not in st.session_state:
+        st.session_state.message = None
+
+    if "message_time" not in st.session_state:
+        st.session_state.message_time = None
+
+    def show_message(text):
+        st.session_state.message = text
+        st.session_state.message_time = time.time()
+
+    def render_message():
+        if st.session_state.message:
+            st.success(st.session_state.message)
+
+            # auto clear after 3 seconds
+            if time.time() - st.session_state.message_time > 3:
+                st.session_state.message = None
+                st.session_state.message_time = None
+                st.rerun()
+
+    render_message()
+
     df = load_df()
 
     # ---------------- ADD CUSTOMER ----------------
@@ -45,15 +69,11 @@ def customers_page():
 
             if name and phone:
                 add_customer(name, phone, email, company, status)
-                st.session_state["add_success"] = True
+                show_message("Customer added successfully ✅")
                 st.rerun()
             else:
-                st.error("Name and Phone are required.")
-
-    # ---------------- ADD SUCCESS MESSAGE ----------------
-    if st.session_state.get("add_success"):
-        st.success("Customer added successfully ✅")
-        st.session_state["add_success"] = False
+                show_message("Name and Phone are required ❌")
+                st.rerun()
 
     st.markdown("---")
 
@@ -71,11 +91,8 @@ def customers_page():
     if "edit_id" not in st.session_state:
         st.session_state.edit_id = None
 
-    if "edit_success" not in st.session_state:
-        st.session_state.edit_success = False
-
     # ---------------- EDIT FORM ----------------
-    if st.session_state.edit_id:
+    if st.session_state.get("edit_id") is not None:
 
         edit_id = st.session_state.edit_id
         edit_row = df[df["id"] == edit_id]
@@ -142,9 +159,9 @@ def customers_page():
                         new_status
                     )
 
-                    # CLOSE EDIT FORM CLEANLY
+                    # CLEAR SCREEN COMPLETELY
                     st.session_state.edit_id = None
-                    st.session_state.edit_success = True
+                    show_message("Customer updated successfully ✅")
 
                     st.rerun()
 
@@ -155,11 +172,6 @@ def customers_page():
 
                     st.session_state.edit_id = None
                     st.rerun()
-
-    # ---------------- EDIT SUCCESS MESSAGE ----------------
-    if st.session_state.get("edit_success"):
-        st.success("Customer updated successfully ✅")
-        st.session_state["edit_success"] = False
 
     st.markdown("---")
 
@@ -223,5 +235,5 @@ def customers_page():
                     if st.button("🗑️ Delete", key=f"delete_btn_{row.id}"):
 
                         delete_customer(row.id)
-                        st.success("Customer deleted.")
+                        show_message("Customer deleted 🗑️")
                         st.rerun()
