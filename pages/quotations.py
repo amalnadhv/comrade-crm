@@ -267,32 +267,35 @@ def quotations_page():
             delete_quotation(row["id"])
             st.rerun()
 
-     if c3.button("📄 PDF", key=f"p_{row['id']}"):
+        if c3.button("📄 PDF", key=f"p_{row['id']}"):
 
-        try:
-            # ---------------- SAFE ITEMS PARSING ----------------
-            items = row.get("items", [])
-    
-            if isinstance(items, str):
-                try:
-                    items = json.loads(items)
-                except:
-                    items = []
-    
-            # rebuild row safely for PDF
-            safe_row = dict(row)
-            safe_row["items"] = items
-    
-            # ---------------- GENERATE PDF ----------------
-            pdf_file = generate_quotation_pdf(safe_row)
-    
-            with open(pdf_file, "rb") as f:
+            try:
+                # Create a safe copy of the row
+                safe_row = row.to_dict()
+
+                # Convert JSON string to list
+                items = safe_row.get("items", [])
+
+                if isinstance(items, str):
+                    try:
+                        items = json.loads(items)
+                    except json.JSONDecodeError:
+                        items = []
+
+                safe_row["items"] = items
+
+                # Generate PDF (returns BytesIO)
+                pdf_buffer = generate_quotation_pdf(safe_row)
+
                 st.download_button(
-                    "Download PDF",
-                    f,
-                    file_name=f"quotation_{row['id']}.pdf"
+                    label="⬇ Download PDF",
+                    data=pdf_buffer,
+                    file_name=f"quotation_{row['id']}.pdf",
+                    mime="application/pdf",
+                    key=f"download_pdf_{row['id']}"
                 )
 
-        except Exception as e:
-        st.error(f"PDF Error: {e}")
-        st.markdown("---")
+            except Exception as e:
+            st.error(f"PDF Error: {e}")
+                
+            st.markdown("---")
