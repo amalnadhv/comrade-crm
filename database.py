@@ -296,3 +296,31 @@ def update_followup(followup_id, lead_id, title, followup_date, status, remarks)
 
     conn.commit()
     conn.close()
+
+def add_version_column():
+    import sqlite3
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    try:
+        cur.execute("ALTER TABLE quotations ADD COLUMN version TEXT")
+    except:
+        pass
+
+    conn.commit()
+    conn.close()
+
+def add_quotation(customer_name, amount, discount, tax, total, status, created_on, version):
+    import sqlite3
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO quotations
+        (customer_name, amount, discount, tax, total, status, created_on, version)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (customer_name, amount, discount, tax, total, status, created_on, version))
+
+    conn.commit()
+    conn.close()
