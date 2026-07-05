@@ -1,219 +1,61 @@
 import streamlit as st
-import pandas as pd
 
-from database import (
-    init_db,
-    add_customer,
-    get_customers,
-    update_customer,
-    delete_customer
+from database import init_db
+from pages.dashboard import dashboard_page
+from pages.customers import customers_page
+from pages.leads import leads_page
+from pages.followups import followups_page
+from pages.reports import reports_page
+from pages.settings import settings_page
+
+# ---------------- APP CONFIG ----------------
+st.set_page_config(
+    page_title="Comrade CRM",
+    page_icon="💼",
+    layout="wide"
 )
 
-st.markdown("""
-<style>
-
-/* Edit button */
-div.stButton > button[kind="primary"] {
-    background-color: #2563eb;
-    color: white;
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-weight: 600;
-}
-
-/* Hover effect */
-div.stButton > button:hover {
-    background-color: #1d4ed8;
-    color: white;
-}
-
-/* Delete button styling using button text selector */
-div.stButton > button:contains("Delete") {
-    background-color: #ef4444;
-    color: white;
-    border-radius: 8px;
-}
-
-/* Save button */
-div.stButton > button:contains("Save") {
-    background-color: #10b981;
-    color: white;
-    border-radius: 8px;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# ---------------- INIT ----------------
+# ---------------- DATABASE ----------------
 init_db()
 
-st.set_page_config(page_title="Comrade CRM", layout="wide")
-
-# ---------------- LOAD DATA ----------------
-def load_df():
-    rows = get_customers()
-    return pd.DataFrame(rows, columns=[
-        "id", "name", "phone", "email", "company", "status"
-    ])
-
-df = load_df()
-
-# ---------------- SESSION STATE ----------------
-if "edit_id" not in st.session_state:
-    st.session_state["edit_id"] = None
-
 # ---------------- SIDEBAR ----------------
-st.sidebar.title("📊 CRM")
+st.sidebar.image(
+    "https://img.icons8.com/color/96/business.png",
+    width=70
+)
 
-page = st.sidebar.radio("Navigation", ["Dashboard", "Customers", "Analytics"])
+st.sidebar.title("Comrade CRM")
+
+page = st.sidebar.radio(
+    "Navigation",
+    [
+        "Dashboard",
+        "Customers",
+        "Leads",
+        "Follow Ups",
+        "Reports",
+        "Settings"
+    ]
+)
 
 st.sidebar.markdown("---")
+st.sidebar.caption("Version 2.0")
 
-st.sidebar.subheader("➕ Add Customer")
-
-name = st.sidebar.text_input("Name")
-phone = st.sidebar.text_input("Phone")
-email = st.sidebar.text_input("Email")
-company = st.sidebar.text_input("Company")
-status = st.sidebar.selectbox("Status", ["New", "Contacted", "Won", "Lost"])
-
-if st.sidebar.button("Save Customer"):
-    if name and phone:
-        add_customer(name, phone, email, company, status)
-        st.success("Customer added!")
-        st.rerun()
-    else:
-        st.error("Name and Phone required")
-
-# ---------------- DASHBOARD ----------------
+# ---------------- PAGE ROUTER ----------------
 if page == "Dashboard":
-    st.title("📌 Dashboard")
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric("Total", len(df))
-    col2.metric("New", len(df[df["status"] == "New"]) if not df.empty else 0)
-    col3.metric("Won", len(df[df["status"] == "Won"]) if not df.empty else 0)
-    col4.metric("Lost", len(df[df["status"] == "Lost"]) if not df.empty else 0)
-
-    st.dataframe(df, use_container_width=True)
-
-# ---------------- CUSTOMERS ----------------
+    dashboard_page()
 
 elif page == "Customers":
-    st.title("Customers")
+    customers_page()
 
-    df = load_df()
+elif page == "Leads":
+    leads_page()
 
-    # ---------------- SEARCH ----------------
-    search = st.text_input("🔍 Search customers")
+elif page == "Follow Ups":
+    followups_page()
 
-    if search:
-        df = df[
-            df["name"].str.contains(search, case=False, na=False) |
-            df["phone"].str.contains(search, case=False, na=False) |
-            df["email"].str.contains(search, case=False, na=False)
-        ]
+elif page == "Reports":
+    reports_page()
 
-    # ---------------- EDIT FORM (TOP LEVEL) ----------------
-    if st.session_state.get("edit_id") is not None:
-
-        edit_id = st.session_state["edit_id"]
-        edit_row = df[df["id"] == edit_id]
-
-        if not edit_row.empty:
-            edit_row = edit_row.iloc[0]
-
-            st.markdown("---")
-            st.subheader(f"✏️ Edit Customer: {edit_row['name']}")
-
-            new_name = st.text_input("Name", edit_row["name"])
-            new_phone = st.text_input("Phone", edit_row["phone"])
-            new_email = st.text_input("Email", edit_row["email"])
-            new_company = st.text_input("Company", edit_row["company"])
-
-            new_status = st.selectbox(
-                "Status",
-                ["New", "Contacted", "Won", "Lost"],
-                index=["New", "Contacted", "Won", "Lost"].index(edit_row["status"])
-            )
-
-            c1, c2 = st.columns(2)
-
-            with c1:
-                if st.button("💾 Save Changes"):
-                    update_customer(
-                        edit_id,
-                        new_name,
-                        new_phone,
-                        new_email,
-                        new_company,
-                        new_status
-                    )
-                    st.session_state["edit_id"] = None
-                    st.rerun()
-
-            with c2:
-                if st.button("❌ Cancel"):
-                    st.session_state["edit_id"] = None
-                    st.rerun()
-
-    st.markdown("---")
-
-    # ---------------- GRID ----------------
-    from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
-
-    gb = GridOptionsBuilder.from_dataframe(df)
-    gb.configure_default_column(sortable=True, filter=True)
-    gb.configure_selection("single", use_checkbox=True)
-
-    grid_options = gb.build()
-
-    grid_response = AgGrid(
-        df,
-        gridOptions=grid_options,
-        update_mode=GridUpdateMode.SELECTION_CHANGED,
-        height=450,
-        fit_columns_on_grid_load=True
-    )
-
-    # ---------------- SAFE SELECTION ----------------
-    selected_rows = grid_response.get("selected_rows")
-
-    if selected_rows is None:
-        selected_rows = []
-    elif isinstance(selected_rows, dict):
-        selected_rows = [selected_rows]
-    elif isinstance(selected_rows, pd.DataFrame):
-        selected_rows = selected_rows.to_dict("records")
-
-    # ---------------- ACTION PANEL ----------------
-    if len(selected_rows) > 0:
-        row = selected_rows[0]
-
-        st.markdown("---")
-        st.subheader(f"Selected: {row['name']}")
-
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            if st.button("✏️ Edit Selected", key=f"edit_{row['id']}"):
-                st.session_state["edit_id"] = int(row["id"])
-                st.rerun()
-
-        with col2:
-            if st.button("🗑️ Delete Selected", key=f"del_{row['id']}"):
-                delete_customer(int(row["id"]))
-                st.rerun()
-
-        with col3:
-            st.info(f"Phone: {row['phone']}")
-
-# ---------------- ANALYTICS ----------------
-elif page == "Analytics":
-    st.title("📊 Analytics")
-
-    if df.empty:
-        st.info("No data available")
-    else:
-        st.bar_chart(df["status"].value_counts())
+elif page == "Settings":
+    settings_page()
