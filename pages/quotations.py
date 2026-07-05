@@ -3,7 +3,13 @@ import pandas as pd
 from datetime import date
 
 from database import add_quotation, get_quotations
+from utils.emailer import send_email
 
+send_email(
+    "client@email.com",
+    "Quotation from Comrade CRM",
+    "Please find attached your quotation."
+)
 
 def quotations_page():
 
