@@ -14,10 +14,12 @@ from pages.settings import settings_page
 st.set_page_config(page_title="Comrade CRM", layout="wide")
 init_db()
 
-
 # ---------------- SESSION ----------------
 if "user" not in st.session_state:
     st.session_state.user = None
+
+if "page" not in st.session_state:
+    st.session_state.page = "Dashboard"
 
 
 # ---------------- LOGIN ----------------
@@ -36,7 +38,10 @@ def login():
                 "username": user[1],
                 "role": user[2]
             }
+
+            st.session_state.page = "Dashboard"  # IMPORTANT FIX
             st.rerun()
+
         else:
             st.error("Invalid credentials")
 
@@ -46,42 +51,45 @@ def app():
 
     st.sidebar.title("📊 Comrade CRM")
 
-    role = st.session_state.user["role"]
-
     st.sidebar.write(f"👤 {st.session_state.user['username']}")
 
+    # logout
     if st.sidebar.button("Logout"):
         st.session_state.user = None
+        st.session_state.page = "Dashboard"
         st.rerun()
 
-    # ---------------- SINGLE SOURCE OF TRUTH ----------------
-    page = st.sidebar.radio(
+    # ---------------- MENU ----------------
+    menu = ["Dashboard", "Customers", "Leads", "Follow-ups", "Quotations", "Reports", "Settings"]
+
+    st.session_state.page = st.sidebar.radio(
         "Navigation",
-        ["Dashboard", "Customers", "Leads", "Follow-ups", "Quotations", "Reports", "Settings"]
+        menu,
+        index=menu.index(st.session_state.page)
     )
 
     st.sidebar.markdown("---")
 
-    # ---------------- PAGE ROUTING (CRITICAL PART) ----------------
-    if page == "Dashboard":
+    # ---------------- ROUTING ----------------
+    if st.session_state.page == "Dashboard":
         dashboard_page()
 
-    elif page == "Customers":
+    elif st.session_state.page == "Customers":
         customers_page()
 
-    elif page == "Leads":
+    elif st.session_state.page == "Leads":
         leads_page()
 
-    elif page == "Follow-ups":
+    elif st.session_state.page == "Follow-ups":
         followups_page()
 
-    elif page == "Quotations":
+    elif st.session_state.page == "Quotations":
         quotations_page()
 
-    elif page == "Reports":
+    elif st.session_state.page == "Reports":
         reports_page()
 
-    elif page == "Settings":
+    elif st.session_state.page == "Settings":
         settings_page()
 
 
