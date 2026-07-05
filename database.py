@@ -217,26 +217,48 @@ def get_followups():
 
 
 # ---------------- QUOTATIONS ----------------
-def add_quotation(customer_name, amount, discount, tax, total, status, created_on):
-    conn = sqlite3.connect(DB_NAME)
+def add_quotation(customer_name, items, subtotal, discount, tax, total, status, created_on, version):
+    import json
+    import sqlite3
+
+    conn = sqlite3.connect("crm.db")
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO quotations
-        (customer_name, amount, discount, tax, total, status, created_on)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (customer_name, amount, discount, tax, total, status, created_on))
+    CREATE TABLE IF NOT EXISTS quotations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_name TEXT,
+        items TEXT,
+        subtotal REAL,
+        discount REAL,
+        tax REAL,
+        total REAL,
+        status TEXT,
+        created_on TEXT,
+        version TEXT
+    )
+    """)
+
+    cur.execute("""
+        INSERT INTO quotations (
+            customer_name, items, subtotal, discount, tax,
+            total, status, created_on, version
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        customer_name,
+        json.dumps(items),
+        subtotal,
+        discount,
+        tax,
+        total,
+        status,
+        created_on,
+        version
+    ))
 
     conn.commit()
     conn.close()
-
-
-def get_quotations():
-    conn = sqlite3.connect(DB_NAME)
-    df = pd.read_sql_query("SELECT * FROM quotations", conn)
-    conn.close()
-    return df
-
 
 # ---------------- MIGRATION HELPERS ----------------
 def add_assigned_column():
