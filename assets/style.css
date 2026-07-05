@@ -32,3 +32,18 @@ div[data-testid="stMetric"] {
     padding: 10px;
     border-radius: 10px;
 }
+/* Smooth UI feel */
+.stApp {
+    font-family: 'Arial';
+}
+
+/* Hover effect for cards */
+div[data-testid="stMetric"]:hover {
+    transform: scale(1.02);
+    transition: 0.2s;
+}
+
+/* Sidebar text */
+section[data-testid="stSidebar"] * {
+    color: white;
+}
