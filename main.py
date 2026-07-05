@@ -58,47 +58,61 @@ def app():
         st.session_state.page = "Dashboard"
         st.rerun()
 
-    # ---------------- MENU ----------------
-    menu = ["Dashboard", "Customers", "Leads", "Follow-ups", "Quotations", "Reports", "Settings"]
+  # ---------------- MENU ----------------
+menu = {
+    "Dashboard": dashboard_page,
+    "Customers": customers_page,
+    "Leads": leads_page,
+    "Follow-ups": followups_page,
+    "Quotations": quotations_page,
+    "Reports": reports_page,
+    "Settings": settings_page
+}
 
-    # ensure valid page
-    if st.session_state.page not in menu:
-        st.session_state.page = "Dashboard"
+# ensure valid page
+if "page" not in st.session_state:
+    st.session_state.page = "Dashboard"
 
-    # IMPORTANT FIX: DO NOT use key here
-    selected_page = st.sidebar.radio(
-        "Navigation",
-        menu,
-        index=menu.index(st.session_state.page)
-    )
-
-    st.session_state.page = selected_page
-
-    st.sidebar.markdown("---")
-
-    # ---------------- ROUTING ----------------
-    if st.session_state.page == "Dashboard":
-        dashboard_page()
-
-    elif st.session_state.page == "Customers":
-        customers_page()
-
-    elif st.session_state.page == "Leads":
-        leads_page()
-
-    elif st.session_state.page == "Follow-ups":
-        followups_page()
-
-    elif st.session_state.page == "Quotations":
-        quotations_page()
-
-    elif st.session_state.page == "Reports":
-        reports_page()
-
-    elif st.session_state.page == "Settings":
-        settings_page()
+if st.session_state.page not in menu:
+    st.session_state.page = "Dashboard"
 
 
+# ---------------- SIDEBAR (PRO UI) ----------------
+st.sidebar.title("📊 Comrade CRM")
+st.sidebar.write(f"👤 {st.session_state.user['username']}")
+
+if st.sidebar.button("🏠 Dashboard"):
+    st.session_state.page = "Dashboard"
+    st.rerun()
+
+if st.sidebar.button("👥 Customers"):
+    st.session_state.page = "Customers"
+    st.rerun()
+
+if st.sidebar.button("🧾 Leads"):
+    st.session_state.page = "Leads"
+    st.rerun()
+
+if st.sidebar.button("📞 Follow-ups"):
+    st.session_state.page = "Follow-ups"
+    st.rerun()
+
+if st.sidebar.button("📑 Quotations"):
+    st.session_state.page = "Quotations"
+    st.rerun()
+
+if st.sidebar.button("📊 Reports"):
+    st.session_state.page = "Reports"
+    st.rerun()
+
+if st.sidebar.button("⚙️ Settings"):
+    st.session_state.page = "Settings"
+    st.rerun()
+
+st.sidebar.markdown("---")
+
+# ---------------- PAGE RENDER ----------------
+menu[st.session_state.page]()
 # ---------------- ENTRY POINT ----------------
 if st.session_state.user is None:
     login()
