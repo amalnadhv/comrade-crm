@@ -270,10 +270,8 @@ def quotations_page():
         if c3.button("📄 PDF", key=f"p_{row['id']}"):
 
             try:
-                # Create a safe copy of the row
                 safe_row = row.to_dict()
 
-                # Convert JSON string to list
                 items = safe_row.get("items", [])
 
                 if isinstance(items, str):
@@ -284,18 +282,17 @@ def quotations_page():
 
                 safe_row["items"] = items
 
-                # Generate PDF (returns BytesIO)
                 pdf_buffer = generate_quotation_pdf(safe_row)
 
                 st.download_button(
-                    label="⬇ Download PDF",
+                    label="📄 Download PDF",
                     data=pdf_buffer,
                     file_name=f"quotation_{row['id']}.pdf",
                     mime="application/pdf",
-                    key=f"download_pdf_{row['id']}"
+                    key=f"pdf_{row['id']}"
                 )
 
             except Exception as e:
                 st.error(f"PDF Error: {e}")
-                
-            st.markdown("---")
+
+        st.markdown("---")
