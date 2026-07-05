@@ -73,10 +73,7 @@ def init_db():
 
     if "items" not in columns:
         cur.execute("ALTER TABLE quotations ADD COLUMN items TEXT")
-
-    conn.commit()
-    conn.close()
-    
+   
     # ---------------- USERS ----------------
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
