@@ -55,6 +55,27 @@ def quotations_page():
 
     st.markdown("---")
 
+    from utils.pdf_generator import generate_quotation_pdf
+    
+    data = {
+        "Customer": customer_name,
+        "Amount": amount,
+        "Discount": discount,
+        "Tax": tax,
+        "Total": total,
+        "Status": status
+    }
+    
+    filename = f"quotation_{customer_name}.pdf"
+    generate_quotation_pdf(filename, data)
+    
+    with open(filename, "rb") as f:
+        st.download_button(
+            "⬇ Download PDF",
+            f,
+            file_name=filename
+        )
+    
     # ---------------- LIST ----------------
     st.subheader("All Quotations")
 
