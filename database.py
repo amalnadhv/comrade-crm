@@ -7,7 +7,7 @@ DB_NAME = "crm.db"
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
-
+    add_assigned_column()
     # Customers table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS customers (
@@ -273,6 +273,21 @@ def init_db():
     conn.commit()
     conn.close()
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS leads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company TEXT,
+        contact_person TEXT,
+        phone TEXT,
+        email TEXT,
+        source TEXT,
+        status TEXT,
+        followup_date TEXT,
+        remarks TEXT,
+        assigned_to TEXT
+    )
+    """)
+
 def add_quotation(customer_name, amount, discount, tax, total, status, created_on):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -305,3 +320,15 @@ def validate_user(username, password):
     conn.close()
 
     return user
+
+def add_assigned_column():
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    try:
+        cur.execute("ALTER TABLE leads ADD COLUMN assigned_to TEXT")
+    except:
+        pass
+
+    conn.commit()
+    conn.close()
