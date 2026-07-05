@@ -51,6 +51,23 @@ CREATE TABLE IF NOT EXISTS quotations (
     created_on TEXT
 )
 """)
+# ---------------- USERS ----------------
+cur.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    password TEXT,
+    role TEXT
+)
+""")
+
+# Create default admin if not exists
+cur.execute("SELECT * FROM users WHERE username='admin'")
+if not cur.fetchone():
+    cur.execute("""
+        INSERT INTO users (username, password, role)
+        VALUES ('admin', 'admin123', 'Admin')
+    """)
 
 # ---------------- CUSTOMERS ----------------
 def add_customer(name, phone, email, company, status):
@@ -234,4 +251,17 @@ def get_quotations():
     df = pd.read_sql_query("SELECT * FROM quotations", conn)
     conn.close()
     return df
-    
+
+def validate_user(username, password):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT * FROM users
+        WHERE username=? AND password=?
+    """, (username, password))
+
+    user = cur.fetchone()
+    conn.close()
+
+    return user
