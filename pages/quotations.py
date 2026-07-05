@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
+import json
 
+from utils.pdf_generator import generate_quotation_pdf
 from database import add_quotation, get_quotations, get_customers
 
 
@@ -71,7 +73,7 @@ def quotations_page():
                 st.error("Enter item name")
 
         # ---------------- SHOW ITEMS ----------------
-        subtotal = 0
+        subtotal = sum(i["total"] for i in st.session_state.quote_items)
 
         if st.session_state.quote_items:
             st.subheader("🧾 Items")
@@ -83,8 +85,6 @@ def quotations_page():
                 col2.write(item["qty"])
                 col3.write(item["price"])
                 col4.write(item["total"])
-
-                subtotal += item["total"]
         else:
             st.info("No items added yet")
 
@@ -104,13 +104,12 @@ def quotations_page():
 
         # ---------------- VERSION ----------------
         df = get_quotations()
-
         existing_versions = df[df["customer_name"] == customer_map.get(customer_id, "")]
         version = f"V{len(existing_versions) + 1}"
 
         st.info(f"📌 Version: {version}")
 
-        # ---------------- TOTAL CALCULATION ----------------
+        # ---------------- TOTAL ----------------
         after_discount = subtotal - (subtotal * discount / 100)
         total = after_discount + (after_discount * tax / 100)
 
@@ -142,14 +141,48 @@ def quotations_page():
             st.success("Quotation saved successfully!")
             st.rerun()
 
-    # ---------------- LIST ----------------
+    # ---------------- LIST SECTION ----------------
     st.markdown("---")
     st.subheader("All Quotations")
 
-    # 🔥 FIX: ALWAYS REFRESH DATA HERE
     df = get_quotations()
 
     if df.empty:
         st.info("No quotations found")
     else:
-        st.dataframe(df, use_container_width=True)
+        for row in df.itertuples():
+
+            with st.expander(f"{row.customer_name} | {row.version} | {row.total}"):
+
+                st.write("Status:", row.status)
+                st.write("Date:", row.created_on)
+                st.write("Subtotal:", row.subtotal)
+                st.write("Discount:", row.discount)
+                st.write("Tax:", row.tax)
+                st.write("Total:", row.total)
+
+                # ITEMS
+                try:
+                    items = json.loads(row.items)
+                    st.table(pd.DataFrame(items))
+                except:
+                    st.error("Invalid item data")
+
+                # ---------------- PDF DOWNLOAD ----------------
+                pdf_data = {
+                    "customer_name": row.customer_name,
+                    "items": json.loads(row.items),
+                    "subtotal": row.subtotal,
+                    "discount": row.discount,
+                    "tax": row.tax,
+                    "total": row.total
+                }
+
+                pdf_file = generate_quotation_pdf(pdf_data)
+
+                st.download_button(
+                    label="📄 Download PDF",
+                    data=pdf_file,
+                    file_name=f"Quotation_{row.version}.pdf",
+                    mime="application/pdf"
+                )
