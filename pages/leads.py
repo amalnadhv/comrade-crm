@@ -5,7 +5,8 @@ from database import add_lead, get_leads
 
 # ---------------- PAGE ----------------
 def leads_page():
-
+    
+    role = st.session_state.user["role"]
     st.title("🎯 Leads")
 
     # ---------------- LOAD DATA ----------------
@@ -125,8 +126,14 @@ for row in df.itertuples():
                 """)
 
         with c2:
-            if st.button("➡ Convert", key=f"convert_{row.id}"):
+           if st.button("➡ Convert", key=f"convert_{row.id}"):
 
+                if role == "Admin":
+                    convert_lead_to_customer(...)
+                    st.success("Converted!")
+                else:
+                    st.error("Only Admin can convert leads")
+        
                 convert_lead_to_customer(
                     row.contact_person,
                     row.phone,
