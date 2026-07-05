@@ -9,51 +9,71 @@ def followups_page():
 
     st.title("📅 Follow-ups")
 
-    # ---------------- LOAD DATA ----------------
+    # ---------------- LOAD FOLLOWUPS ----------------
     df = get_followups()
 
     if df is None:
         df = pd.DataFrame()
 
-    # ---------------- GET LEADS + CUSTOMERS ----------------
+    # ---------------- FIX: LEADS ----------------
     leads = get_leads()
-    customers = get_customers()
-
     if leads is None:
         leads = pd.DataFrame()
 
+    # ---------------- FIX: CUSTOMERS ----------------
+    customers = get_customers()
+
+    # 👉 IMPORTANT FIX: convert list → DataFrame
     if customers is None:
         customers = pd.DataFrame()
+    else:
+        customers = pd.DataFrame(
+            customers,
+            columns=["id", "name", "phone", "email", "company", "status"]
+        )
 
-    # Convert to dict for dropdown display
+    if leads is None:
+        leads = pd.DataFrame()
+    else:
+        leads = pd.DataFrame(
+            leads,
+            columns=["id", "company", "contact_person", "phone", "email",
+                     "source", "status", "followup_date", "remarks", "assigned_to"]
+        )
+
+    # ---------------- MAPS ----------------
     lead_map = {}
     customer_map = {}
 
     if not leads.empty:
         for row in leads.itertuples():
-            lead_map[row.id] = f"🎯 Lead: {row.contact_person} ({row.company})"
+            lead_map[row.id] = f"🎯 {row.contact_person} ({row.company})"
 
     if not customers.empty:
         for row in customers.itertuples():
-            customer_map[row.id] = f"👥 Customer: {row.name} ({row.company})"
+            customer_map[row.id] = f"👥 {row.name} ({row.company})"
 
     # ---------------- ADD FOLLOW-UP ----------------
     with st.expander("➕ Add Follow-up"):
 
         type_choice = st.selectbox("Related To", ["Lead", "Customer"])
 
-        if type_choice == "Lead":
+        if type_choice == "Lead" and lead_map:
             selected_id = st.selectbox(
                 "Select Lead",
                 options=list(lead_map.keys()),
                 format_func=lambda x: lead_map[x]
             )
-        else:
+
+        elif type_choice == "Customer" and customer_map:
             selected_id = st.selectbox(
                 "Select Customer",
                 options=list(customer_map.keys()),
                 format_func=lambda x: customer_map[x]
             )
+        else:
+            st.warning("No data available")
+            return
 
         title = st.text_input("Title")
 
@@ -93,10 +113,9 @@ def followups_page():
         return
 
     st.subheader("📅 All Follow-ups")
-
     st.dataframe(df, use_container_width=True)
 
-    # ---------------- TODAY FILTER ----------------
+    # ---------------- TODAY ----------------
     today = str(date.today())
 
     st.subheader("🔥 Today's Follow-ups")
