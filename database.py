@@ -270,3 +270,29 @@ def delete_followup(followup_id):
 
     conn.commit()
     conn.close()
+
+def delete_followup(followup_id):
+    import sqlite3
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM followups WHERE id=?", (followup_id,))
+
+    conn.commit()
+    conn.close()
+
+def update_followup(followup_id, lead_id, title, followup_date, status, remarks):
+    import sqlite3
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE followups
+        SET lead_id=?, title=?, followup_date=?, status=?, remarks=?
+        WHERE id=?
+    """, (lead_id, title, followup_date, status, remarks, followup_id))
+
+    conn.commit()
+    conn.close()
