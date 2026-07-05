@@ -41,7 +41,6 @@ def login():
 
             st.session_state.page = "Dashboard"
             st.rerun()
-
         else:
             st.error("Invalid credentials")
 
@@ -52,67 +51,51 @@ def app():
     st.sidebar.title("📊 Comrade CRM")
     st.sidebar.write(f"👤 {st.session_state.user['username']}")
 
-    # logout
-    if st.sidebar.button("Logout"):
+    if st.sidebar.button("🚪 Logout"):
         st.session_state.user = None
-        st.session_state.page = "Dashboard"
         st.rerun()
 
-  # ---------------- MENU ----------------
-menu = {
-    "Dashboard": dashboard_page,
-    "Customers": customers_page,
-    "Leads": leads_page,
-    "Follow-ups": followups_page,
-    "Quotations": quotations_page,
-    "Reports": reports_page,
-    "Settings": settings_page
-}
+    # ---------------- NAVIGATION ----------------
+    nav_items = {
+        "🏠 Dashboard": "Dashboard",
+        "👥 Customers": "Customers",
+        "🧾 Leads": "Leads",
+        "📞 Follow-ups": "Follow-ups",
+        "📑 Quotations": "Quotations",
+        "📊 Reports": "Reports",
+        "⚙️ Settings": "Settings"
+    }
 
-# ensure valid page
-if "page" not in st.session_state:
-    st.session_state.page = "Dashboard"
+    for label, page in nav_items.items():
+        if st.sidebar.button(label):
+            st.session_state.page = page
+            st.rerun()
 
-if st.session_state.page not in menu:
-    st.session_state.page = "Dashboard"
+    st.sidebar.markdown("---")
+
+    # ---------------- PAGE ROUTER ----------------
+    if st.session_state.page == "Dashboard":
+        dashboard_page()
+
+    elif st.session_state.page == "Customers":
+        customers_page()
+
+    elif st.session_state.page == "Leads":
+        leads_page()
+
+    elif st.session_state.page == "Follow-ups":
+        followups_page()
+
+    elif st.session_state.page == "Quotations":
+        quotations_page()
+
+    elif st.session_state.page == "Reports":
+        reports_page()
+
+    elif st.session_state.page == "Settings":
+        settings_page()
 
 
-# ---------------- SIDEBAR (PRO UI) ----------------
-st.sidebar.title("📊 Comrade CRM")
-st.sidebar.write(f"👤 {st.session_state.user['username']}")
-
-if st.sidebar.button("🏠 Dashboard"):
-    st.session_state.page = "Dashboard"
-    st.rerun()
-
-if st.sidebar.button("👥 Customers"):
-    st.session_state.page = "Customers"
-    st.rerun()
-
-if st.sidebar.button("🧾 Leads"):
-    st.session_state.page = "Leads"
-    st.rerun()
-
-if st.sidebar.button("📞 Follow-ups"):
-    st.session_state.page = "Follow-ups"
-    st.rerun()
-
-if st.sidebar.button("📑 Quotations"):
-    st.session_state.page = "Quotations"
-    st.rerun()
-
-if st.sidebar.button("📊 Reports"):
-    st.session_state.page = "Reports"
-    st.rerun()
-
-if st.sidebar.button("⚙️ Settings"):
-    st.session_state.page = "Settings"
-    st.rerun()
-
-st.sidebar.markdown("---")
-
-# ---------------- PAGE RENDER ----------------
-menu[st.session_state.page]()
 # ---------------- ENTRY POINT ----------------
 if st.session_state.user is None:
     login()
