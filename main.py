@@ -50,29 +50,35 @@ def login():
 # ---------------- APP ----------------
 def app():
 
-    # ---------------- CSS (BUTTON DESIGN) ----------------
+    # ---------------- CSS FOR BUTTON STYLE ----------------
     st.markdown("""
     <style>
-    div.stButton > button {
+
+    section[data-testid="stSidebar"] div.stButton > button {
         width: 100%;
-        height: 45px;
-        border-radius: 10px;
+        height: 48px;
+        border-radius: 12px;
         font-weight: 600;
+        text-align: left;
+        padding-left: 12px;
+        border: none;
         transition: 0.2s;
+        color: white;
     }
 
-    div.stButton > button:hover {
-        transform: scale(1.02);
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+    section[data-testid="stSidebar"] div.stButton > button:hover {
+        transform: scale(1.03);
+        opacity: 0.9;
     }
 
     section[data-testid="stSidebar"] div.stButton {
         margin-bottom: 6px;
     }
+
     </style>
     """, unsafe_allow_html=True)
 
-    # ---------------- SIDEBAR ----------------
+    # ---------------- SIDEBAR HEADER ----------------
     st.sidebar.title("📊 Comrade CRM")
     st.sidebar.write(f"👤 {st.session_state.user['username']}")
 
@@ -80,34 +86,26 @@ def app():
         st.session_state.user = None
         st.rerun()
 
-    # ---------------- MENU (LEADS ABOVE CUSTOMERS) ----------------
-    menu = {
-        "Dashboard": dashboard_page,
-        "Leads": leads_page,
-        "Customers": customers_page,
-        "Follow-ups": followups_page,
-        "Quotations": quotations_page,
-        "Reports": reports_page,
-        "Settings": settings_page
-    }
+    # ---------------- MENU (LEADS FIRST) ----------------
+    menu = [
+        ("🏠 Dashboard", "Dashboard", "#4CAF50"),
+        ("🎯 Leads", "Leads", "#2196F3"),
+        ("👥 Customers", "Customers", "#FF9800"),
+        ("📞 Follow-ups", "Follow-ups", "#9C27B0"),
+        ("📑 Quotations", "Quotations", "#00BCD4"),
+        ("📊 Reports", "Reports", "#607D8B"),
+        ("⚙️ Settings", "Settings", "#F44336")
+    ]
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("## 📌 Navigation")
 
-    # ---------------- BUTTON NAVIGATION ----------------
-    colors = {
-        "Dashboard": "#4CAF50",
-        "Leads": "#2196F3",
-        "Customers": "#FF9800",
-        "Follow-ups": "#9C27B0",
-        "Quotations": "#00BCD4",
-        "Reports": "#607D8B",
-        "Settings": "#F44336"
-    }
+    # ---------------- NAV BUTTONS ----------------
+    for label, page, color in menu:
 
-    for label in menu.keys():
-        if st.sidebar.button(f"⬤ {label}", key=label):
-            st.session_state.page = label
+        if st.sidebar.button(label, key=page):
+
+            st.session_state.page = page
             st.rerun()
 
     st.sidebar.markdown("---")
