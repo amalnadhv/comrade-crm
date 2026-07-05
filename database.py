@@ -108,3 +108,15 @@ def get_leads():
     df = pd.read_sql_query("SELECT * FROM leads", conn)
     conn.close()
     return df
+    
+def convert_lead_to_customer(name, phone, email, company, status="New"):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO customers (name, phone, email, company, status)
+        VALUES (?, ?, ?, ?, ?)
+    """, (name, phone, email, company, status))
+
+    conn.commit()
+    conn.close()
