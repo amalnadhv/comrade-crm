@@ -29,7 +29,6 @@ def render_message():
     if st.session_state.get("msg"):
         st.success(st.session_state["msg"])
 
-        # auto clear after 3 seconds
         if time.time() - st.session_state["msg_time"] > 3:
             st.session_state["msg"] = None
             st.session_state["msg_time"] = None
@@ -40,8 +39,7 @@ def render_message():
 def reset_add_form():
     keys = ["add_name", "add_phone", "add_email", "add_company", "add_status"]
     for k in keys:
-        if k in st.session_state:
-            del st.session_state[k]
+        st.session_state.pop(k, None)
 
 
 # ---------------- PAGE ----------------
@@ -69,26 +67,22 @@ def customers_page():
             key="add_status"
         )
 
-     if st.button("💾 Save Customer", key="save_customer"):
+        if st.button("💾 Save Customer", key="save_customer"):
 
-        if name and phone:
-    
-            add_customer(name, phone, email, company, status)
-    
-            # 🔥 CLEAR ADD FORM STATE
-            for key in ["add_name", "add_phone", "add_email", "add_company"]:
-                if key in st.session_state:
-                    st.session_state[key] = ""
-    
-            if "add_status" in st.session_state:
-                st.session_state["add_status"] = "New"
-    
-            st.session_state["add_success"] = True
-            st.rerun()
-    
-        else:
-            st.session_state["add_success"] = False
-            st.error("Name and Phone are required.")
+            if name and phone:
+
+                add_customer(name, phone, email, company, status)
+
+                # CLEAR FORM
+                reset_add_form()
+
+                show_message("Customer added successfully ✅")
+
+                st.rerun()
+
+            else:
+                show_message("Name and Phone are required ❌")
+                st.rerun()
 
     st.markdown("---")
 
@@ -119,37 +113,14 @@ def customers_page():
             st.markdown("---")
             st.subheader(f"✏️ Edit Customer: {edit_row['name']}")
 
-            new_name = st.text_input(
-                "Name",
-                value=edit_row["name"],
-                key=f"edit_name_{edit_id}"
-            )
-
-            new_phone = st.text_input(
-                "Phone",
-                value=edit_row["phone"],
-                key=f"edit_phone_{edit_id}"
-            )
-
-            new_email = st.text_input(
-                "Email",
-                value=edit_row["email"],
-                key=f"edit_email_{edit_id}"
-            )
-
-            new_company = st.text_input(
-                "Company",
-                value=edit_row["company"],
-                key=f"edit_company_{edit_id}"
-            )
+            new_name = st.text_input("Name", value=edit_row["name"], key=f"edit_name_{edit_id}")
+            new_phone = st.text_input("Phone", value=edit_row["phone"], key=f"edit_phone_{edit_id}")
+            new_email = st.text_input("Email", value=edit_row["email"], key=f"edit_email_{edit_id}")
+            new_company = st.text_input("Company", value=edit_row["company"], key=f"edit_company_{edit_id}")
 
             status_list = ["New", "Contacted", "Won", "Lost"]
 
-            current_status = (
-                edit_row["status"]
-                if edit_row["status"] in status_list
-                else "New"
-            )
+            current_status = edit_row["status"] if edit_row["status"] in status_list else "New"
 
             new_status = st.selectbox(
                 "Status",
@@ -160,7 +131,6 @@ def customers_page():
 
             col1, col2 = st.columns(2)
 
-            # ---------------- SAVE ----------------
             with col1:
 
                 if st.button("💾 Save Changes", key=f"save_edit_{edit_id}"):
@@ -179,7 +149,6 @@ def customers_page():
 
                     st.rerun()
 
-            # ---------------- CANCEL ----------------
             with col2:
 
                 if st.button("❌ Cancel", key=f"cancel_edit_{edit_id}"):
@@ -220,9 +189,7 @@ def customers_page():
 
     for row in df.itertuples():
 
-        col1, col2, col3, col4, col5, col6 = st.columns(
-            [2, 2, 3, 2, 2, 2]
-        )
+        col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 3, 2, 2, 2])
 
         col1.write(row.name)
         col2.write(row.phone)
@@ -236,16 +203,13 @@ def customers_page():
             c1, c2 = st.columns(2)
 
             with c1:
-
                 if st.button("✏️ Edit", key=f"edit_btn_{row.id}"):
 
                     st.session_state.edit_id = row.id
                     st.rerun()
 
             with c2:
-
                 if role == "Admin":
-
                     if st.button("🗑️ Delete", key=f"delete_btn_{row.id}"):
 
                         delete_customer(row.id)
