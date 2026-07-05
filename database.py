@@ -332,3 +332,16 @@ def add_assigned_column():
 
     conn.commit()
     conn.close()
+
+def add_lead(company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO leads 
+        (company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to))
+
+    conn.commit()
+    conn.close()
