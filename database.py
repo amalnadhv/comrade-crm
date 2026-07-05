@@ -9,6 +9,25 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
+    # USERS
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        role TEXT
+    )
+    """)
+
+    # DEFAULT ADMIN
+    cur.execute("SELECT * FROM users WHERE username='admin'")
+    if not cur.fetchone():
+        cur.execute("""
+            INSERT INTO users (username, password, role)
+            VALUES ('admin', 'admin123', 'Admin')
+        """)
+
+    # CUSTOMERS
     cur.execute("""
     CREATE TABLE IF NOT EXISTS customers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,6 +39,7 @@ def init_db():
     )
     """)
 
+    # LEADS
     cur.execute("""
     CREATE TABLE IF NOT EXISTS leads (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,6 +54,35 @@ def init_db():
         assigned_to TEXT
     )
     """)
+
+    conn.commit()
+    conn.close()
+
+
+# ---------------- AUTH ----------------
+def validate_user(username, password):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, username, role
+        FROM users
+        WHERE username=? AND password=?
+    """, (username, password))
+
+    user = cur.fetchone()
+    conn.close()
+    return user
+
+
+def add_user(username, password, role="Sales"):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO users (username, password, role)
+        VALUES (?, ?, ?)
+    """, (username, password, role))
 
     conn.commit()
     conn.close()
@@ -60,7 +109,7 @@ def get_customers():
     return df
 
 
-def update_customer(customer_id, name, phone, email, company, status):
+def update_customer(cid, name, phone, email, company, status):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
@@ -68,17 +117,17 @@ def update_customer(customer_id, name, phone, email, company, status):
         UPDATE customers
         SET name=?, phone=?, email=?, company=?, status=?
         WHERE id=?
-    """, (name, phone, email, company, status, customer_id))
+    """, (name, phone, email, company, status, cid))
 
     conn.commit()
     conn.close()
 
 
-def delete_customer(customer_id):
+def delete_customer(cid):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
-    cur.execute("DELETE FROM customers WHERE id=?", (customer_id,))
+    cur.execute("DELETE FROM customers WHERE id=?", (cid,))
     conn.commit()
     conn.close()
 
@@ -89,8 +138,10 @@ def add_lead(company, contact_person, phone, email, source, status, followup_dat
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO leads 
-        (company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to)
+        INSERT INTO leads (
+            company, contact_person, phone, email,
+            source, status, followup_date, remarks, assigned_to
+        )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (company, contact_person, phone, email, source, status, followup_date, remarks, assigned_to))
 
