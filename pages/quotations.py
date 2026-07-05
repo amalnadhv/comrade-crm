@@ -66,23 +66,31 @@ def quotations_page():
 
         st.success(f"💰 Total: {total:.2f}")
 
-        if st.button("Save Quotation"):
+       if st.button("Save Quotation"):
 
-            customer_name = customer_map[customer_id]
-
-            add_quotation(
-                customer_name,
-                amount,
-                discount,
-                tax,
-                total,
-                status,
-                str(date.today()),
-                next_version
-            )
-
-            st.success("Quotation saved!")
-            st.rerun()
+        if not st.session_state.quote_items:
+            st.error("Please add items first")
+            return
+    
+        customer_name = customer_map[customer_id]
+    
+        version = f"V{len(df) + 1}"
+    
+        add_quotation(
+            customer_name,
+            st.session_state.quote_items,
+            subtotal,
+            discount,
+            tax,
+            total,
+            status,
+            str(date.today()),
+            version
+        )
+    
+        st.session_state.quote_items = []
+        st.success("Quotation saved successfully!")
+        st.rerun()
 
     st.markdown("---")
 
