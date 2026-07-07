@@ -7,42 +7,17 @@ def leads_page():
 
     st.title("🎯 Leads Dashboard")
 
-    # ---------------- SESSION STATE ----------------
+    # ---------------- SESSION ----------------
     if "lead_saved" not in st.session_state:
         st.session_state.lead_saved = False
 
-    defaults = {
-        "lead_company": "",
-        "lead_contact": "",
-        "lead_phone": "",
-        "lead_email": "",
-        "lead_source": "Website",
-        "lead_status": "New",
-        "lead_followup": pd.Timestamp.today().date(),
-        "lead_assigned": "",
-        "lead_remarks": ""
-    }
-
-    for k, v in defaults.items():
-        if k not in st.session_state:
-            st.session_state[k] = v
-
     # ---------------- NEW BUTTON ----------------
-    if st.button("➕ New Lead", use_container_width=True):
+    col1, col2 = st.columns([1, 5])
 
-        st.session_state.lead_saved = False
-
-        st.session_state.lead_company = ""
-        st.session_state.lead_contact = ""
-        st.session_state.lead_phone = ""
-        st.session_state.lead_email = ""
-        st.session_state.lead_source = "Website"
-        st.session_state.lead_status = "New"
-        st.session_state.lead_followup = pd.Timestamp.today().date()
-        st.session_state.lead_assigned = ""
-        st.session_state.lead_remarks = ""
-
-        st.rerun()
+    with col1:
+        if st.button("➕ New Lead", use_container_width=True):
+            st.session_state.lead_saved = False
+            st.rerun()
 
     df = get_leads()
     if df is None:
@@ -51,59 +26,32 @@ def leads_page():
     # ---------------- ADD LEAD ----------------
     with st.expander("➕ Add New Lead", expanded=True):
 
-        with st.form("add_lead", clear_on_submit=False):
+        with st.form("add_lead", clear_on_submit=True):
 
             col1, col2 = st.columns(2)
 
             with col1:
-                company = st.text_input(
-                    "Company",
-                    key="lead_company"
-                )
-
-                contact = st.text_input(
-                    "Contact Person",
-                    key="lead_contact"
-                )
-
-                phone = st.text_input(
-                    "Phone",
-                    key="lead_phone"
-                )
-
-                email = st.text_input(
-                    "Email",
-                    key="lead_email"
-                )
+                company = st.text_input("Company")
+                contact = st.text_input("Contact Person")
+                phone = st.text_input("Phone")
+                email = st.text_input("Email")
 
             with col2:
-
                 source = st.selectbox(
                     "Source",
-                    ["Website", "Facebook", "Referral", "Other"],
-                    key="lead_source"
+                    ["Website", "Facebook", "Referral", "Other"]
                 )
 
                 status = st.selectbox(
                     "Status",
-                    ["New", "Contacted", "Won", "Lost"],
-                    key="lead_status"
+                    ["New", "Contacted", "Won", "Lost"]
                 )
 
-                followup_date = st.date_input(
-                    "Follow-up Date",
-                    key="lead_followup"
-                )
+                followup_date = st.date_input("Follow-up Date")
 
-                assigned_to = st.text_input(
-                    "Assign To",
-                    key="lead_assigned"
-                )
+                assigned_to = st.text_input("Assign To")
 
-            remarks = st.text_area(
-                "Remarks",
-                key="lead_remarks"
-            )
+            remarks = st.text_area("Remarks")
 
             submit = st.form_submit_button(
                 "💾 Save Lead",
@@ -112,7 +60,7 @@ def leads_page():
 
             if submit:
 
-                if company.strip() == "" or contact.strip() == "":
+                if not company.strip() or not contact.strip():
                     st.error("Company and Contact Person are required.")
 
                 else:
@@ -129,21 +77,10 @@ def leads_page():
                         assigned_to
                     )
 
-                    # Disable Save
                     st.session_state.lead_saved = True
 
-                    # Clear Form
-                    st.session_state.lead_company = ""
-                    st.session_state.lead_contact = ""
-                    st.session_state.lead_phone = ""
-                    st.session_state.lead_email = ""
-                    st.session_state.lead_source = "Website"
-                    st.session_state.lead_status = "New"
-                    st.session_state.lead_followup = pd.Timestamp.today().date()
-                    st.session_state.lead_assigned = ""
-                    st.session_state.lead_remarks = ""
-
                     st.success("✅ Lead saved successfully.")
+
                     st.rerun()
 
     st.markdown("---")
@@ -168,8 +105,15 @@ def leads_page():
 
         for col, row in zip(cols, row_group.itertuples()):
 
-            company_img = f"https://ui-avatars.com/api/?name={row.company}&background=0D8ABC&color=fff&size=48"
-            person_img = f"https://ui-avatars.com/api/?name={row.contact_person}&background=FF6B6B&color=fff&size=32"
+            company_img = (
+                f"https://ui-avatars.com/api/?name={row.company}"
+                "&background=0D8ABC&color=fff&size=48"
+            )
+
+            person_img = (
+                f"https://ui-avatars.com/api/?name={row.contact_person}"
+                "&background=FF6B6B&color=fff&size=32"
+            )
 
             with col:
 
