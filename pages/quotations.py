@@ -5,7 +5,7 @@ from datetime import date
 import sqlite3
 
 from database import add_quotation, get_quotations, get_customers
-from utils.pdf_generator import generate_quotation_pdf
+from utils.pdf_generator import generate_quotation_pdf, generate_list_pdf
 
 DB_NAME = "crm.db"
 
