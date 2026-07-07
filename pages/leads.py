@@ -10,17 +10,117 @@ from database import (
 )
 
 
-# ==============================
-# LEADS PAGE
-# ==============================
-
 def leads_page():
 
-    st.set_page_config(
-        layout="wide"
+    # ---------------- PAGE STYLE ----------------
+
+    st.markdown(
+        """
+        <style>
+
+        .main-title {
+            font-size:32px;
+            font-weight:800;
+            color:#1f4e79;
+        }
+
+        .info-box {
+            padding:15px;
+            border-radius:12px;
+            border:1px solid #ddd;
+            text-align:center;
+            background:#f8f9fa;
+        }
+
+        .row-box {
+
+            border:1px solid #ddd;
+            border-radius:12px;
+            padding:12px;
+            margin-bottom:10px;
+            background:#ffffff;
+
+        }
+
+        .row-box:hover {
+
+            background:#f5fbff;
+
+        }
+
+        .action-edit {
+
+            background:#ffc107;
+            color:#000;
+            padding:6px 12px;
+            border-radius:8px;
+            font-weight:bold;
+
+        }
+
+        .action-convert {
+
+            background:#28a745;
+            color:white;
+            padding:6px 12px;
+            border-radius:8px;
+            font-weight:bold;
+
+        }
+
+        .action-delete {
+
+            background:#dc3545;
+            color:white;
+            padding:6px 12px;
+            border-radius:8px;
+            font-weight:bold;
+
+        }
+
+        /* Make action buttons attractive */
+        
+        div.stButton > button {
+        
+            border-radius:10px;
+            font-size:18px;
+            height:38px;
+            padding:0px;
+        
+        }
+        
+        
+        /* Edit button */
+        
+        div[data-testid="column"]:has(button[key*="edit"]) button {
+        
+            background:#ffc107;
+            color:black;
+        
+        }
+        
+        
+        /* Delete */
+        
+        button:hover {
+        
+            transform:scale(1.05);
+            transition:0.2s;
+        
+        }
+        
+        </style>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.title("🎯 Leads Management")
+
+
+    st.markdown(
+        "<div class='main-title'>🎯 Leads Dashboard</div>",
+        unsafe_allow_html=True
+    )
+
 
 
     # ---------------- SESSION ----------------
@@ -34,7 +134,7 @@ def leads_page():
 
 
 
-    # ---------------- LOAD DATA ----------------
+    # ---------------- LOAD ----------------
 
     df = get_leads()
 
@@ -43,70 +143,72 @@ def leads_page():
 
 
 
-    # ---------------- DASHBOARD SUMMARY ----------------
+    # ---------------- SUMMARY ----------------
 
     total = len(df)
 
-    new_count = len(
-        df[df["status"] == "New"]
-    ) if not df.empty else 0
-
-    contacted_count = len(
-        df[df["status"] == "Contacted"]
-    ) if not df.empty else 0
-
-    won_count = len(
-        df[df["status"] == "Won"]
-    ) if not df.empty else 0
-
-    lost_count = len(
-        df[df["status"] == "Lost"]
+    new = len(
+        df[df.status=="New"]
     ) if not df.empty else 0
 
 
+    contacted = len(
+        df[df.status=="Contacted"]
+    ) if not df.empty else 0
 
-    c1, c2, c3, c4, c5 = st.columns(5)
+
+    won = len(
+        df[df.status=="Won"]
+    ) if not df.empty else 0
+
+
+    lost = len(
+        df[df.status=="Lost"]
+    ) if not df.empty else 0
+
+
+
+    c1,c2,c3,c4,c5 = st.columns(5)
 
 
     with c1:
         st.metric(
-            "📋 Total Leads",
+            "📋 Total",
             total
         )
 
     with c2:
         st.metric(
-            "🆕 New",
-            new_count
+            "🟢 New",
+            new
         )
 
     with c3:
         st.metric(
-            "📞 Contacted",
-            contacted_count
+            "🟡 Contacted",
+            contacted
         )
 
     with c4:
         st.metric(
-            "🏆 Won",
-            won_count
+            "🔵 Won",
+            won
         )
 
     with c5:
         st.metric(
-            "❌ Lost",
-            lost_count
+            "🔴 Lost",
+            lost
         )
 
 
 
-    st.markdown("---")
+    st.divider()
 
 
 
-    # ==============================
-    # NEW BUTTON
-    # ==============================
+    # ---------------- NEW BUTTON ----------------
+
 
     if st.button(
         "➕ New Lead",
@@ -120,9 +222,9 @@ def leads_page():
 
 
 
-    # ==============================
+    # ==================================================
     # EDIT SECTION
-    # ==============================
+    # ==================================================
 
     if st.session_state.edit_lead_id:
 
@@ -134,7 +236,7 @@ def leads_page():
 
         with st.container(border=True):
 
-            col1, col2 = st.columns(2)
+            col1,col2 = st.columns(2)
 
 
             with col1:
@@ -158,7 +260,6 @@ def leads_page():
                     "Email",
                     st.session_state.edit_email
                 )
-
 
 
             with col2:
@@ -202,7 +303,7 @@ def leads_page():
 
 
                 followup = st.text_input(
-                    "Follow-up Date",
+                    "Follow Up Date",
                     st.session_state.edit_followup
                 )
 
@@ -213,18 +314,16 @@ def leads_page():
                 )
 
 
-
             remarks = st.text_area(
                 "Remarks",
                 st.session_state.edit_remarks
             )
 
 
+            u1,u2 = st.columns(2)
 
-            e1, e2 = st.columns(2)
 
-
-            with e1:
+            with u1:
 
                 if st.button(
                     "💾 Update Lead",
@@ -244,32 +343,30 @@ def leads_page():
                         assigned
                     )
 
-                    st.session_state.edit_lead_id = None
+
+                    st.session_state.edit_lead_id=None
 
                     st.success(
-                        "Lead updated successfully"
+                        "Lead updated"
                     )
 
                     st.rerun()
 
 
 
-            with e2:
+            with u2:
 
                 if st.button(
                     "❌ Cancel",
                     use_container_width=True
                 ):
 
-                    st.session_state.edit_lead_id = None
+                    st.session_state.edit_lead_id=None
 
                     st.rerun()
-
-
-
-    # ==============================
-    # ADD LEAD
-    # ==============================
+                        # ==================================================
+    # ADD LEAD SECTION
+    # ==================================================
 
     with st.expander(
         "➕ Add New Lead",
@@ -281,7 +378,7 @@ def leads_page():
             clear_on_submit=True
         ):
 
-            col1, col2 = st.columns(2)
+            col1,col2 = st.columns(2)
 
 
             with col1:
@@ -329,7 +426,7 @@ def leads_page():
                     "Follow-up Date"
                 )
 
-                assigned = st.text_input(
+                assigned_to = st.text_input(
                     "Assigned To"
                 )
 
@@ -347,7 +444,13 @@ def leads_page():
 
             if save:
 
-                if company and contact:
+                if not company or not contact:
+
+                    st.error(
+                        "Company and Contact Person required"
+                    )
+
+                else:
 
                     add_lead(
                         company,
@@ -358,56 +461,64 @@ def leads_page():
                         status,
                         str(followup_date),
                         remarks,
-                        assigned
+                        assigned_to
                     )
 
 
-                    st.session_state.lead_saved = True
+                    st.session_state.lead_saved=True
+
 
                     st.success(
                         "Lead saved successfully"
                     )
 
+
                     st.rerun()
 
-                else:
 
-                    st.error(
-                        "Company and Contact Person required"
-                    )
-                        # ==============================
-    # LEADS LISTING
-    # ==============================
 
-    st.markdown("---")
+    st.divider()
 
-    st.subheader("📋 Lead Register")
+
+
+    # ==================================================
+    # CRM LISTING
+    # ==================================================
+
+    st.subheader(
+        "📋 Lead Register"
+    )
 
 
     if df.empty:
 
-        st.info("No leads available")
+        st.info(
+            "No leads available"
+        )
 
         return
 
 
 
-    # ---------------- SEARCH + FILTER ----------------
-
-    f1, f2 = st.columns([3, 1])
+    # ---------------- SEARCH ----------------
 
 
-    with f1:
+    col1,col2 = st.columns(
+        [3,1]
+    )
+
+
+    with col1:
 
         search = st.text_input(
-            "🔍 Search Lead",
-            placeholder="Search company, contact, phone..."
+            "🔍 Search",
+            placeholder="Company / Contact / Phone"
         )
 
 
-    with f2:
+    with col2:
 
-        status_filter = st.selectbox(
+        filter_status = st.selectbox(
             "Status",
             [
                 "All",
@@ -420,26 +531,26 @@ def leads_page():
 
 
 
-    filtered = df.copy()
+    data=df.copy()
 
 
 
     if search:
 
-        filtered = filtered[
-            filtered["company"].str.contains(
+        data=data[
+            data.company.str.contains(
                 search,
                 case=False,
                 na=False
             )
             |
-            filtered["contact_person"].str.contains(
+            data.contact_person.str.contains(
                 search,
                 case=False,
                 na=False
             )
             |
-            filtered["phone"].str.contains(
+            data.phone.str.contains(
                 search,
                 case=False,
                 na=False
@@ -448,74 +559,78 @@ def leads_page():
 
 
 
-    if status_filter != "All":
+    if filter_status!="All":
 
-        filtered = filtered[
-            filtered["status"] == status_filter
+        data=data[
+            data.status==filter_status
         ]
 
 
 
     st.caption(
-        f"Showing {len(filtered)} leads"
+        f"Total records: {len(data)}"
     )
 
 
 
-    # ---------------- STATUS BADGE ----------------
+    # ---------------- STATUS STYLE ----------------
 
-    def status_badge(status):
 
-        if status == "New":
-            return "🟢 NEW"
+    def badge(status):
 
-        elif status == "Contacted":
-            return "🟡 CONTACTED"
+        colors={
+            "New":"#28a745",
+            "Contacted":"#ffc107",
+            "Won":"#007bff",
+            "Lost":"#dc3545"
+        }
 
-        elif status == "Won":
-            return "🔵 WON"
 
-        elif status == "Lost":
-            return "🔴 LOST"
-
-        return status
+        return f"""
+        <span style="
+        background:{colors.get(status,'gray')};
+        color:white;
+        padding:5px 12px;
+        border-radius:15px;
+        font-weight:bold;
+        font-size:13px;">
+        {status}
+        </span>
+        """
 
 
 
     # ---------------- TABLE HEADER ----------------
 
 
-    header = st.columns(
+    h=st.columns(
         [
             2,
             2,
             1.5,
             1.2,
             1.5,
-            1.2,
-            1.5
+            1.3,
+            2
         ]
     )
 
 
-    headers = [
+    titles=[
         "🏢 Company",
         "👤 Contact",
         "📞 Phone",
-        "🏷 Status",
+        "Status",
         "📅 Follow Up",
         "👨 Assigned",
         "Actions"
     ]
 
 
-    for col, text in zip(
-        header,
-        headers
-    ):
+    for c,t in zip(h,titles):
 
-        col.markdown(
-            f"**{text}**"
+        c.markdown(
+            f"**{t}**"
         )
 
 
@@ -523,78 +638,75 @@ def leads_page():
 
 
 
-    # ---------------- DATA ROWS ----------------
+    # ---------------- ROWS ----------------
 
 
-    for row in filtered.itertuples():
+    for row in data.itertuples():
 
 
-        cols = st.columns(
+        st.markdown(
+            "<div class='row-box'>",
+            unsafe_allow_html=True
+        )
+
+
+        c=st.columns(
             [
                 2,
                 2,
                 1.5,
                 1.2,
                 1.5,
-                1.2,
-                1.5
+                1.3,
+                2
             ]
         )
 
 
-
-        with cols[0]:
-
-            st.markdown(
-                f"**🏢 {row.company}**"
-            )
+        c[0].markdown(
+            f"**🏢 {row.company}**"
+        )
 
 
-        with cols[1]:
-
-            st.write(
-                row.contact_person
-            )
+        c[1].write(
+            row.contact_person
+        )
 
 
-        with cols[2]:
-
-            st.write(
-                row.phone or "-"
-            )
+        c[2].write(
+            row.phone or "-"
+        )
 
 
-        with cols[3]:
-
-            st.write(
-                status_badge(row.status)
-            )
-
-
-        with cols[4]:
-
-            st.write(
-                row.followup_date
-            )
+        c[3].markdown(
+            badge(row.status),
+            unsafe_allow_html=True
+        )
 
 
-        with cols[5]:
-
-            st.write(
-                row.assigned_to or "-"
-            )
+        c[4].write(
+            row.followup_date
+        )
 
 
-        with cols[6]:
+        c[5].write(
+            row.assigned_to or "-"
+        )
+                # ---------------- ACTION BUTTONS ----------------
+
+        with c[6]:
 
             a1, a2, a3 = st.columns(3)
 
+
+            # -------- EDIT --------
 
             with a1:
 
                 if st.button(
                     "✏",
-                    key=f"edit_{row.id}"
+                    key=f"edit_{row.id}",
+                    help="Edit Lead"
                 ):
 
                     st.session_state.edit_lead_id = row.id
@@ -609,17 +721,20 @@ def leads_page():
                     st.session_state.edit_remarks = row.remarks
                     st.session_state.edit_assigned = row.assigned_to
 
-
                     st.rerun()
 
 
+
+            # -------- CONVERT --------
 
             with a2:
 
                 if st.button(
                     "✔",
-                    key=f"convert_{row.id}"
+                    key=f"convert_{row.id}",
+                    help="Convert to Customer"
                 ):
+
 
                     add_customer(
                         row.contact_person,
@@ -644,12 +759,16 @@ def leads_page():
 
 
 
+            # -------- DELETE --------
+
             with a3:
 
                 if st.button(
                     "🗑",
-                    key=f"delete_{row.id}"
+                    key=f"delete_{row.id}",
+                    help="Delete Lead"
                 ):
+
 
                     delete_lead(
                         row.id
@@ -662,49 +781,11 @@ def leads_page():
 
 
                     st.rerun()
-                    # ==============================
-# CRM STYLE
-# ==============================
 
-st.markdown(
-    """
-    <style>
 
-    .lead-card {
-        padding: 15px;
-        border-radius: 12px;
-        background-color: #f8f9fa;
-        border: 1px solid #e0e0e0;
-        margin-bottom: 8px;
-    }
 
-    .lead-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1f4e79;
-    }
-
-    .lead-status-new {
-        color: #008000;
-        font-weight: bold;
-    }
-
-    .lead-status-contact {
-        color: #b8860b;
-        font-weight: bold;
-    }
-
-    .lead-status-won {
-        color: #0066cc;
-        font-weight: bold;
-    }
-
-    .lead-status-lost {
-        color: #cc0000;
-        font-weight: bold;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+        st.markdown(
+            "</div>",
+            unsafe_allow_html=True
+        )
+        
