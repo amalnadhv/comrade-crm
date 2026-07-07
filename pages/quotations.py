@@ -3,8 +3,6 @@ import pandas as pd
 import json
 from datetime import date
 import sqlite3
-from fpdf import FPDF
-import io
 
 from database import add_quotation, get_quotations, get_customers
 from utils.pdf_generator import generate_quotation_pdf
@@ -12,6 +10,7 @@ from utils.pdf_generator import generate_quotation_pdf
 DB_NAME = "crm.db"
 
 # ================= DATABASE FUNCTIONS =================
+# (Unchanged)
 def update_quotation(qid, customer_name, items, subtotal, discount, tax, total, status, version):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -29,62 +28,32 @@ def delete_quotation(qid):
     conn.commit()
     conn.close()
 
-# ================= REPORTING FUNCTIONS =================
-def generate_report_pdf(df):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, txt="Quotations Report", ln=True, align='C')
-    pdf.set_font("Arial", size=10)
-    pdf.ln(10)
-    cols = ["Customer", "Approved", "Rejected", "Total Value"]
-    for col in cols: pdf.cell(45, 10, col, border=1)
-    pdf.ln()
-    for _, row in df.iterrows():
-        pdf.cell(45, 10, str(row['customer_name']), border=1)
-        pdf.cell(45, 10, str(row['Approved']), border=1)
-        pdf.cell(45, 10, str(row['Rejected']), border=1)
-        pdf.cell(45, 10, f"{row['total_value']:.2f}", border=1)
-        pdf.ln()
-    return pdf.output(dest='S').encode('latin-1')
-
-def render_reports():
-    st.divider()
-    st.subheader("📊 Analytics & Reports")
-    df = get_quotations()
-    if df.empty:
-        st.info("No data available for reports yet.")
-        return
-    
-    report_df = df.groupby('customer_name').agg(
-        Approved=('status', lambda x: (x == 'Approved').sum()),
-        Rejected=('status', lambda x: (x == 'Rejected').sum()),
-        total_value=('total', 'sum')
-    ).reset_index()
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Total Quotations", len(df))
-    col2.metric("Success", f"{report_df['Approved'].sum()}")
-    col3.metric("Failed", f"{report_df['Rejected'].sum()}")
-
-    st.dataframe(report_df, use_container_width=True)
-    c1, c2 = st.columns(2)
-    c1.download_button("📥 Download CSV", data=report_df.to_csv(index=False).encode('utf-8'), file_name='report.csv', mime='text/csv')
-    c2.download_button("📥 Download PDF", data=generate_report_pdf(report_df), file_name='report.pdf', mime='application/pdf')
-
 # ================= PAGE =================
 def quotations_page():
+    # --- Custom CSS for Themes and Colors ---
     st.markdown("""
         <style>
+            /* Status Badges */
             .status-pill { padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem; color: white; }
-            .Draft { background-color: #95a5a6; } .Sent { background-color: #3498db; }
-            .Approved { background-color: #27ae60; } .Rejected { background-color: #e74c3c; }
+            .Draft { background-color: #95a5a6; }
+            .Sent { background-color: #3498db; }
+            .Approved { background-color: #27ae60; }
+            .Rejected { background-color: #e74c3c; }
+            
+            /* Container styling */
             .input-box { background-color: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 5px solid #3498db; }
+            
+            /* Metric Highlight */
+            .total-highlight { color: #2c3e50; font-weight: bold; }
         </style>
     """, unsafe_allow_html=True)
 
-    def render_status_badge(status): return f'<span class="status-pill {status}">{status}</span>'
+    def render_status_badge(status):
+        return f'<span class="status-pill {status}">{status}</span>'
 
+    st.title("💼 Quotations Dashboard")
+
+    # --- Session State ---
     if "quote_items" not in st.session_state: st.session_state.quote_items = []
     if "edit_id" not in st.session_state: st.session_state.edit_id = None
     if "edit_loaded" not in st.session_state: st.session_state.edit_loaded = False
@@ -96,49 +65,90 @@ def quotations_page():
         st.session_state.edit_loaded = False
         st.session_state.form_id += 1
 
-    st.title("💼 Quotations Dashboard")
+    # --- Navigation ---
     if st.button("➕ Create New Quotation"):
-        reset_form(); st.rerun()
+        reset_form()
+        st.rerun()
 
-    # (Add your existing Customer Loading logic here...)
     customers_df = pd.DataFrame(get_customers(), columns=["id", "name", "phone", "email", "company", "status"])
     customer_map = {r.id: f"{r.name} ({r.company})" for r in customers_df.itertuples()}
+    
+    if st.session_state.edit_id and not st.session_state.edit_loaded:
+        df = get_quotations()
+        match = df[df["id"] == st.session_state.edit_id]
+        if not match.empty:
+            row = match.iloc[0]
+            st.session_state.quote_items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
+        st.session_state.edit_loaded = True
 
-    # --- INPUT SECTION ---
+    # --- COLORFUL INPUT SECTION ---
     st.markdown('<div class="input-box">', unsafe_allow_html=True)
     st.subheader("🟠 Edit Quotation" if st.session_state.edit_id else "🔵 Create New Quotation")
     col1, col2 = st.columns(2)
     customer_id = col1.selectbox("Customer", list(customer_map.keys()), format_func=lambda x: customer_map[x])
     status = col2.selectbox("Status", ["Draft", "Sent", "Approved", "Rejected"])
     
+    st.markdown("### 📝 Add Items")
     i1, i2, i3, i4 = st.columns([2, 1, 1, 1])
-    item_in = i1.text_input("Item", key=f"i_name_{st.session_state.form_id}")
+    item_in = i1.text_input("Item Name", key=f"i_name_{st.session_state.form_id}")
     qty_in = i2.number_input("Qty", value=1.0, key=f"i_qty_{st.session_state.form_id}")
     prc_in = i3.number_input("Price", value=0.0, key=f"i_prc_{st.session_state.form_id}")
+    
     if i4.button("➕ Add Item"):
         st.session_state.quote_items.append({"item": item_in, "qty": qty_in, "price": prc_in})
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True) # Close colored box
 
-    # --- SEARCH & LIST ---
+    # --- TOTALS ---
+    subtotal = sum(it['qty'] * it['price'] for it in st.session_state.quote_items)
+    discount = st.number_input("Discount %", value=0.0)
+    tax = st.number_input("Tax %", value=0.0)
+    total = (subtotal - (subtotal * discount / 100)) * (1 + tax / 100)
+
+    # Use a container for totals to make them pop
+    with st.container(border=True):
+        c1, c2 = st.columns(2)
+        c1.metric("Subtotal", f"{subtotal:,.2f}")
+        c2.metric("Total Amount", f"{total:,.2f}")
+
+    # --- ACTIONS ---
+    sc1, sc2 = st.columns([1, 5])
+    if sc1.button("💾 Save Quotation"):
+        if not st.session_state.quote_items:
+            st.error("Please add at least one item.")
+        else:
+            cust_name = customer_map[customer_id]
+            if st.session_state.edit_id:
+                update_quotation(st.session_state.edit_id, cust_name, st.session_state.quote_items, subtotal, discount, tax, total, status, "V-EDIT")
+            else:
+                add_quotation(cust_name, st.session_state.quote_items, subtotal, discount, tax, total, status, str(date.today()), "V1")
+            reset_form()
+            st.rerun()
+    if sc2.button("❌ Cancel"):
+        reset_form()
+        st.rerun()
+
+    # --- LIST DISPLAY ---
     st.divider()
     st.subheader("📋 All Quotations")
-    col_s, col_f = st.columns([2, 1])
-    search = col_s.text_input("🔍 Search")
-    status_filter = col_f.multiselect("Filter Status", ["Draft", "Sent", "Approved", "Rejected"])
+    head_c1, head_c2, head_c3, head_c4 = st.columns([3, 2, 2, 3])
+    head_c1.markdown("**Customer**"); head_c2.markdown("**Status**"); head_c3.markdown("**Total**"); head_c4.markdown("**Actions**")
     
     df = get_quotations()
-    if search: df = df[df['customer_name'].str.contains(search, case=False, na=False)]
-    if status_filter: df = df[df['status'].isin(status_filter)]
-
     for _, row in df.iterrows():
         c1, c2, c3, c4 = st.columns([3, 2, 2, 3])
-        c1.write(row.get('customer_name'))
-        c2.markdown(render_status_badge(row.get('status')), unsafe_allow_html=True)
+        c1.write(row.get('customer_name', 'N/A'))
+        c2.markdown(render_status_badge(row.get('status', 'Draft')), unsafe_allow_html=True)
         c3.write(f"{row.get('total', 0):,.2f}")
+        
         with c4:
-            if st.button("✏️", key=f"e_{row['id']}"): 
-                st.session_state.edit_id = row["id"]; st.rerun()
-
-    # --- CALL THE REPORTS FUNCTION ---
-    render_reports()
+            s1, s2, s3 = st.columns(3)
+            if s1.button("✏️", key=f"e_{row['id']}"):
+                st.session_state.edit_id = row["id"]
+                st.session_state.edit_loaded = False
+                st.rerun()
+            if s2.button("🗑️", key=f"d_{row['id']}"):
+                delete_quotation(row["id"])
+                st.rerun()
+            items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
+            s3.download_button("📄", data=generate_quotation_pdf({**row.to_dict(), "items": items}), file_name=f"q_{row['id']}.pdf", key=f"pdf_{row['id']}")
