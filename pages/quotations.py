@@ -858,173 +858,190 @@ def reset_quote():
         st.rerun()
     
         # =====================================================
-        # COMPACT QUOTATION LIST
-        # =====================================================
-        
-        st.divider()
-        
-        st.subheader("📋 Quotations")
-        
-        
-        df = get_quotations()
-        
-        
-        if df.empty:
-        
-            st.info("No quotations found")
-        
-        
-        else:
-        
-        
-            # Header
-        
-            col1,col2,col3,col4,col5 = st.columns(
+    # COMPACT QUOTATION LIST
+    # =====================================================
+
+    st.divider()
+
+    st.subheader("📋 Quotations")
+
+
+    df = get_quotations()
+
+
+    if df.empty:
+
+        st.info("No quotations found")
+
+
+    else:
+
+
+        # Header
+
+        h1,h2,h3,h4,h5 = st.columns(
+            [1.2,3.5,2,1.5,2]
+        )
+
+
+        h1.markdown("**Quote No**")
+        h2.markdown("**Customer**")
+        h3.markdown("**Amount**")
+        h4.markdown("**Status**")
+        h5.markdown("**Action**")
+
+
+        st.markdown(
+            "<hr style='margin:3px 0'>",
+            unsafe_allow_html=True
+        )
+
+
+
+        for _,row in df.iterrows():
+
+
+            c1,c2,c3,c4,c5 = st.columns(
                 [1.2,3.5,2,1.5,2]
             )
-        
-        
-            col1.markdown("**Quote No**")
-            col2.markdown("**Customer**")
-            col3.markdown("**Amount**")
-            col4.markdown("**Status**")
-            col5.markdown("**Action**")
-        
-        
-        
-            st.markdown(
-                """
-                <hr style="margin:5px 0">
+
+
+            c1.write(
+                f"QT-{row['id']:04d}"
+            )
+
+
+            c2.write(
+                row["customer_name"]
+            )
+
+
+            c3.write(
+                f"{row['total']:,.2f}"
+            )
+
+
+            status=row["status"]
+
+
+            c4.markdown(
+                f"""
+                <span style="
+                background:#e5e7eb;
+                padding:3px 8px;
+                border-radius:10px;
+                font-size:11px;">
+                {status}
+                </span>
                 """,
                 unsafe_allow_html=True
             )
-        
-        
-        
-            for _,row in df.iterrows():
-        
-        
-                c1,c2,c3,c4,c5 = st.columns(
-                    [1.2,3.5,2,1.5,2]
+
+
+
+            with c5:
+
+
+                b1,b2,b3 = st.columns(
+                    [1,1,1]
                 )
-        
-        
-                c1.write(
-                    f"QT-{row['id']:04d}"
-                )
-        
-        
-                c2.write(
-                    row["customer_name"]
-                )
-        
-        
-                c3.write(
-                    f"{row['total']:,.2f}"
-                )
-        
-        
-                # status badge
-        
-                status=row["status"]
-        
-        
-                c4.markdown(
-                    f"""
-                    <span style="
-                    background:#e2e8f0;
-                    padding:4px 10px;
-                    border-radius:12px;
-                    font-size:12px;">
-                    {status}
-                    </span>
-                    """,
-                    unsafe_allow_html=True
-                )
-        
-        
-        
-                with c5:
-        
-        
-                    b1,b2,b3 = st.columns(3)
-        
-        
-        
-                    with b1:
-        
-                        if st.button(
-                            "✏️",
-                            key=f"edit_{row['id']}"
-                        ):
-        
-                            st.session_state.edit_id=row["id"]
-        
-                            st.session_state.edit_loaded=False
-        
-                            st.rerun()
-        
-        
-        
-                    with b2:
-        
-        
-                        if st.button(
-                            "🗑",
-                            key=f"del_{row['id']}"
-                        ):
-        
-        
-                            delete_quotation(
-                                row["id"]
-                            )
-        
-                            st.rerun()
-        
-        
-        
-                    with b3:
-        
-        
-                        safe_row=row.to_dict()
-        
-        
-                        if isinstance(
-                            safe_row["items"],
-                            str
-                        ):
-        
-                            safe_row["items"]=json.loads(
-                                safe_row["items"]
-                            )
-        
-        
-                        pdf=generate_quotation_pdf(
-                            safe_row
+
+
+                with b1:
+
+                    if st.button(
+                        "✏️",
+                        key=f"edit_{row['id']}",
+                        width="content"
+                    ):
+
+                        st.session_state.edit_id = row["id"]
+
+                        st.session_state.edit_loaded = False
+
+                        st.rerun()
+
+
+
+                with b2:
+
+                    if st.button(
+                        "🗑",
+                        key=f"del_{row['id']}",
+                        width="content"
+                    ):
+
+                        delete_quotation(
+                            row["id"]
                         )
-        
-        
-                        st.download_button(
-        
-                            "📄",
-        
-                            pdf,
-        
-                            file_name=
-                            f"quotation_{row['id']}.pdf",
-        
-                            mime=
-                            "application/pdf",
-        
-                            key=
-                            f"pdf_{row['id']}"
-        
+
+                        st.success(
+                            "Deleted"
                         )
-        
-        
-                st.markdown(
-                    """
-                    <hr style="margin:3px 0">
-                    """,
-                    unsafe_allow_html=True
-                )
+
+                        st.rerun()
+
+
+
+                with b3:
+
+
+                    safe_row=row.to_dict()
+
+
+                    items=safe_row.get(
+                        "items",
+                        []
+                    )
+
+
+                    if isinstance(
+                        items,
+                        str
+                    ):
+
+                        try:
+
+                            items=json.loads(
+                                items
+                            )
+
+                        except:
+
+                            items=[]
+
+
+
+                    safe_row["items"]=items
+
+
+
+                    pdf=generate_quotation_pdf(
+                        safe_row
+                    )
+
+
+                    st.download_button(
+
+                        "📄",
+
+                        pdf,
+
+                        file_name=
+                        f"quotation_{row['id']}.pdf",
+
+                        mime=
+                        "application/pdf",
+
+                        key=
+                        f"pdf_{row['id']}",
+
+                        width="content"
+
+                    )
+
+
+            st.markdown(
+                "<hr style='margin:2px 0'>",
+                unsafe_allow_html=True
+            )
