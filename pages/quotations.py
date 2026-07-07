@@ -10,7 +10,7 @@ from utils.pdf_generator import generate_quotation_pdf
 DB_NAME = "crm.db"
 
 # ================= DATABASE FUNCTIONS =================
-# (Kept identical to your working version)
+# (Unchanged)
 def update_quotation(qid, customer_name, items, subtotal, discount, tax, total, status, version):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -30,27 +30,28 @@ def delete_quotation(qid):
 
 # ================= PAGE =================
 def quotations_page():
-    # --- CSS for Colored Status Badges ---
+    # --- Custom CSS for Themes and Colors ---
     st.markdown("""
         <style>
-            .status-pill {
-                padding: 4px 10px;
-                border-radius: 15px;
-                font-weight: bold;
-                font-size: 0.8rem;
-                color: white;
-            }
-            .Draft { background-color: #7f8c8d; }
+            /* Status Badges */
+            .status-pill { padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem; color: white; }
+            .Draft { background-color: #95a5a6; }
             .Sent { background-color: #3498db; }
             .Approved { background-color: #27ae60; }
-            .Rejected { background-color: #c0392b; }
+            .Rejected { background-color: #e74c3c; }
+            
+            /* Container styling */
+            .input-box { background-color: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 5px solid #3498db; }
+            
+            /* Metric Highlight */
+            .total-highlight { color: #2c3e50; font-weight: bold; }
         </style>
     """, unsafe_allow_html=True)
 
     def render_status_badge(status):
         return f'<span class="status-pill {status}">{status}</span>'
 
-    st.title("💼 Quotations")
+    st.title("💼 Quotations Dashboard")
 
     # --- Session State ---
     if "quote_items" not in st.session_state: st.session_state.quote_items = []
@@ -64,7 +65,7 @@ def quotations_page():
         st.session_state.edit_loaded = False
         st.session_state.form_id += 1
 
-    # --- Navigation & Data ---
+    # --- Navigation ---
     if st.button("➕ Create New Quotation"):
         reset_form()
         st.rerun()
@@ -80,48 +81,39 @@ def quotations_page():
             st.session_state.quote_items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
         st.session_state.edit_loaded = True
 
-    # --- INPUT CONTAINER ---
-    with st.container(border=True):
-        st.subheader("🟠 Edit Quotation" if st.session_state.edit_id else "🔵 Create New Quotation")
-        col1, col2 = st.columns(2)
-        customer_id = col1.selectbox("Customer", list(customer_map.keys()), format_func=lambda x: customer_map[x])
-        status = col2.selectbox("Status", ["Draft", "Sent", "Approved", "Rejected"])
-        
-        st.markdown("### Add Items")
-        i1, i2, i3, i4 = st.columns([2, 1, 1, 1])
-        item_in = i1.text_input("Item Name", key=f"i_name_{st.session_state.form_id}")
-        qty_in = i2.number_input("Qty", value=1.0, key=f"i_qty_{st.session_state.form_id}")
-        prc_in = i3.number_input("Price", value=0.0, key=f"i_prc_{st.session_state.form_id}")
-        
-        if i4.button("➕ Add Item"):
-            st.session_state.quote_items.append({"item": item_in, "qty": qty_in, "price": prc_in})
-            st.rerun()
+    # --- COLORFUL INPUT SECTION ---
+    st.markdown('<div class="input-box">', unsafe_allow_html=True)
+    st.subheader("🟠 Edit Quotation" if st.session_state.edit_id else "🔵 Create New Quotation")
+    col1, col2 = st.columns(2)
+    customer_id = col1.selectbox("Customer", list(customer_map.keys()), format_func=lambda x: customer_map[x])
+    status = col2.selectbox("Status", ["Draft", "Sent", "Approved", "Rejected"])
+    
+    st.markdown("### 📝 Add Items")
+    i1, i2, i3, i4 = st.columns([2, 1, 1, 1])
+    item_in = i1.text_input("Item Name", key=f"i_name_{st.session_state.form_id}")
+    qty_in = i2.number_input("Qty", value=1.0, key=f"i_qty_{st.session_state.form_id}")
+    prc_in = i3.number_input("Price", value=0.0, key=f"i_prc_{st.session_state.form_id}")
+    
+    if i4.button("➕ Add Item"):
+        st.session_state.quote_items.append({"item": item_in, "qty": qty_in, "price": prc_in})
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True) # Close colored box
 
-    # --- ITEMS TABLE ---
-    if st.session_state.quote_items:
-        st.markdown("#### Current Items")
-        for i, it in enumerate(st.session_state.quote_items):
-            cols = st.columns([3, 1, 1, 1])
-            cols[0].write(it['item'])
-            cols[1].write(f"Qty: {it['qty']}")
-            cols[2].write(f"Price: {it['price']}")
-            if cols[3].button("🗑️", key=f"del_{i}"):
-                st.session_state.quote_items.pop(i)
-                st.rerun()
-
-    # --- TOTALS METRICS ---
+    # --- TOTALS ---
     subtotal = sum(it['qty'] * it['price'] for it in st.session_state.quote_items)
     discount = st.number_input("Discount %", value=0.0)
     tax = st.number_input("Tax %", value=0.0)
     total = (subtotal - (subtotal * discount / 100)) * (1 + tax / 100)
 
-    c1, c2 = st.columns(2)
-    c1.metric("Subtotal", f"{subtotal:.2f}")
-    c2.metric("Total Amount", f"{total:.2f}")
+    # Use a container for totals to make them pop
+    with st.container(border=True):
+        c1, c2 = st.columns(2)
+        c1.metric("Subtotal", f"{subtotal:,.2f}")
+        c2.metric("Total Amount", f"{total:,.2f}")
 
     # --- ACTIONS ---
     sc1, sc2 = st.columns([1, 5])
-    if sc1.button("💾 Save"):
+    if sc1.button("💾 Save Quotation"):
         if not st.session_state.quote_items:
             st.error("Please add at least one item.")
         else:
@@ -146,11 +138,8 @@ def quotations_page():
     for _, row in df.iterrows():
         c1, c2, c3, c4 = st.columns([3, 2, 2, 3])
         c1.write(row.get('customer_name', 'N/A'))
-        
-        # Apply the Colored Badge here
         c2.markdown(render_status_badge(row.get('status', 'Draft')), unsafe_allow_html=True)
-        
-        c3.write(f"{row.get('total', 0):.2f}")
+        c3.write(f"{row.get('total', 0):,.2f}")
         
         with c4:
             s1, s2, s3 = st.columns(3)
