@@ -794,7 +794,8 @@ def leads_page():
                if st.button(
                     "✏",
                     key=f"edit_{row.id}",
-                    help="Edit Lead"
+                    help="Edit Lead",
+                    type="secondary"
                 ):
 
 
