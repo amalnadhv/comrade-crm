@@ -213,7 +213,7 @@ def quotations_page():
         if c1.button("✏ Edit", key=f"e_{row['id']}"):
             st.session_state.edit_id = row["id"]
             st.session_state.edit_loaded = False
-            st.experimental_rerun()
+            st.rerun()
 
         if c2.button("🗑 Delete", key=f"d_{row['id']}"):
             delete_quotation(row["id"])
