@@ -192,6 +192,49 @@ def delete_lead(lead_id):
     conn.commit()
     conn.close()
 
+def update_lead(
+    lead_id,
+    company,
+    contact_person,
+    phone,
+    email,
+    source,
+    status,
+    followup_date,
+    remarks,
+    assigned_to
+):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE leads
+        SET company=?,
+            contact_person=?,
+            phone=?,
+            email=?,
+            source=?,
+            status=?,
+            followup_date=?,
+            remarks=?,
+            assigned_to=?
+        WHERE id=?
+    """, (
+        company,
+        contact_person,
+        phone,
+        email,
+        source,
+        status,
+        followup_date,
+        remarks,
+        assigned_to,
+        lead_id
+    ))
+
+    conn.commit()
+    conn.close()
+    
 
 def convert_lead_to_customer(name, phone, email, company, status="New"):
     add_customer(name, phone, email, company, status)
