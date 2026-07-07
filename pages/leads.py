@@ -106,20 +106,71 @@ def leads_page():
             transition:0.2s;
         
         }
+
+        .crm-header {
+        
+            background: linear-gradient(
+                135deg,
+                #1e3c72,
+                #2a5298
+            );
+        
+            padding: 22px 30px;
+        
+            border-radius: 15px;
+        
+            margin-bottom: 20px;
+        
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        
+        }
+        
+        
+        .crm-title {
+        
+            color:white;
+        
+            font-size:32px;
+        
+            font-weight:800;
+        
+            letter-spacing:0.5px;
+        
+        }
+        
+        
+        .crm-subtitle {
+        
+            color:#e6f2ff;
+        
+            font-size:15px;
+        
+            margin-top:5px;
+        
+        }
+
         
         </style>
         """,
         unsafe_allow_html=True
     )
 
-
-
     st.markdown(
-        "<div class='main-title'>🎯 Leads Dashboard</div>",
+    """
+        <div class="crm-header">
+    
+            <div class="crm-title">
+                🎯 Leads Dashboard
+            </div>
+    
+            <div class="crm-subtitle">
+                Manage prospects, follow-ups and conversions efficiently
+            </div>
+    
+        </div>
+        """,
         unsafe_allow_html=True
     )
-
-
 
     # ---------------- SESSION ----------------
 
