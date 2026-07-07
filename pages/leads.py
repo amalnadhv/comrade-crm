@@ -153,10 +153,9 @@ def leads_page():
         unsafe_allow_html=True
     )
 
-    st.markdown(
-    """
+   st.markdown(
+        """
         <div class="crm-header">
-    
             <div class="crm-title">
                 🎯 Leads Dashboard
             </div>
@@ -164,7 +163,6 @@ def leads_page():
             <div class="crm-subtitle">
                 Manage prospects, follow-ups and conversions efficiently
             </div>
-    
         </div>
         """,
         unsafe_allow_html=True
