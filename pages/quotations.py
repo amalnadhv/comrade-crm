@@ -33,37 +33,35 @@ def quotations_page():
     # --- Custom CSS for Themes and Colors ---
     st.markdown("""
         <style>
-            /* Status Badges */
-            .status-pill { padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem; color: white; }
-            .Draft { background-color: #95a5a6; }
-            .Sent { background-color: #3498db; }
-            .Approved { background-color: #27ae60; }
-            .Rejected { background-color: #e74c3c; }
+          .crm-header {
+                background: linear-gradient(135deg, #2563EB, #1d4ed8);
+                padding: 22px 30px;
+                border-radius: 15px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 12px rgba(0,0,0,.15);
+            }
+            .crm-title { color: white; font-size: 32px; font-weight: 800; }
+            .crm-subtitle { color: #e0e7ff; font-size: 15px; margin-top: 6px; }
             
-            /* Container styling */
-            .input-box { background-color: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 5px solid #3498db; }
+            .table-header {
+                background: #2563EB;
+                color: white;
+                padding: 10px;
+                border-radius: 8px;
+                text-align: center;
+                font-weight: bold;
+            }
             
-            /* Metric Highlight */
-            .total-highlight { color: #2c3e50; font-weight: bold; }
-            .status-pill { padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem; color: white; }
+            /* Buttons */
+            div.stButton > button { border-radius: 8px; font-weight: bold; }
             
-             /* Buttons */
-            div.stButton > button { border-radius: 8px; font-weight: bold; border: none; }
             /* Status Pills */
             .status-pill { padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem; color: white; }
             .Draft { background-color: #7f8c8d; }
             .Sent { background-color: #2563EB; }
             .Approved { background-color: #059669; }
             .Rejected { background-color: #DC2626; }
-            /* Layout */
-            .input-box { 
-                background-color: #ffffff; 
-                padding: 20px; 
-                border-radius: 12px; 
-                border-left: 6px solid #2563EB;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            }
-            
+        
         </style>
     """, unsafe_allow_html=True)
 
