@@ -205,7 +205,7 @@ def quotations_page():
     for _, row in df.iterrows():
         st.markdown(f"""
         ### {row['customer_name']}
-        **Total:** {row['total']} | **Status:** {row['status']} | **Date:** {row['date']}
+        **Total:** {row['total']} | **Status:** {row['status']}
         """)
 
         c1, c2, c3 = st.columns(3)
