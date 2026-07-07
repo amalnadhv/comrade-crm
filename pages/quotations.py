@@ -132,8 +132,8 @@ def quotations_page():
     st.divider()
     st.subheader("📋 All Quotations")
 
-    # 1. Search & Filter Inputs
-    col_search, col_filter, col_export = st.columns([2, 1, 1])
+    # 1. Search & Filter Inputs (Changed [2, 1, 1] to [2, 1, 1, 1] to add space for PDF button)
+    col_search, col_filter, col_export, col_pdf = st.columns([2, 1, 1, 1])
     search_val = col_search.text_input("🔍 Search by Customer Name", key="search_query")
     status_val = col_filter.multiselect("Filter by Status", ["Draft", "Sent", "Approved", "Rejected"], key="status_filter")
 
@@ -146,7 +146,7 @@ def quotations_page():
     if status_val:
         df = df[df['status'].isin(status_val)]
     
-    # 3. Export Button (Exports only the filtered data)
+    # 3. Export Buttons (CSV and PDF)
     csv_data = df.to_csv(index=False).encode('utf-8')
     col_export.download_button(
         label="📥 Export CSV",
@@ -156,7 +156,16 @@ def quotations_page():
         key="export_csv"
     )
 
-    # 4. Render Header and Filtered Rows
+    # Added PDF Button
+    col_pdf.download_button(
+        label="📄 Export PDF",
+        data=generate_list_pdf(df), 
+        file_name="filtered_report.pdf",
+        mime="application/pdf",
+        key="export_pdf"
+    )
+
+    # 4. Render Header and Filtered Rows (Rest remains exactly as you had it)
     head_c1, head_c2, head_c3, head_c4 = st.columns([3, 2, 2, 3])
     head_c1.markdown("**Customer**"); head_c2.markdown("**Status**"); head_c3.markdown("**Total**"); head_c4.markdown("**Actions**")
     
@@ -179,7 +188,6 @@ def quotations_page():
                     delete_quotation(row["id"])
                     st.rerun()
                 
-                # PDF Generation (Using your existing utility)
                 items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
                 s3.download_button(
                     label="📄", 
