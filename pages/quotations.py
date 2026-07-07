@@ -92,7 +92,12 @@ def delete_quotation(qid):
 
 def reset_quote():
 
+    # clear quotation data
+
     st.session_state.quote_items = []
+
+
+    # clear edit mode
 
     st.session_state.edit_id = None
 
@@ -103,6 +108,33 @@ def reset_quote():
     st.session_state.edit_status = "Draft"
 
 
+
+    # clear input widgets
+
+    widget_keys = [
+
+        "item_input",
+
+        "qty_input",
+
+        "price_input",
+
+        "discount",
+
+        "tax",
+
+        "customer_select",
+
+        "status_select"
+
+    ]
+
+
+    for key in widget_keys:
+
+        if key in st.session_state:
+
+            del st.session_state[key]
 
 # =====================================================
 # PAGE
