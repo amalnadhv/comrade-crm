@@ -52,23 +52,36 @@ def app():
     # ---------------- CSS (BUTTON DESIGN) ----------------
     st.markdown("""
     <style>
-    div.stButton > button {
-        width: 100%;
-        height: 45px;
-        border-radius: 10px;
-        font-weight: 600;
-        transition: 0.2s;
-    }
+       /* Sidebar Styling */
+        [data-testid="stSidebar"] {
+            background-color: #f8fafc;
+            padding: 20px;
+        }
+        
+        /* Modern Button Styling */
+        div.stButton > button {
+            width: 100%;
+            border-radius: 12px;
+            height: 50px;
+            font-weight: 700;
+            border: none;
+            transition: all 0.3s ease;
+            text-align: left;
+            padding-left: 20px;
+        }
 
-    div.stButton > button:hover {
-        transform: scale(1.02);
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
-    }
-
-    section[data-testid="stSidebar"] div.stButton {
-        margin-bottom: 6px;
-    }
-    </style>
+        /* Hover Effect */
+        div.stButton > button:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Active Page Highlighting - This makes the selected button POP */
+        div.stButton > button[kind="primary"] {
+            border-left: 6px solid #1d4ed8;
+            background: linear-gradient(90deg, #dbeafe, transparent);
+        }
+       </style>
     """, unsafe_allow_html=True)
 
     # ---------------- SIDEBAR ----------------
