@@ -9,7 +9,8 @@ from utils.pdf_generator import generate_quotation_pdf
 
 DB_NAME = "crm.db"
 
-# ================= DATABASE FUNCTIONS (Same as before) =================
+# ================= DATABASE FUNCTIONS =================
+# (Kept identical to your working version)
 def update_quotation(qid, customer_name, items, subtotal, discount, tax, total, status, version):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -29,6 +30,26 @@ def delete_quotation(qid):
 
 # ================= PAGE =================
 def quotations_page():
+    # --- CSS for Colored Status Badges ---
+    st.markdown("""
+        <style>
+            .status-pill {
+                padding: 4px 10px;
+                border-radius: 15px;
+                font-weight: bold;
+                font-size: 0.8rem;
+                color: white;
+            }
+            .Draft { background-color: #7f8c8d; }
+            .Sent { background-color: #3498db; }
+            .Approved { background-color: #27ae60; }
+            .Rejected { background-color: #c0392b; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    def render_status_badge(status):
+        return f'<span class="status-pill {status}">{status}</span>'
+
     st.title("💼 Quotations")
 
     # --- Session State ---
@@ -43,7 +64,7 @@ def quotations_page():
         st.session_state.edit_loaded = False
         st.session_state.form_id += 1
 
-    # --- Top Navigation ---
+    # --- Navigation & Data ---
     if st.button("➕ Create New Quotation"):
         reset_form()
         st.rerun()
@@ -125,7 +146,10 @@ def quotations_page():
     for _, row in df.iterrows():
         c1, c2, c3, c4 = st.columns([3, 2, 2, 3])
         c1.write(row.get('customer_name', 'N/A'))
-        c2.write(row.get('status', 'N/A'))
+        
+        # Apply the Colored Badge here
+        c2.markdown(render_status_badge(row.get('status', 'Draft')), unsafe_allow_html=True)
+        
         c3.write(f"{row.get('total', 0):.2f}")
         
         with c4:
