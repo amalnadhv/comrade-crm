@@ -655,7 +655,44 @@ def quotations_page():
 
     )
 
+# ================= CANCEL EDIT =================
 
+if st.session_state.edit_id:
+
+    if st.button(
+        "❌ Cancel Edit",
+        key="cancel_edit"
+    ):
+
+        st.session_state.edit_id = None
+
+        st.session_state.quote_items = []
+
+        st.session_state.edit_loaded = False
+
+        st.session_state.edit_customer = None
+
+        st.session_state.edit_status = "Draft"
+
+
+        # clear widgets
+
+        for key in [
+            "customer_select",
+            "status_select",
+            "item_input",
+            "qty_input",
+            "price_input",
+            "discount",
+            "tax"
+        ]:
+
+            if key in st.session_state:
+
+                del st.session_state[key]
+
+
+        st.rerun()
 
     # ================= SAVE =================
 
