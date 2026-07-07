@@ -117,7 +117,7 @@ def quotations_page():
             "qty": qty_input,
             "price": price_input
         })
-        st.experimental_rerun()
+        st.rerun()
 
     # Item list display
     subtotal = 0
