@@ -7,6 +7,34 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.enums import TA_RIGHT, TA_CENTER, TA_LEFT
 from io import BytesIO
 
+def generate_list_pdf(df):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    elements.append(Paragraph("<b>Quotations Summary Report</b>", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    # Prepare data for the table
+    data = [["Customer", "Status", "Total (AED)"]]
+    for _, row in df.iterrows():
+        data.append([str(row['customer_name']), str(row['status']), f"{row['total']:,.2f}"])
+
+    # Create and style the table
+    t = Table(data, colWidths=[200, 100, 150])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1F4E79")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('PADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(t)
+
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer.getvalue()
 
 def generate_quotation_pdf(data):
 
