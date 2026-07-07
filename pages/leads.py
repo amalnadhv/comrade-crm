@@ -791,11 +791,14 @@ def leads_page():
 
             with a1:
 
-                if st.button(
-                    "✏",
-                    key=f"edit_{row.id}",
-                    help="Edit Lead"
-                ):
+                st.markdown(
+                """
+                <span class="crm-btn edit-btn">
+                ✏ Edit
+                </span>
+                """,
+                unsafe_allow_html=True
+                )
 
                     st.session_state.edit_lead_id = row.id
 
