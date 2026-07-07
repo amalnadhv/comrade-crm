@@ -37,7 +37,7 @@ def leads_page():
             border-radius:8px;
             padding:6px 10px;
             margin-bottom:5px;
-            background:#ffffff;
+            background:#F54927;
         }
 
         .row-box:hover {
