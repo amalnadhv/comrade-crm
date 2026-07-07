@@ -52,39 +52,43 @@ def app():
     # ---------------- CSS (BUTTON DESIGN) ----------------
     st.markdown("""
     <style>
-    /* 1. Base Button Styling (Non-Active) */
+    /* 1. Base Button Styling (Midnight Indigo Theme) */
         div.stButton > button {
             width: 100%;
             height: 50px;
             border-radius: 12px;
             font-weight: 600;
-            border: 1px solid #334155; /* Subtle border for dark mode */
-            background-color: #1e293b;  /* Deep Slate */
-            color: #e2e8f0;            /* Light gray text */
+            /* A rich, deep Indigo that isn't black */
+            background-color: #1e1b4b; 
+            color: #e0e7ff;
+            /* Subtle blue border to define the shape */
+            border: 1px solid rgba(99, 102, 241, 0.3);
             transition: all 0.3s ease;
         }
 
-        /* 2. Hover Effect (The Glow) */
+        /* 2. Hover Effect (Glow) */
         div.stButton > button:hover {
-            border: 1px solid #6366f1; /* Purple border on hover */
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+            background-color: #312e81; /* Lighter Indigo on hover */
+            border: 1px solid #818cf8;
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
             transform: scale(1.02);
         }
 
-        /* 3. The Active/Primary Button (The "Pop" Factor) */
+        /* 3. The Active/Primary Button (Vibrant Gradient) */
         div.stButton > button[kind="primary"] {
             border: none;
-            /* Electric Blue to Purple Gradient */
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+            /* Vibrant Indigo to Purple Gradient */
+            background: linear-gradient(135deg, #4f46e5, #9333ea) !important;
             color: white !important;
             font-weight: 700;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.5);
         }
         
-        /* 4. Ensure Sidebar spacing looks clean */
+        /* 4. Sidebar spacing */
         section[data-testid="stSidebar"] div.stButton {
             margin-bottom: 10px;
-        } 
+        }
+    
     </style>
     """, unsafe_allow_html=True)
 
