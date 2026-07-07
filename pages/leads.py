@@ -202,9 +202,16 @@ def leads_page():
         )
 
 
-
-    st.divider()
-
+      st.markdown(
+        """
+        <hr style="
+        margin:4px 0px;
+        border:0;
+        border-top:1px solid #dddddd;
+        ">
+        """,
+        unsafe_allow_html=True
+    )
 
 
     # ---------------- NEW BUTTON ----------------
