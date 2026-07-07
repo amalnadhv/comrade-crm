@@ -193,7 +193,7 @@ def leads_page():
             won
         )
 
-    with c5:
+  with c5:
         st.metric(
             "🔴 Lost",
             lost
