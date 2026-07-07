@@ -128,27 +128,45 @@ def quotations_page():
         reset_form()
         st.rerun()
 
-    # --- LIST DISPLAY ---
+  # --- LIST DISPLAY & SEARCH ---
     st.divider()
     st.subheader("📋 All Quotations")
+
+    # 1. Search & Filter Inputs
+    col_search, col_filter = st.columns([2, 1])
+    search_val = col_search.text_input("🔍 Search by Customer Name", key="search_query")
+    status_val = col_filter.multiselect("Filter by Status", ["Draft", "Sent", "Approved", "Rejected"], key="status_filter")
+
+    # 2. Get Data and Apply Filters
+    df = get_quotations()
+    
+    if search_val:
+        df = df[df['customer_name'].str.contains(search_val, case=False, na=False)]
+    
+    if status_val:
+        df = df[df['status'].isin(status_val)]
+
+    # 3. Render Header and Filtered Rows
     head_c1, head_c2, head_c3, head_c4 = st.columns([3, 2, 2, 3])
     head_c1.markdown("**Customer**"); head_c2.markdown("**Status**"); head_c3.markdown("**Total**"); head_c4.markdown("**Actions**")
     
-    df = get_quotations()
-    for _, row in df.iterrows():
-        c1, c2, c3, c4 = st.columns([3, 2, 2, 3])
-        c1.write(row.get('customer_name', 'N/A'))
-        c2.markdown(render_status_badge(row.get('status', 'Draft')), unsafe_allow_html=True)
-        c3.write(f"{row.get('total', 0):,.2f}")
-        
-        with c4:
-            s1, s2, s3 = st.columns(3)
-            if s1.button("✏️", key=f"e_{row['id']}"):
-                st.session_state.edit_id = row["id"]
-                st.session_state.edit_loaded = False
-                st.rerun()
-            if s2.button("🗑️", key=f"d_{row['id']}"):
-                delete_quotation(row["id"])
-                st.rerun()
-            items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
-            s3.download_button("📄", data=generate_quotation_pdf({**row.to_dict(), "items": items}), file_name=f"q_{row['id']}.pdf", key=f"pdf_{row['id']}")
+    if df.empty:
+        st.info("No quotations found matching your search.")
+    else:
+        for _, row in df.iterrows():
+            c1, c2, c3, c4 = st.columns([3, 2, 2, 3])
+            c1.write(row.get('customer_name', 'N/A'))
+            c2.markdown(render_status_badge(row.get('status', 'Draft')), unsafe_allow_html=True)
+            c3.write(f"{row.get('total', 0):,.2f}")
+            
+            with c4:
+                s1, s2, s3 = st.columns(3)
+                if s1.button("✏️", key=f"e_{row['id']}"):
+                    st.session_state.edit_id = row["id"]
+                    st.session_state.edit_loaded = False
+                    st.rerun()
+                if s2.button("🗑️", key=f"d_{row['id']}"):
+                    delete_quotation(row["id"])
+                    st.rerun()
+                items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
+                s3.download_button("📄", data=generate_quotation_pdf({**row.to_dict(), "items": items}), file_name=f"q_{row['id']}.pdf", key=f"pdf_{row['id']}")
