@@ -4,7 +4,7 @@ import json
 from datetime import date
 import sqlite3
 
-# Assuming these imports work based on your project structure
+# Import your helper functions
 from database import add_quotation, get_quotations, get_customers
 from utils.pdf_generator import generate_quotation_pdf
 
@@ -44,15 +44,15 @@ def quotations_page():
         st.session_state.quote_items = []
         st.session_state.edit_loaded = False
 
-    # --- Data ---
-    customers_df = pd.DataFrame(get_customers(), columns=["id", "name", "phone", "email", "company", "status"])
-    customer_map = {r.id: f"{r.name} ({r.company})" for r in customers_df.itertuples()}
-    
-    # --- Create Button ---
+    # --- Create Button (Force Reset) ---
     if st.button("➕ Create New Quotation"):
         reset_form()
         st.rerun()
 
+    # --- Data ---
+    customers_df = pd.DataFrame(get_customers(), columns=["id", "name", "phone", "email", "company", "status"])
+    customer_map = {r.id: f"{r.name} ({r.company})" for r in customers_df.itertuples()}
+    
     # --- Edit Mode Loading ---
     if st.session_state.edit_id and not st.session_state.edit_loaded:
         df = get_quotations()
@@ -63,6 +63,7 @@ def quotations_page():
         st.session_state.edit_loaded = True
 
     # --- Editor Form ---
+    st.markdown("---")
     st.subheader("🟠 Edit Quotation" if st.session_state.edit_id else "🔵 Create New Quotation")
     
     col1, col2 = st.columns(2)
@@ -93,11 +94,11 @@ def quotations_page():
             st.rerun()
 
     # Totals
-    st.write(f"**Subtotal: ${subtotal:.2f}**")
+    st.write(f"**Subtotal: {subtotal:.2f}**")
     discount = st.number_input("Discount %", value=0.0)
     tax = st.number_input("Tax %", value=0.0)
     total = (subtotal - (subtotal * discount / 100)) * (1 + tax / 100)
-    st.write(f"### Total: ${total:.2f}")
+    st.write(f"### Total: {total:.2f}")
 
     # Save/Cancel
     sc1, sc2 = st.columns(2)
@@ -125,12 +126,11 @@ def quotations_page():
     df = get_quotations()
     
     for _, row in df.iterrows():
-        # Safe display of row data
         cust = row.get('customer_name', 'N/A')
         stat = row.get('status', 'N/A')
         tot = row.get('total', 0.0)
         
-        st.markdown(f"### {cust} | Status: {stat} | Total: ${tot:.2f}")
+        st.markdown(f"### {cust} | Status: {stat} | Total: {tot:.2f}")
         
         c1, c2, c3 = st.columns(3)
         if c1.button("✏️ Edit", key=f"e_{row['id']}"):
@@ -141,7 +141,6 @@ def quotations_page():
             delete_quotation(row["id"])
             st.rerun()
             
-        # PDF Generation
         items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
         pdf_data = generate_quotation_pdf({**row.to_dict(), "items": items})
         c3.download_button("📄 PDF", data=pdf_data, file_name=f"quote_{row['id']}.pdf", key=f"pdf_{row['id']}")
