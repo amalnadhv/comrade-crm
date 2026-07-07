@@ -128,12 +128,12 @@ def quotations_page():
         reset_form()
         st.rerun()
 
-  # --- LIST DISPLAY & SEARCH ---
+  # --- LIST DISPLAY, SEARCH, FILTER, & EXPORT ---
     st.divider()
     st.subheader("📋 All Quotations")
 
     # 1. Search & Filter Inputs
-    col_search, col_filter = st.columns([2, 1])
+    col_search, col_filter, col_export = st.columns([2, 1, 1])
     search_val = col_search.text_input("🔍 Search by Customer Name", key="search_query")
     status_val = col_filter.multiselect("Filter by Status", ["Draft", "Sent", "Approved", "Rejected"], key="status_filter")
 
@@ -145,8 +145,18 @@ def quotations_page():
     
     if status_val:
         df = df[df['status'].isin(status_val)]
+    
+    # 3. Export Button (Exports only the filtered data)
+    csv_data = df.to_csv(index=False).encode('utf-8')
+    col_export.download_button(
+        label="📥 Export CSV",
+        data=csv_data,
+        file_name="filtered_quotations.csv",
+        mime="text/csv",
+        key="export_csv"
+    )
 
-    # 3. Render Header and Filtered Rows
+    # 4. Render Header and Filtered Rows
     head_c1, head_c2, head_c3, head_c4 = st.columns([3, 2, 2, 3])
     head_c1.markdown("**Customer**"); head_c2.markdown("**Status**"); head_c3.markdown("**Total**"); head_c4.markdown("**Actions**")
     
@@ -168,5 +178,12 @@ def quotations_page():
                 if s2.button("🗑️", key=f"d_{row['id']}"):
                     delete_quotation(row["id"])
                     st.rerun()
+                
+                # PDF Generation (Using your existing utility)
                 items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
-                s3.download_button("📄", data=generate_quotation_pdf({**row.to_dict(), "items": items}), file_name=f"q_{row['id']}.pdf", key=f"pdf_{row['id']}")
+                s3.download_button(
+                    label="📄", 
+                    data=generate_quotation_pdf({**row.to_dict(), "items": items}), 
+                    file_name=f"q_{row['id']}.pdf", 
+                    key=f"pdf_{row['id']}"
+                )
