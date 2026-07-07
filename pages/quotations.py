@@ -58,7 +58,7 @@ def quotations_page():
         st.session_state.edit_loaded = False
         st.session_state.edit_customer = None
         st.session_state.edit_status = "Draft"
-        st.experimental_rerun()
+        st.rerun()  # <--- Use this instead
 
     # Load edit logic
     if st.session_state.edit_id and not st.session_state.edit_loaded:
