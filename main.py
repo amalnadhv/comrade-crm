@@ -52,36 +52,40 @@ def app():
     # ---------------- CSS (BUTTON DESIGN) ----------------
     st.markdown("""
     <style>
-       /* Sidebar Styling */
-        [data-testid="stSidebar"] {
-            background-color: #f8fafc;
-            padding: 20px;
-        }
-        
-        /* Modern Button Styling */
+    /* 1. Base Button Styling (Non-Active) */
         div.stButton > button {
             width: 100%;
-            border-radius: 12px;
             height: 50px;
-            font-weight: 700;
-            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            border: 1px solid #334155; /* Subtle border for dark mode */
+            background-color: #1e293b;  /* Deep Slate */
+            color: #e2e8f0;            /* Light gray text */
             transition: all 0.3s ease;
-            text-align: left;
-            padding-left: 20px;
         }
 
-        /* Hover Effect */
+        /* 2. Hover Effect (The Glow) */
         div.stButton > button:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 1px solid #6366f1; /* Purple border on hover */
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+            transform: scale(1.02);
+        }
+
+        /* 3. The Active/Primary Button (The "Pop" Factor) */
+        div.stButton > button[kind="primary"] {
+            border: none;
+            /* Electric Blue to Purple Gradient */
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+            color: white !important;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
         
-        /* Active Page Highlighting - This makes the selected button POP */
-        div.stButton > button[kind="primary"] {
-            border-left: 6px solid #1d4ed8;
-            background: linear-gradient(90deg, #dbeafe, transparent);
-        }
-       </style>
+        /* 4. Ensure Sidebar spacing looks clean */
+        section[data-testid="stSidebar"] div.stButton {
+            margin-bottom: 10px;
+        } 
+    </style>
     """, unsafe_allow_html=True)
 
     # ---------------- SIDEBAR ----------------
