@@ -35,7 +35,7 @@ def leads_page():
        .row-box {
             border:1px solid #e2e2e2;
             border-radius:8px;
-            padding:6px 5px;
+            padding:1px 1px;
             margin-bottom:5px;
             background:#1DBFBF;
         }
