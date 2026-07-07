@@ -36,7 +36,7 @@ def leads_page():
             border:1px solid #e2e2e2;
             border-radius:8px;
             padding:1px 1px;
-            margin-bottom:5px;
+            margin-bottom:2px;
             background:#1DBFBF;
         }
 
