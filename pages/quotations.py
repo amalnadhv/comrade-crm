@@ -712,13 +712,58 @@ def quotations_page():
     ):
 
 
-        if not st.session_state.quote_items:
+    if not st.session_state.quote_items:
 
-            st.warning(
-                "Add at least one item"
-            )
+    st.warning(
+        "Please add at least one item before saving."
+    )
 
-            return
+else:
+
+    customer_name = customer_map[
+        customer_id
+    ]
+
+    if st.session_state.edit_id:
+
+        update_quotation(
+            st.session_state.edit_id,
+            customer_name,
+            st.session_state.quote_items,
+            subtotal,
+            discount,
+            tax,
+            total,
+            status,
+            "V-EDIT"
+        )
+
+        st.success(
+            "Quotation updated successfully"
+        )
+
+    else:
+
+        add_quotation(
+            customer_name,
+            st.session_state.quote_items,
+            subtotal,
+            discount,
+            tax,
+            total,
+            status,
+            str(date.today()),
+            "V1"
+        )
+
+        st.success(
+            "Quotation saved successfully"
+        )
+
+
+    reset_quote()
+
+    st.rerun()
 
 
 
