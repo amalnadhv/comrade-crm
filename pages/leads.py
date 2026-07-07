@@ -200,7 +200,7 @@ def leads_page():
         )
 
 
-      st.markdown(
+    st.markdown(
         """
         <hr style="
         margin:4px 0px;
