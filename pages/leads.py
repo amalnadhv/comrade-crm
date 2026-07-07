@@ -32,14 +32,14 @@ def leads_page():
             background:#f8f9fa;
         }
 
-        .row-box {
+       .row-box {
 
-            border:1px solid #ddd;
+            border:1px solid #e2e2e2;
             border-radius:8px;
-            padding:10px;
+            padding:6px 10px;
             margin-bottom:5px;
-            background:#4bc8fa;
-
+            background:#ffffff;
+        
         }
 
         .row-box:hover {
