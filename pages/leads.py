@@ -193,23 +193,22 @@ def leads_page():
             won
         )
 
-  with c5:
+    with c5:
         st.metric(
             "🔴 Lost",
             lost
         )
 
-
-    st.markdown(
-        """
-        <hr style="
-        margin:4px 0px;
-        border:0;
-        border-top:1px solid #dddddd;
-        ">
-        """,
-        unsafe_allow_html=True
-    )
+        st.markdown(
+            """
+            <hr style="
+            margin:4px 0px;
+            border:0;
+            border-top:1px solid #dddddd;
+            ">
+            """,
+            unsafe_allow_html=True
+        )
 
 
     # ---------------- NEW BUTTON ----------------
