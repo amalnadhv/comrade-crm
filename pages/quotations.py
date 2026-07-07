@@ -115,20 +115,39 @@ def quotations_page():
         reset_form()
         st.rerun()
 
+   # --- Clean Row-Based List Display ---
     st.markdown("---")
-    st.subheader("All Quotations")
+    st.subheader("📋 All Quotations")
+
+    # 1. Header Row
+    head_c1, head_c2, head_c3, head_c4 = st.columns([3, 2, 2, 3])
+    head_c1.markdown("**Customer**")
+    head_c2.markdown("**Status**")
+    head_c3.markdown("**Total**")
+    head_c4.markdown("**Actions**")
+    st.divider()
+
+    # 2. Data Rows
     df = get_quotations()
     for _, row in df.iterrows():
-        st.markdown(f"### {row.get('customer_name')} | Status: {row.get('status')} | Total: {row.get('total', 0):.2f}")
-        c1, c2, c3 = st.columns(3)
-        if c1.button("✏️ Edit", key=f"e_{row['id']}"):
-            st.session_state.edit_id = row["id"]
-            st.session_state.edit_loaded = False
-            st.rerun()
-        if c2.button("🗑️ Delete", key=f"d_{row['id']}"):
-            delete_quotation(row["id"])
-            st.rerun()
+        c1, c2, c3, c4 = st.columns([3, 2, 2, 3])
+        
+        c1.write(row.get('customer_name', 'N/A'))
+        c2.write(row.get('status', 'N/A'))
+        c3.write(f"{row.get('total', 0):.2f}")
+        
+        # Action Buttons in a sub-column group
+        with c4:
+            sub_c1, sub_c2, sub_c3 = st.columns(3)
+            if sub_c1.button("✏️", key=f"e_{row['id']}", help="Edit"):
+                st.session_state.edit_id = row["id"]
+                st.session_state.edit_loaded = False
+                st.rerun()
+            if sub_c2.button("🗑️", key=f"d_{row['id']}", help="Delete"):
+                delete_quotation(row["id"])
+                st.rerun()
             
-        items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
-        pdf_data = generate_quotation_pdf({**row.to_dict(), "items": items})
-        c3.download_button("📄 PDF", data=pdf_data, file_name=f"quote_{row['id']}.pdf", key=f"pdf_{row['id']}")
+            # PDF Generation
+            items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
+            pdf_data = generate_quotation_pdf({**row.to_dict(), "items": items})
+            sub_c3.download_button("📄", data=pdf_data, file_name=f"quote_{row['id']}.pdf", key=f"pdf_{row['id']}", help="Download PDF")
