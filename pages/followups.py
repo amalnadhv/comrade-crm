@@ -242,27 +242,17 @@ def followups_page():
 
     st.markdown(
     """
-
     <div class="crm-header">
-
         <div class="crm-title">
             📅 Follow-up Management
         </div>
-
-
         <div class="crm-subtitle">
             Track customer activities, reminders and pending actions efficiently
         </div>
-
-
     </div>
-
     """,
-
     unsafe_allow_html=True
     )
-
-
 
     render_message()
 
