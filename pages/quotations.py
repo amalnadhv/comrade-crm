@@ -266,36 +266,19 @@ def quotations_page():
 
     st.markdown(
     """
-
     <div class="crm-header">
-
         <div class="crm-title">
-
             💼 Quotations Dashboard
-
         </div>
-
-
         <div class="crm-subtitle">
-
             Create quotations, track approvals and manage customer proposals
-
         </div>
-
-
     </div>
-
     """,
-
     unsafe_allow_html=True
-
     )
 
-
-
     render_message()
-
-
 
     # =================================================
     # SESSION INITIALIZATION (FIXED)
