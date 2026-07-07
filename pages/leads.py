@@ -35,10 +35,10 @@ def leads_page():
         .row-box {
 
             border:1px solid #ddd;
-            border-radius:12px;
-            padding:12px;
-            margin-bottom:10px;
-            background:#ffffff;
+            border-radius:8px;
+            padding:10px;
+            margin-bottom:5px;
+            background:#4bc8fa;
 
         }
 
