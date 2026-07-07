@@ -16,9 +16,10 @@ from utils.pdf_generator import generate_quotation_pdf
 DB_NAME = "crm.db"
 
 
-# =====================================================
+
+# ======================================================
 # UPDATE QUOTATION
-# =====================================================
+# ======================================================
 
 def update_quotation(
         qid,
@@ -33,12 +34,13 @@ def update_quotation(
 ):
 
     conn = sqlite3.connect(DB_NAME)
+
     cur = conn.cursor()
 
     cur.execute(
         """
         UPDATE quotations
-        SET 
+        SET
             customer_name=?,
             items=?,
             subtotal=?,
@@ -67,13 +69,14 @@ def update_quotation(
 
 
 
-# =====================================================
+# ======================================================
 # DELETE QUOTATION
-# =====================================================
+# ======================================================
 
 def delete_quotation(qid):
 
     conn = sqlite3.connect(DB_NAME)
+
     cur = conn.cursor()
 
     cur.execute(
@@ -86,82 +89,103 @@ def delete_quotation(qid):
 
 
 
-# =====================================================
+# ======================================================
+# RESET FORM
+# ======================================================
+
+def clear_quote_form():
+
+    keys = [
+
+        "quote_items",
+
+        "customer_select",
+
+        "status_select",
+
+        "item_input",
+
+        "qty_input",
+
+        "price_input",
+
+        "discount",
+
+        "tax"
+
+    ]
+
+
+    for key in keys:
+
+        if key in st.session_state:
+
+            del st.session_state[key]
+
+
+
+    st.session_state.edit_id = None
+
+    st.session_state.edit_loaded = False
+
+    st.session_state.edit_customer = None
+
+    st.session_state.edit_status = "Draft"
+
+
+
+
+# ======================================================
 # PAGE
-# =====================================================
+# ======================================================
 
 def quotations_page():
 
 
-    # ---------------- CSS ----------------
+
+    # ---------------- STYLE ----------------
 
     st.markdown(
         """
         <style>
 
-        .quote-card {
 
-            background:white;
-            padding:20px;
-            border-radius:12px;
-            box-shadow:0 2px 8px rgba(0,0,0,.08);
-            margin-bottom:15px;
+        .quote-box {
+
+            background:#ffffff;
+
+            padding:15px;
+
+            border-radius:10px;
+
+            border:1px solid #eeeeee;
+
+            margin-bottom:12px;
 
         }
 
 
-        .total-box {
+        .total-card {
+
+            padding:18px;
+
+            border-radius:12px;
 
             background:#f5f7fb;
-            padding:18px;
-            border-radius:12px;
+
             text-align:right;
 
         }
 
 
-        .big-total {
+        .total-number {
 
-            font-size:28px;
-            font-weight:700;
+            font-size:26px;
 
-        }
-
-
-        .status-draft {
-
-            background:#fff3cd;
-            padding:5px 12px;
-            border-radius:20px;
+            font-weight:bold;
 
         }
 
-
-        .status-approved {
-
-            background:#d1e7dd;
-            padding:5px 12px;
-            border-radius:20px;
-
-        }
-
-
-        .status-sent {
-
-            background:#cff4fc;
-            padding:5px 12px;
-            border-radius:20px;
-
-        }
-
-
-        .status-rejected {
-
-            background:#f8d7da;
-            padding:5px 12px;
-            border-radius:20px;
-
-        }
 
         </style>
         """,
@@ -174,37 +198,53 @@ def quotations_page():
 
 
 
-    # ---------------- SESSION ----------------
+    # ==================================================
+    # SESSION
+    # ==================================================
 
 
     if "quote_items" not in st.session_state:
+
         st.session_state.quote_items = []
 
 
+
     if "edit_id" not in st.session_state:
+
         st.session_state.edit_id = None
 
 
+
     if "edit_loaded" not in st.session_state:
+
         st.session_state.edit_loaded = False
 
 
+
     if "edit_customer" not in st.session_state:
+
         st.session_state.edit_customer = None
 
 
+
     if "edit_status" not in st.session_state:
+
         st.session_state.edit_status = "Draft"
 
 
 
-    # ---------------- DATA ----------------
+
+    # ==================================================
+    # LOAD DATA
+    # ==================================================
 
 
     quotation_df = get_quotations()
 
 
+
     customers = get_customers()
+
 
 
     customers = pd.DataFrame(
@@ -223,10 +263,10 @@ def quotations_page():
 
     customer_map = {
 
-        r.id:
-        f"{r.name} ({r.company})"
+        row.id:
+        f"{row.name} ({row.company})"
 
-        for r in customers.itertuples()
+        for row in customers.itertuples()
 
     }
 
@@ -246,74 +286,65 @@ def quotations_page():
 
 
 
-    # =====================================================
-    # HEADER
-    # =====================================================
+
+    # ==================================================
+    # NEW BUTTON
+    # ==================================================
 
 
-    col1, col2 = st.columns([3,1])
+    top1,top2 = st.columns([4,1])
 
 
-    with col1:
 
-        if st.session_state.edit_id:
+    with top2:
 
-            st.subheader(
-                "✏ Edit Quotation"
-            )
-
-        else:
-
-            st.subheader(
-                "➕ Create New Quotation"
-            )
-
-
-    with col2:
 
         if st.button(
-            "New Quotation",
+            "➕ New",
             use_container_width=True
         ):
 
-            st.session_state.edit_id = None
-            st.session_state.quote_items = []
-            st.session_state.edit_loaded = False
-            st.session_state.edit_customer = None
-            st.session_state.edit_status = "Draft"
+            clear_quote_form()
 
             st.rerun()
 
 
 
-    # =====================================================
-    # LOAD EDIT DATA
-    # =====================================================
+    # ==================================================
+    # LOAD EDIT RECORD
+    # ==================================================
 
 
     if (
+
         st.session_state.edit_id
+
         and
+
         not st.session_state.edit_loaded
+
     ):
 
 
-        row = quotation_df[
+        record = quotation_df[
             quotation_df["id"]
             ==
             st.session_state.edit_id
         ]
 
 
-        if not row.empty:
 
-            data = row.iloc[0]
+        if not record.empty:
+
+
+            row = record.iloc[0]
+
 
 
             try:
 
                 st.session_state.quote_items = json.loads(
-                    data["items"]
+                    row["items"]
                 )
 
             except:
@@ -321,14 +352,11 @@ def quotations_page():
                 st.session_state.quote_items = []
 
 
-            st.session_state.edit_customer = (
-                data["customer_name"]
-            )
+
+            st.session_state.edit_customer = row["customer_name"]
 
 
-            st.session_state.edit_status = (
-                data["status"]
-            )
+            st.session_state.edit_status = row["status"]
 
 
 
@@ -336,35 +364,66 @@ def quotations_page():
 
 
 
-    # =====================================================
-    # CUSTOMER SECTION
-    # =====================================================
+
+    # ==================================================
+    # HEADER
+    # ==================================================
 
 
-    left,right = st.columns(2)
+    if st.session_state.edit_id:
+
+        st.subheader(
+            "✏ Edit Quotation"
+        )
+
+    else:
+
+        st.subheader(
+            "➕ Create Quotation"
+        )
 
 
 
-    with left:
+    st.divider()
 
 
-        default_customer = customer_options[0]
+
+    # ==================================================
+    # CUSTOMER
+    # ==================================================
 
 
-        if st.session_state.edit_customer:
+    col1,col2 = st.columns(2)
 
-            default_customer = next(
 
-                (
-                    k
-                    for k,v in customer_map.items()
-                    if v ==
-                    st.session_state.edit_customer
-                ),
 
-                customer_options[0]
+    default_customer = customer_options[0]
 
-            )
+
+
+    if st.session_state.edit_customer:
+
+
+        default_customer = next(
+
+            (
+
+                k
+
+                for k,v in customer_map.items()
+
+                if v ==
+                st.session_state.edit_customer
+
+            ),
+
+            customer_options[0]
+
+        )
+
+
+
+    with col1:
 
 
         customer_id = st.selectbox(
@@ -386,15 +445,21 @@ def quotations_page():
 
 
 
-    with right:
+    with col2:
 
 
         status_list = [
+
             "Draft",
+
             "Sent",
+
             "Approved",
+
             "Rejected"
+
         ]
+
 
 
         status = st.selectbox(
@@ -403,10 +468,14 @@ def quotations_page():
 
             status_list,
 
-            index=status_list.index(
+            index=
+
+            status_list.index(
                 st.session_state.edit_status
             )
+
             if st.session_state.edit_status in status_list
+
             else 0,
 
             key="status_select"
@@ -416,41 +485,42 @@ def quotations_page():
 
 
     st.divider()
-        # =====================================================
-    # ITEM ENTRY
-    # =====================================================
+        # ==================================================
+    # ITEMS
+    # ==================================================
 
-    st.subheader("🛒 Quotation Items")
+    st.subheader("🛒 Items")
 
 
     item_col1, item_col2, item_col3, item_col4 = st.columns(
-        [4,1.5,2,1]
+        [4, 1, 2, 1]
     )
 
 
     with item_col1:
+
         item_input = st.text_input(
-            "Description",
+            "Item Description",
             key="item_input"
         )
 
 
     with item_col2:
+
         qty_input = st.number_input(
             "Qty",
             min_value=1.0,
             value=1.0,
-            step=1.0,
             key="qty_input"
         )
 
 
     with item_col3:
+
         price_input = st.number_input(
-            "Unit Price",
+            "Price",
             min_value=0.0,
             value=0.0,
-            step=0.01,
             key="price_input"
         )
 
@@ -460,12 +530,13 @@ def quotations_page():
         st.write("")
 
         if st.button(
-            "➕",
-            key="add_item",
+            "➕ Add",
             use_container_width=True
         ):
 
+
             if item_input.strip():
+
 
                 st.session_state.quote_items.append(
                     {
@@ -475,6 +546,16 @@ def quotations_page():
                     }
                 )
 
+
+                # clear item entry only
+
+                st.session_state.item_input = ""
+
+                st.session_state.qty_input = 1.0
+
+                st.session_state.price_input = 0.0
+
+
                 st.rerun()
 
 
@@ -483,118 +564,106 @@ def quotations_page():
 
 
 
-    # =====================================================
-    # ITEM TABLE
-    # =====================================================
+    # ==================================================
+    # ITEM DISPLAY
+    # ==================================================
 
 
     subtotal = 0
 
+
     updated_items = []
+
 
 
     if st.session_state.quote_items:
 
 
-        header = st.columns(
-            [4,1.5,2,1.5]
+        h1,h2,h3,h4 = st.columns(
+            [4,1,2,1]
         )
 
-        header[0].markdown("**Item**")
-        header[1].markdown("**Qty**")
-        header[2].markdown("**Price**")
-        header[3].markdown("**Amount**")
+        h1.write("**Description**")
+        h2.write("**Qty**")
+        h3.write("**Price**")
+        h4.write("**Remove**")
 
 
 
-        for i,item in enumerate(
+        for index,item in enumerate(
             st.session_state.quote_items
         ):
 
 
-            cols = st.columns(
-                [4,1.5,2,1.5]
+            c1,c2,c3,c4 = st.columns(
+                [4,1,2,1]
             )
 
 
-            new_item = cols[0].text_input(
 
-                "Item",
+            new_item = c1.text_input(
+
+                "item",
 
                 value=item["item"],
 
-                key=f"item_{i}",
+                key=f"edit_item_{index}",
 
                 label_visibility="collapsed"
 
             )
 
 
-            new_qty = cols[1].number_input(
+            new_qty = c2.number_input(
 
-                "Qty",
+                "qty",
 
                 value=float(item["qty"]),
 
-                key=f"qty_{i}",
+                key=f"edit_qty_{index}",
 
                 label_visibility="collapsed"
 
             )
 
 
-            new_price = cols[2].number_input(
+            new_price = c3.number_input(
 
-                "Price",
+                "price",
 
                 value=float(item["price"]),
 
-                key=f"price_{i}",
+                key=f"edit_price_{index}",
 
                 label_visibility="collapsed"
 
             )
 
 
-            amount = (
-                new_qty *
-                new_price
-            )
 
-
-            cols[3].markdown(
-                f"""
-                {amount:,.2f}
-
-                """
-            )
+            amount = new_qty * new_price
 
 
             subtotal += amount
 
 
 
-            remove = cols[3].button(
-
+            if c4.button(
                 "❌",
+                key=f"remove_{index}"
+            ):
 
-                key=f"remove_{i}"
+                continue
 
+
+
+            updated_items.append(
+                {
+                    "item":new_item,
+                    "qty":new_qty,
+                    "price":new_price
+                }
             )
-
-
-            if not remove:
-
-
-                updated_items.append(
-
-                    {
-                        "item":new_item,
-                        "qty":new_qty,
-                        "price":new_price
-                    }
-
-                )
 
 
 
@@ -605,7 +674,7 @@ def quotations_page():
     else:
 
         st.info(
-            "No items added yet."
+            "No items added."
         )
 
 
@@ -614,16 +683,16 @@ def quotations_page():
 
 
 
-    # =====================================================
-    # CALCULATION SECTION
-    # =====================================================
+    # ==================================================
+    # TOTALS
+    # ==================================================
 
 
-    calc1,calc2 = st.columns(2)
+    col1,col2 = st.columns(2)
 
 
 
-    with calc1:
+    with col1:
 
 
         discount = st.number_input(
@@ -633,8 +702,6 @@ def quotations_page():
             min_value=0.0,
 
             value=0.0,
-
-            step=0.5,
 
             key="discount"
 
@@ -649,74 +716,74 @@ def quotations_page():
 
             value=0.0,
 
-            step=0.5,
-
             key="tax"
 
         )
 
 
 
-    with calc2:
+    after_discount = (
 
+        subtotal -
 
-        after_discount = (
-
-            subtotal -
-            (
-                subtotal *
-                discount /
-                100
-            )
-
+        (
+            subtotal *
+            discount /
+            100
         )
 
+    )
 
-        total = (
 
-            after_discount +
 
-            (
-                after_discount *
-                tax /
-                100
-            )
+    total = (
 
+        after_discount +
+
+        (
+            after_discount *
+            tax /
+            100
         )
 
+    )
+
+
+
+    with col2:
 
 
         st.markdown(
 
             f"""
 
-            <div class="total-box">
+            <div class="total-card">
 
-            <div>
+
             Subtotal :
             <b>{subtotal:,.2f}</b>
-            </div>
 
 
-            <div>
+            <br>
+
+
             Discount :
             <b>{discount}%</b>
-            </div>
 
 
-            <div>
+            <br>
+
+
             Tax :
             <b>{tax}%</b>
-            </div>
 
 
             <hr>
 
 
-            <div class="big-total">
+            <div class="total-number">
 
-            Total :
-            {total:,.2f}
+            Total : {total:,.2f}
 
             </div>
 
@@ -735,28 +802,30 @@ def quotations_page():
 
 
 
-    # =====================================================
-    # SAVE BUTTON
-    # =====================================================
-
-
-    save_text = (
-
-        "Update Quotation"
-        if st.session_state.edit_id
-        else
-        "Save Quotation"
-
-    )
+    # ==================================================
+    # SAVE
+    # ==================================================
 
 
     if st.button(
 
-        f"💾 {save_text}",
+        "💾 Save Quotation",
 
         use_container_width=True
 
     ):
+
+
+
+        if not st.session_state.quote_items:
+
+
+            st.warning(
+                "Please add items before saving."
+            )
+
+            return
+
 
 
         customer_name = customer_map[
@@ -765,18 +834,8 @@ def quotations_page():
 
 
 
-        if not st.session_state.quote_items:
-
-
-            st.warning(
-                "Please add at least one item."
-            )
-
-            return
-
-
-
         if st.session_state.edit_id:
+
 
 
             update_quotation(
@@ -807,7 +866,9 @@ def quotations_page():
             )
 
 
+
         else:
+
 
 
             add_quotation(
@@ -839,28 +900,23 @@ def quotations_page():
 
 
 
-        st.session_state.quote_items = []
+        # IMPORTANT RESET
 
-        st.session_state.edit_id = None
+        clear_quote_form()
 
-        st.session_state.edit_loaded = False
-
-        st.session_state.edit_customer = None
-
-        st.session_state.edit_status = "Draft"
 
 
         st.rerun()
-            # =====================================================
+            # ==================================================
     # QUOTATION LIST
-    # =====================================================
-
+    # ==================================================
 
     st.divider()
 
-    st.subheader("📋 All Quotations")
+    st.subheader("📋 Saved Quotations")
 
 
+    # Always reload fresh data from database
 
     quotation_df = get_quotations()
 
@@ -870,30 +926,29 @@ def quotations_page():
 
 
         st.info(
-            "No quotations available."
+            "No quotations saved yet."
         )
 
 
     else:
 
 
-        # ---------------- SEARCH ----------------
-
-
         search = st.text_input(
-
-            "🔍 Search quotation",
-
-            placeholder="Search customer name..."
-
+            "🔍 Search customer",
+            key="quotation_search"
         )
+
+
+
+        display_df = quotation_df.copy()
+
 
 
         if search:
 
 
-            quotation_df = quotation_df[
-                quotation_df["customer_name"]
+            display_df = display_df[
+                display_df["customer_name"]
                 .str.contains(
                     search,
                     case=False,
@@ -903,29 +958,7 @@ def quotations_page():
 
 
 
-        # ---------------- DISPLAY ----------------
-
-
-        for _, row in quotation_df.iterrows():
-
-
-            status_class = {
-
-                "Draft":"status-draft",
-
-                "Sent":"status-sent",
-
-                "Approved":"status-approved",
-
-                "Rejected":"status-rejected"
-
-            }.get(
-
-                row["status"],
-
-                "status-draft"
-
-            )
+        for _,row in display_df.iterrows():
 
 
 
@@ -933,40 +966,33 @@ def quotations_page():
 
                 f"""
 
-                <div class="quote-card">
+                <div class="quote-box">
 
 
-                <h3>
-                📄 Quotation #{row['id']}
-                </h3>
+                <h4>
+                📄 Quotation No : QT-{row['id']:04d}
+                </h4>
 
 
-                <b>
-                Customer:
-                </b>
+                <b>Customer:</b>
                 {row['customer_name']}
 
 
                 <br>
 
 
-                <b>
-                Amount:
-                </b>
-
+                <b>Total:</b>
                 {row['total']:,.2f}
 
 
-                <br><br>
+                <br>
 
 
-                <span class="{status_class}">
+                <b>Status:</b>
                 {row['status']}
-                </span>
 
 
                 </div>
-
 
                 """,
 
@@ -976,14 +1002,13 @@ def quotations_page():
 
 
 
-            b1,b2,b3 = st.columns(3)
+            c1,c2,c3 = st.columns(3)
 
 
 
             # ---------------- EDIT ----------------
 
-
-            with b1:
+            with c1:
 
 
                 if st.button(
@@ -1001,6 +1026,8 @@ def quotations_page():
 
                     st.session_state.edit_loaded = False
 
+                    st.session_state.edit_customer = None
+
                     st.rerun()
 
 
@@ -1008,7 +1035,7 @@ def quotations_page():
             # ---------------- DELETE ----------------
 
 
-            with b2:
+            with c2:
 
 
                 if st.button(
@@ -1026,9 +1053,11 @@ def quotations_page():
                         row["id"]
                     )
 
+
                     st.success(
-                        "Deleted successfully"
+                        "Quotation deleted"
                     )
+
 
                     st.rerun()
 
@@ -1037,7 +1066,7 @@ def quotations_page():
             # ---------------- PDF ----------------
 
 
-            with b3:
+            with c3:
 
 
                 safe_row = row.to_dict()
@@ -1063,7 +1092,9 @@ def quotations_page():
                             items
                         )
 
+
                     except:
+
 
                         items = []
 
@@ -1073,7 +1104,7 @@ def quotations_page():
 
 
 
-                pdf_buffer = generate_quotation_pdf(
+                pdf_file = generate_quotation_pdf(
                     safe_row
                 )
 
@@ -1081,12 +1112,12 @@ def quotations_page():
 
                 st.download_button(
 
-                    label="📄 PDF",
+                    "📄 PDF",
 
-                    data=pdf_buffer,
+                    data=pdf_file,
 
                     file_name=
-                    f"quotation_{row['id']}.pdf",
+                    f"QT-{row['id']:04d}.pdf",
 
                     mime=
                     "application/pdf",
