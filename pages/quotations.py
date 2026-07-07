@@ -47,17 +47,23 @@ def quotations_page():
             .total-highlight { color: #2c3e50; font-weight: bold; }
             .status-pill { padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem; color: white; }
             
-            .Draft { background-color: #7f8c8d; }     /* Neutral Grey */
-            .Sent { background-color: #2563EB; }      /* Vibrant Blue */
-            .Approved { background-color: #059669; }  /* Vibrant Emerald Green */
-            .Rejected { background-color: #DC2626; }  /* Vibrant Red */
-            
+             /* Buttons */
+            div.stButton > button { border-radius: 8px; font-weight: bold; border: none; }
+            /* Status Pills */
+            .status-pill { padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem; color: white; }
+            .Draft { background-color: #7f8c8d; }
+            .Sent { background-color: #2563EB; }
+            .Approved { background-color: #059669; }
+            .Rejected { background-color: #DC2626; }
+            /* Layout */
             .input-box { 
-                background-color: #f8f9fa; 
+                background-color: #ffffff; 
                 padding: 20px; 
-                border-radius: 10px; 
-                border-left: 5px solid #2563EB; /* Matching Vibrant Blue */
+                border-radius: 12px; 
+                border-left: 6px solid #2563EB;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             }
+            
         </style>
     """, unsafe_allow_html=True)
 
