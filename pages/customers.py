@@ -10,7 +10,10 @@ from database import (
 )
 
 
-# ---------------- LOAD DATA ----------------
+
+# =====================================================
+# LOAD DATA
+# =====================================================
 
 def load_df():
 
@@ -29,7 +32,10 @@ def load_df():
     )
 
 
-# ---------------- MESSAGE SYSTEM ----------------
+
+# =====================================================
+# MESSAGE SYSTEM
+# =====================================================
 
 def show_message(msg):
 
@@ -50,43 +56,72 @@ def render_message():
 
             st.session_state["msg"] = None
             st.session_state["msg_time"] = None
-            st.rerun()
 
 
 
-# ---------------- RESET FORM ----------------
+# =====================================================
+# CLEAR FORM
+# =====================================================
 
-def reset_add_form():
+def clear_customer_form():
 
-    keys = [
-        "add_name",
-        "add_phone",
-        "add_email",
-        "add_company",
-        "add_status"
-    ]
+    for key in [
+        "cust_name",
+        "cust_phone",
+        "cust_email",
+        "cust_company",
+        "cust_status"
+    ]:
 
-    for k in keys:
-        st.session_state.pop(k, None)
+        st.session_state.pop(
+            key,
+            None
+        )
 
 
 
-# ---------------- PAGE ----------------
+# =====================================================
+# CUSTOMER PAGE
+# =====================================================
 
 def customers_page():
+
 
     role = st.session_state.user["role"]
 
 
-    # ---------------- STYLE ----------------
+
+    # =================================================
+    # SESSION CONTROL (SAVE PROTECTION)
+    # =================================================
+
+
+    if "customer_saved" not in st.session_state:
+
+        st.session_state.customer_saved = True
+
+
+
+    if "edit_customer_id" not in st.session_state:
+
+        st.session_state.edit_customer_id = None
+
+
+
+    # =================================================
+    # CSS STYLE
+    # =================================================
+
 
     st.markdown(
     """
     <style>
 
+
     .crm-header {
 
-        background:linear-gradient(
+        background:
+        linear-gradient(
             135deg,
             #11998e,
             #38ef7d
@@ -96,11 +131,13 @@ def customers_page():
 
         border-radius:15px;
 
-        margin-bottom:20px;
+        margin-bottom:15px;
 
-        box-shadow:0 4px 12px rgba(0,0,0,.15);
+        box-shadow:
+        0 4px 12px rgba(0,0,0,.15);
 
     }
+
 
 
     .crm-title {
@@ -114,22 +151,31 @@ def customers_page():
     }
 
 
+
     .crm-subtitle {
 
         color:#eaffea;
 
         font-size:15px;
 
+        margin-top:5px;
+
     }
 
 
-    .table-head {
 
-        background:#11998e;
+    .table-header {
+
+        background:
+        linear-gradient(
+            135deg,
+            #11998e,
+            #38ef7d
+        );
 
         color:white;
 
-        padding:10px;
+        padding:8px;
 
         border-radius:8px;
 
@@ -140,11 +186,49 @@ def customers_page():
     }
 
 
+
+    .status-new {
+
+        color:#2196f3;
+
+        font-weight:bold;
+
+    }
+
+
+    .status-contact {
+
+        color:#ff9800;
+
+        font-weight:bold;
+
+    }
+
+
+    .status-won {
+
+        color:#28a745;
+
+        font-weight:bold;
+
+    }
+
+
+    .status-lost {
+
+        color:#dc3545;
+
+        font-weight:bold;
+
+    }
+
+
+
     div.stButton > button {
 
         border-radius:10px;
 
-        height:35px;
+        height:36px;
 
         font-weight:bold;
 
@@ -152,17 +236,22 @@ def customers_page():
 
 
     </style>
+
     """,
+
     unsafe_allow_html=True
     )
 
 
 
-    # ---------------- HEADER ----------------
+    # =================================================
+    # HEADER
+    # =================================================
 
 
     st.markdown(
     """
+
     <div class="crm-header">
 
         <div class="crm-title">
@@ -170,11 +259,13 @@ def customers_page():
         </div>
 
         <div class="crm-subtitle">
-            Manage customer relationships efficiently
+            Manage customers, relationships and business growth
         </div>
 
     </div>
+
     """,
+
     unsafe_allow_html=True
     )
 
@@ -183,23 +274,45 @@ def customers_page():
     render_message()
 
 
+
     df = load_df()
 
 
 
-    # ---------------- SUMMARY ----------------
+    # =================================================
+    # SUMMARY
+    # =================================================
 
 
     total = len(df)
 
-    new = len(df[df.status=="New"])
-    contacted = len(df[df.status=="Contacted"])
-    won = len(df[df.status=="Won"])
-    lost = len(df[df.status=="Lost"])
+
+    new = len(
+        df[df.status=="New"]
+    ) if not df.empty else 0
+
+
+
+    contacted = len(
+        df[df.status=="Contacted"]
+    ) if not df.empty else 0
+
+
+
+    won = len(
+        df[df.status=="Won"]
+    ) if not df.empty else 0
+
+
+
+    lost = len(
+        df[df.status=="Lost"]
+    ) if not df.empty else 0
 
 
 
     c1,c2,c3,c4,c5 = st.columns(5)
+
 
 
     c1.metric(
@@ -207,20 +320,24 @@ def customers_page():
         total
     )
 
+
     c2.metric(
         "🔵 New",
         new
     )
+
 
     c3.metric(
         "🟠 Contacted",
         contacted
     )
 
+
     c4.metric(
         "🟢 Won",
         won
     )
+
 
     c5.metric(
         "🔴 Lost",
@@ -229,113 +346,310 @@ def customers_page():
 
 
 
-    st.markdown("---")
+    st.markdown(
+    """
+    <hr style="
+    margin:5px 0;
+    border:0;
+    border-top:1px solid #ddd;
+    ">
+    """,
+
+    unsafe_allow_html=True
+    )
 
 
 
-    # ---------------- ADD CUSTOMER ----------------
+    # =================================================
+    # NEW CUSTOMER BUTTON
+    # =================================================
 
 
-    with st.expander(
-        "➕ Add New Customer"
+    if st.button(
+        "➕ New Customer",
+        width="stretch"
     ):
 
 
-        col1,col2 = st.columns(2)
+        st.session_state.customer_saved = False
+
+        st.session_state.edit_customer_id = None
 
 
-        with col1:
 
-            name = st.text_input(
-                "Contact Name",
-                key="add_name"
+    # =================================================
+    # ADD CUSTOMER FORM
+    # =================================================
+
+
+    if not st.session_state.customer_saved:
+
+
+        with st.container(border=True):
+
+
+            st.subheader(
+                "➕ Add New Customer"
             )
 
 
-            phone = st.text_input(
-                "Phone",
-                key="add_phone"
-            )
-
-
-            email = st.text_input(
-                "Email",
-                key="add_email"
-            )
+            col1,col2 = st.columns(2)
 
 
 
-        with col2:
-
-            company = st.text_input(
-                "Company",
-                key="add_company"
-            )
+            with col1:
 
 
-            status = st.selectbox(
-                "Status",
-                [
-                    "New",
-                    "Contacted",
-                    "Won",
-                    "Lost"
-                ],
-                key="add_status"
-            )
-
-
-
-        if st.button(
-            "💾 Save Customer",
-            key="save_customer"
-        ):
-
-
-            if name and phone:
-
-
-                add_customer(
-                    name,
-                    phone,
-                    email,
-                    company,
-                    status
+                name = st.text_input(
+                    "Contact Name",
+                    key="cust_name"
                 )
 
 
-                reset_add_form()
-
-
-                show_message(
-                    "Customer added successfully ✅"
+                phone = st.text_input(
+                    "Phone",
+                    key="cust_phone"
                 )
 
 
-                st.rerun()
-
-
-
-            else:
-
-
-                show_message(
-                    "Name and Phone are required ❌"
+                email = st.text_input(
+                    "Email",
+                    key="cust_email"
                 )
 
-                st.rerun()
 
+
+            with col2:
+
+
+                company = st.text_input(
+                    "Company",
+                    key="cust_company"
+                )
+
+
+                status = st.selectbox(
+                    "Status",
+                    [
+                        "New",
+                        "Contacted",
+                        "Won",
+                        "Lost"
+                    ],
+                    key="cust_status"
+                )
+
+
+
+            save = st.button(
+                "💾 Save Customer",
+                width="stretch"
+            )
+
+
+
+            if save:
+
+
+                if not name or not phone:
+
+
+                    st.error(
+                        "Name and Phone are required"
+                    )
+
+
+                else:
+
+
+                    add_customer(
+                        name,
+                        phone,
+                        email,
+                        company,
+                        status
+                    )
+
+
+                    st.session_state.customer_saved=True
+
+
+                    clear_customer_form()
+
+
+                    show_message(
+                        "Customer saved successfully ✅"
+                    )
+
+
+                    st.rerun()
+                        # =================================================
+    # EDIT CUSTOMER
+    # =================================================
+
+
+    if st.session_state.edit_customer_id:
+
+
+        edit_id = st.session_state.edit_customer_id
+
+
+        edit_data = df[
+            df.id == edit_id
+        ]
+
+
+        if not edit_data.empty:
+
+
+            row = edit_data.iloc[0]
+
+
+            st.markdown("---")
+
+
+            with st.container(border=True):
+
+
+                st.subheader(
+                    f"✏️ Edit Customer : {row['name']}"
+                )
+
+
+                col1,col2 = st.columns(2)
+
+
+
+                with col1:
+
+
+                    edit_name = st.text_input(
+                        "Contact Name",
+                        value=row["name"],
+                        key=f"edit_name_{edit_id}"
+                    )
+
+
+                    edit_phone = st.text_input(
+                        "Phone",
+                        value=row["phone"],
+                        key=f"edit_phone_{edit_id}"
+                    )
+
+
+                    edit_email = st.text_input(
+                        "Email",
+                        value=row["email"],
+                        key=f"edit_email_{edit_id}"
+                    )
+
+
+
+                with col2:
+
+
+                    edit_company = st.text_input(
+                        "Company",
+                        value=row["company"],
+                        key=f"edit_company_{edit_id}"
+                    )
+
+
+
+                    status_list = [
+                        "New",
+                        "Contacted",
+                        "Won",
+                        "Lost"
+                    ]
+
+
+
+                    current_status = row["status"]
+
+
+
+                    if current_status not in status_list:
+
+                        current_status="New"
+
+
+
+                    edit_status = st.selectbox(
+                        "Status",
+                        status_list,
+                        index=status_list.index(
+                            current_status
+                        ),
+                        key=f"edit_status_{edit_id}"
+                    )
+
+
+
+                c1,c2 = st.columns(2)
+
+
+
+                with c1:
+
+
+                    if st.button(
+                        "💾 Update Customer",
+                        key=f"update_customer_{edit_id}",
+                        width="stretch"
+                    ):
+
+
+                        update_customer(
+                            edit_id,
+                            edit_name,
+                            edit_phone,
+                            edit_email,
+                            edit_company,
+                            edit_status
+                        )
+
+
+
+                        st.session_state.edit_customer_id=None
+
+
+                        show_message(
+                            "Customer updated successfully ✅"
+                        )
+
+
+                        st.rerun()
+
+
+
+                with c2:
+
+
+                    if st.button(
+                        "❌ Cancel",
+                        key=f"cancel_customer_{edit_id}",
+                        width="stretch"
+                    ):
+
+
+                        st.session_state.edit_customer_id=None
+
+
+                        st.rerun()
+
+
+
+    # =================================================
+    # SEARCH
+    # =================================================
 
 
     st.markdown("---")
 
 
-
-    # ---------------- SEARCH ----------------
-
-
     search = st.text_input(
-        "🔍 Search customers"
+        "🔍 Search Customers"
     )
 
 
@@ -349,7 +663,8 @@ def customers_page():
                 lambda x:
                 x.str.contains(
                     search,
-                    case=False
+                    case=False,
+                    na=False
                 )
             )
             .any(axis=1)
@@ -357,102 +672,15 @@ def customers_page():
 
 
 
-    # ---------------- EDIT ----------------
+    # =================================================
+    # EXPORT
+    # =================================================
 
 
-    if "edit_id" not in st.session_state:
+    st.markdown(
+        "### 📤 Export Customers"
+    )
 
-        st.session_state.edit_id=None
-
-
-
-    if st.session_state.edit_id:
-
-
-        edit_id = st.session_state.edit_id
-
-
-        row = df[
-            df.id==edit_id
-        ]
-
-
-        if not row.empty:
-
-
-            row=row.iloc[0]
-
-
-            st.subheader(
-                f"✏ Edit Customer : {row['name']}"
-            )
-
-
-            n = st.text_input(
-                "Name",
-                row["name"]
-            )
-
-            p = st.text_input(
-                "Phone",
-                row["phone"]
-            )
-
-            e = st.text_input(
-                "Email",
-                row["email"]
-            )
-
-            c = st.text_input(
-                "Company",
-                row["company"]
-            )
-
-
-            s = st.selectbox(
-                "Status",
-                [
-                    "New",
-                    "Contacted",
-                    "Won",
-                    "Lost"
-                ]
-            )
-
-
-
-            if st.button(
-                "💾 Update Customer"
-            ):
-
-
-                update_customer(
-                    edit_id,
-                    n,
-                    p,
-                    e,
-                    c,
-                    s
-                )
-
-
-                st.session_state.edit_id=None
-
-
-                show_message(
-                    "Customer updated successfully ✅"
-                )
-
-
-                st.rerun()
-
-
-
-    st.markdown("---")
-
-
-
-    # ---------------- EXPORT ----------------
 
 
     csv = df.to_csv(
@@ -460,11 +688,13 @@ def customers_page():
     ).encode("utf-8")
 
 
+
     st.download_button(
         "⬇ Download Customers CSV",
         csv,
         "customers.csv",
-        "text/csv"
+        "text/csv",
+        width="stretch"
     )
 
 
@@ -473,7 +703,9 @@ def customers_page():
 
 
 
-    # ---------------- CUSTOMER TABLE ----------------
+    # =================================================
+    # CUSTOMER LIST TITLE
+    # =================================================
 
 
     st.subheader(
@@ -481,45 +713,56 @@ def customers_page():
     )
 
 
+
     if df.empty:
+
 
         st.info(
             "No customers found"
         )
 
-        return
 
+        return
+            # =================================================
+    # TABLE HEADER
+    # =================================================
 
 
     headers = st.columns(
         [
-            2,
+            2.2,
             2,
             1.5,
-            2,
-            1.2,
-            1.2
+            2.2,
+            1.3,
+            1.5
         ]
     )
 
 
     titles = [
+
         "🏢 Company",
+
         "👤 Contact",
+
         "📞 Phone",
+
         "✉ Email",
+
         "🏷 Status",
+
         "⚙ Actions"
+
     ]
 
 
+    for col,title in zip(headers,titles):
 
-    for c,t in zip(headers,titles):
-
-        c.markdown(
+        col.markdown(
         f"""
-        <div class="table-head">
-        {t}
+        <div class="table-header">
+            {title}
         </div>
         """,
         unsafe_allow_html=True
@@ -527,97 +770,161 @@ def customers_page():
 
 
 
-    # ---------------- ROWS ----------------
+    st.markdown(
+        "<br>",
+        unsafe_allow_html=True
+    )
+
+
+
+    # =================================================
+    # CUSTOMER ROWS
+    # =================================================
 
 
     for row in df.itertuples():
 
 
+
         cols = st.columns(
             [
-                2,
+                2.2,
                 2,
                 1.5,
-                2,
-                1.2,
-                1.2
+                2.2,
+                1.3,
+                1.5
             ]
         )
 
 
-        cols[0].write(
-            f"🏢 {row.company}"
-        )
 
+        with cols[0]:
 
-        cols[1].write(
-            row.name
-        )
-
-
-        cols[2].write(
-            row.phone
-        )
-
-
-        cols[3].write(
-            row.email
-        )
-
-
-        if row.status=="New":
-
-            cols[4].markdown(
-                "🔵 New"
+            st.write(
+                f"🏢 {row.company}"
             )
 
-        elif row.status=="Contacted":
 
-            cols[4].markdown(
-                "🟠 Contacted"
+
+        with cols[1]:
+
+            st.write(
+                row.name
             )
 
-        elif row.status=="Won":
 
-            cols[4].markdown(
-                "🟢 Won"
+
+        with cols[2]:
+
+            st.write(
+                row.phone
             )
 
-        else:
 
-            cols[4].markdown(
-                "🔴 Lost"
+
+        with cols[3]:
+
+            st.write(
+                row.email
             )
+
+
+
+        with cols[4]:
+
+
+            if row.status == "New":
+
+
+                st.markdown(
+                """
+                <span class="status-new">
+                🔵 New
+                </span>
+                """,
+                unsafe_allow_html=True
+                )
+
+
+
+            elif row.status == "Contacted":
+
+
+                st.markdown(
+                """
+                <span class="status-contact">
+                🟠 Contacted
+                </span>
+                """,
+                unsafe_allow_html=True
+                )
+
+
+
+            elif row.status == "Won":
+
+
+                st.markdown(
+                """
+                <span class="status-won">
+                🟢 Won
+                </span>
+                """,
+                unsafe_allow_html=True
+                )
+
+
+
+            else:
+
+
+                st.markdown(
+                """
+                <span class="status-lost">
+                🔴 Lost
+                </span>
+                """,
+                unsafe_allow_html=True
+                )
 
 
 
         with cols[5]:
 
+
             b1,b2 = st.columns(2)
+
 
 
             with b1:
 
+
                 if st.button(
-                    "✏",
-                    key=f"edit_{row.id}",
+                    "✏️",
+                    key=f"edit_customer_{row.id}",
                     help="Edit Customer"
                 ):
 
-                    st.session_state.edit_id=row.id
+
+                    st.session_state.edit_customer_id = row.id
+
                     st.rerun()
 
 
 
             with b2:
 
-                if role=="Admin":
+
+                if role == "Admin":
+
 
                     if st.button(
-                        "🗑",
-                        key=f"delete_{row.id}",
+                        "🗑️",
+                        key=f"delete_customer_{row.id}",
                         help="Delete Customer"
                     ):
+
 
                         delete_customer(
                             row.id
@@ -625,7 +932,7 @@ def customers_page():
 
 
                         show_message(
-                            "Customer deleted 🗑"
+                            "Customer deleted 🗑️"
                         )
 
 
@@ -633,13 +940,16 @@ def customers_page():
 
 
 
+        # row separator
+
         st.markdown(
         """
         <hr style="
-        margin:4px 0;
+        margin:4px 0px;
         border:0;
         border-top:1px solid #eeeeee;
         ">
         """,
         unsafe_allow_html=True
         )
+        
