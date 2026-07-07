@@ -45,6 +45,19 @@ def quotations_page():
             
             /* Metric Highlight */
             .total-highlight { color: #2c3e50; font-weight: bold; }
+            .status-pill { padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem; color: white; }
+            
+            .Draft { background-color: #7f8c8d; }     /* Neutral Grey */
+            .Sent { background-color: #2563EB; }      /* Vibrant Blue */
+            .Approved { background-color: #059669; }  /* Vibrant Emerald Green */
+            .Rejected { background-color: #DC2626; }  /* Vibrant Red */
+            
+            .input-box { 
+                background-color: #f8f9fa; 
+                padding: 20px; 
+                border-radius: 10px; 
+                border-left: 5px solid #2563EB; /* Matching Vibrant Blue */
+            }
         </style>
     """, unsafe_allow_html=True)
 
