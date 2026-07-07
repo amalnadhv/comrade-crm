@@ -111,45 +111,43 @@ def leads_page():
         
             background: linear-gradient(
                 135deg,
-                #1e3c72,
-                #2a5298
+                #0066cc,
+                #00b4db
             );
         
-            padding: 22px 30px;
+            padding: 20px 28px;
         
-            border-radius: 15px;
+            border-radius: 14px;
         
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.18);
         
         }
         
         
         .crm-title {
         
-            color:white;
+            color: white;
         
-            font-size:32px;
+            font-size: 34px;
         
-            font-weight:800;
+            font-weight: 800;
         
-            letter-spacing:0.5px;
+            line-height: 1.2;
         
         }
         
         
         .crm-subtitle {
         
-            color:#e6f2ff;
+            color: #eaf7ff;
         
-            font-size:15px;
+            font-size: 15px;
         
-            margin-top:5px;
+            margin-top: 8px;
         
-        }
-
-        
+        }        
         </style>
         """,
         unsafe_allow_html=True
