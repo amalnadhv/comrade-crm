@@ -4,6 +4,7 @@ import json
 from datetime import date
 import sqlite3
 
+# Assuming these imports work based on your project structure
 from database import add_quotation, get_quotations, get_customers
 from utils.pdf_generator import generate_quotation_pdf
 
@@ -14,8 +15,8 @@ def update_quotation(qid, customer_name, items, subtotal, discount, tax, total, 
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
     cur.execute("""
-        UPDATE quotations
-        SET customer_name=?, items=?, subtotal=?, discount=?, tax=?, total=?, status=?, version=?
+        UPDATE quotations 
+        SET customer_name=?, items=?, subtotal=?, discount=?, tax=?, total=?, status=?, version=? 
         WHERE id=?
     """, (customer_name, json.dumps(items), subtotal, discount, tax, total, status, version, qid))
     conn.commit()
@@ -36,110 +37,111 @@ def quotations_page():
     if "quote_items" not in st.session_state: st.session_state.quote_items = []
     if "edit_id" not in st.session_state: st.session_state.edit_id = None
     if "edit_loaded" not in st.session_state: st.session_state.edit_loaded = False
-    if "edit_customer" not in st.session_state: st.session_state.edit_customer = None
-    if "edit_status" not in st.session_state: st.session_state.edit_status = "Draft"
-
-    def reset_all_states():
+    
+    # --- Helper: Reset ---
+    def reset_form():
         st.session_state.edit_id = None
         st.session_state.quote_items = []
         st.session_state.edit_loaded = False
-        st.session_state.edit_customer = None
-        st.session_state.edit_status = "Draft"
 
     # --- Data ---
-    df = get_quotations()
     customers_df = pd.DataFrame(get_customers(), columns=["id", "name", "phone", "email", "company", "status"])
     customer_map = {r.id: f"{r.name} ({r.company})" for r in customers_df.itertuples()}
-    customer_options = list(customer_map.keys())
-
-    # --- Create New ---
+    
+    # --- Create Button ---
     if st.button("➕ Create New Quotation"):
-        reset_all_states()
+        reset_form()
         st.rerun()
 
-    # --- Edit Load Logic ---
+    # --- Edit Mode Loading ---
     if st.session_state.edit_id and not st.session_state.edit_loaded:
+        df = get_quotations()
         match = df[df["id"] == st.session_state.edit_id]
         if not match.empty:
             row = match.iloc[0]
             st.session_state.quote_items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
-            st.session_state.edit_customer = row["customer_name"]
-            st.session_state.edit_status = row["status"]
         st.session_state.edit_loaded = True
 
-    # --- UI: Entry Form ---
+    # --- Editor Form ---
     st.subheader("🟠 Edit Quotation" if st.session_state.edit_id else "🔵 Create New Quotation")
+    
+    col1, col2 = st.columns(2)
+    customer_id = col1.selectbox("Customer", list(customer_map.keys()), format_func=lambda x: customer_map[x])
+    status = col2.selectbox("Status", ["Draft", "Sent", "Approved", "Rejected"])
 
-    default_customer = customer_options[0]
-    if st.session_state.edit_id:
-        default_customer = next((k for k, v in customer_map.items() if v == st.session_state.edit_customer), customer_options[0])
-
-    customer_id = st.selectbox("Customer", customer_options, index=customer_options.index(default_customer), format_func=lambda x: customer_map[x], key="customer_select")
-    status = st.selectbox("Status", ["Draft", "Sent", "Approved", "Rejected"], index=["Draft", "Sent", "Approved", "Rejected"].index(st.session_state.edit_status) if st.session_state.edit_status in ["Draft", "Sent", "Approved", "Rejected"] else 0, key="status_select")
-
+    # Item Input
     st.markdown("### Items")
-    item_input = st.text_input("Item", key="item_input")
-    qty_input = st.number_input("Qty", value=1.0, key="qty_input")
-    price_input = st.number_input("Price", value=0.0, key="price_input")
-
-    if st.button("➕ Add Item"):
-        st.session_state.quote_items.append({"item": item_input, "qty": qty_input, "price": price_input})
+    i1, i2, i3, i4 = st.columns([2, 1, 1, 1])
+    item_in = i1.text_input("Item Name")
+    qty_in = i2.number_input("Qty", value=1.0)
+    prc_in = i3.number_input("Price", value=0.0)
+    
+    if i4.button("➕ Add Item"):
+        st.session_state.quote_items.append({"item": item_in, "qty": qty_in, "price": prc_in})
         st.rerun()
 
-    # --- Item List ---
+    # List Current Items
     subtotal = 0
-    updated_items = []
     for i, it in enumerate(st.session_state.quote_items):
-        cols = st.columns([3, 2, 2, 1])
-        n_item = cols[0].text_input("Item", it["item"], key=f"it_{i}")
-        n_qty = cols[1].number_input("Qty", value=float(it["qty"]), key=f"qt_{i}")
-        n_prc = cols[2].number_input("Price", value=float(it["price"]), key=f"pr_{i}")
-        subtotal += n_qty * n_prc
-        if cols[3].button("❌", key=f"rm_{i}"):
+        cols = st.columns([3, 1, 1, 1])
+        cols[0].write(it['item'])
+        cols[1].write(f"Qty: {it['qty']}")
+        cols[2].write(f"Price: {it['price']}")
+        subtotal += (it['qty'] * it['price'])
+        if cols[3].button("🗑️", key=f"del_{i}"):
             st.session_state.quote_items.pop(i)
             st.rerun()
-        updated_items.append({"item": n_item, "qty": n_qty, "price": n_prc})
-    
-    st.session_state.quote_items = updated_items
 
-    # --- Totals ---
-    st.markdown("---")
-    discount = st.number_input("Discount %", value=0.0, key="discount")
-    tax = st.number_input("Tax %", value=0.0, key="tax")
-    after_discount = subtotal - (subtotal * discount / 100)
-    total = after_discount + (after_discount * tax / 100)
-    st.success(f"Subtotal: {subtotal:.2f} | Total: {total:.2f}")
+    # Totals
+    st.write(f"**Subtotal: ${subtotal:.2f}**")
+    discount = st.number_input("Discount %", value=0.0)
+    tax = st.number_input("Tax %", value=0.0)
+    total = (subtotal - (subtotal * discount / 100)) * (1 + tax / 100)
+    st.write(f"### Total: ${total:.2f}")
 
-    # --- Save / Cancel Actions ---
-    col1, col2 = st.columns([1, 6])
-    if col1.button("💾 Save"):
-        cust_name = customer_map[customer_id]
-        if st.session_state.edit_id:
-            update_quotation(st.session_state.edit_id, cust_name, st.session_state.quote_items, subtotal, discount, tax, total, status, "V-EDIT")
+    # Save/Cancel
+    sc1, sc2 = st.columns(2)
+    if sc1.button("💾 Save Quotation"):
+        if not st.session_state.quote_items:
+            st.error("Please add at least one item.")
         else:
-            add_quotation(cust_name, st.session_state.quote_items, subtotal, discount, tax, total, status, str(date.today()), "V1")
-        
-        reset_all_states()
-        st.rerun()
-        
-    if col2.button("❌ Cancel"):
-        reset_all_states()
+            cust_name = customer_map[customer_id]
+            if st.session_state.edit_id:
+                update_quotation(st.session_state.edit_id, cust_name, st.session_state.quote_items, subtotal, discount, tax, total, status, "V-EDIT")
+                st.success("Updated successfully!")
+            else:
+                add_quotation(cust_name, st.session_state.quote_items, subtotal, discount, tax, total, status, str(date.today()), "V1")
+                st.success("Saved successfully!")
+            reset_form()
+            st.rerun()
+
+    if sc2.button("❌ Cancel"):
+        reset_form()
         st.rerun()
 
-    # --- List View ---
+    # --- List Display ---
     st.markdown("---")
     st.subheader("All Quotations")
     df = get_quotations()
+    
     for _, row in df.iterrows():
-        st.markdown(f"### {row['customer_name']} - {row['status']} - Total: {row['total']:.2f}")
+        # Safe display of row data
+        cust = row.get('customer_name', 'N/A')
+        stat = row.get('status', 'N/A')
+        tot = row.get('total', 0.0)
+        
+        st.markdown(f"### {cust} | Status: {stat} | Total: ${tot:.2f}")
+        
         c1, c2, c3 = st.columns(3)
-        if c1.button("✏ Edit", key=f"e_{row['id']}"):
+        if c1.button("✏️ Edit", key=f"e_{row['id']}"):
             st.session_state.edit_id = row["id"]
             st.session_state.edit_loaded = False
             st.rerun()
-        if c2.button("🗑 Delete", key=f"d_{row['id']}"):
+        if c2.button("🗑️ Delete", key=f"d_{row['id']}"):
             delete_quotation(row["id"])
             st.rerun()
-        
+            
+        # PDF Generation
         items = json.loads(row["items"]) if isinstance(row["items"], str) else row["items"]
-        c3.download_button("📄 PDF", data=generate_quotation_pdf({**row.to_dict(), "items": items}), file_name=f"q_{row['id']}.pdf", key=f"pdf_{row['id']}")
+        pdf_data = generate_quotation_pdf({**row.to_dict(), "items": items})
+        c3.download_button("📄 PDF", data=pdf_data, file_name=f"quote_{row['id']}.pdf", key=f"pdf_{row['id']}")
