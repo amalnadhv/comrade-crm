@@ -251,25 +251,17 @@ def customers_page():
 
     st.markdown(
     """
-
     <div class="crm-header">
-
-        <div class="crm-title">
-            👥 Customers Dashboard
+      <div class="crm-title">
+        👥 Customers Management
         </div>
-
         <div class="crm-subtitle">
-            Manage customers, relationships and business growth
+            Maintain customer details, track status and manage business relationships efficiently
         </div>
-
     </div>
-
     """,
-
     unsafe_allow_html=True
     )
-
-
 
     render_message()
 
