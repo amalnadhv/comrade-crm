@@ -159,7 +159,6 @@ def leads_page():
             <div class="crm-title">
                 🎯 Leads Dashboard
             </div>
-    
             <div class="crm-subtitle">
                 Manage prospects, follow-ups and conversions efficiently
             </div>
