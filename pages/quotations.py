@@ -113,73 +113,73 @@ def reset_quote():
             def quotations_page():
 
 
-    # ===============================
-    # STYLE
-    # ===============================
-
-    st.markdown(
-        """
-        <style>
-
-        .header {
-
-            background:
-            linear-gradient(
-            135deg,
-            #ffffff,
-            #f1f5f9
-            );
-
-            padding:25px;
-
-            border-radius:16px;
-
-            border:1px solid #e2e8f0;
-
-            margin-bottom:20px;
-
-        }
-
-
-        .stat-card {
-
-            background:white;
-
-            padding:15px;
-
-            border-radius:14px;
-
-            border:1px solid #e5e7eb;
-
-            text-align:center;
-
-        }
-
-
-        .stat-number {
-
-            font-size:26px;
-
-            font-weight:bold;
-
-        }
-
-
-        .table-row {
-
-            padding:8px;
-
-            border-bottom:1px solid #e5e7eb;
-
-        }
-
-
-        </style>
-
-        """,
-
-        unsafe_allow_html=True
-    )
+                # ===============================
+                # STYLE
+                # ===============================
+            
+                st.markdown(
+                    """
+                    <style>
+            
+                    .header {
+            
+                        background:
+                        linear-gradient(
+                        135deg,
+                        #ffffff,
+                        #f1f5f9
+                        );
+            
+                        padding:25px;
+            
+                        border-radius:16px;
+            
+                        border:1px solid #e2e8f0;
+            
+                        margin-bottom:20px;
+            
+                    }
+            
+            
+                    .stat-card {
+            
+                        background:white;
+            
+                        padding:15px;
+            
+                        border-radius:14px;
+            
+                        border:1px solid #e5e7eb;
+            
+                        text-align:center;
+            
+                    }
+            
+            
+                    .stat-number {
+            
+                        font-size:26px;
+            
+                        font-weight:bold;
+            
+                    }
+            
+            
+                    .table-row {
+            
+                        padding:8px;
+            
+                        border-bottom:1px solid #e5e7eb;
+            
+                    }
+            
+            
+                    </style>
+            
+                    """,
+            
+                    unsafe_allow_html=True
+                )
 
 
 
