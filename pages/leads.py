@@ -153,7 +153,7 @@ def leads_page():
         unsafe_allow_html=True
     )
 
-   st.markdown(
+    st.markdown(
         """
         <div class="crm-header">
             <div class="crm-title">
