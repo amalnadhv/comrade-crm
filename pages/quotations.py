@@ -655,14 +655,14 @@ def quotations_page():
 
     )
 
-# ================= CANCEL EDIT =================
+  # ================= CANCEL EDIT =================
 
-if st.session_state.edit_id:
+  if st.session_state.edit_id:
 
-    if st.button(
-        "❌ Cancel Edit",
-        key="cancel_edit"
-    ):
+      if st.button(
+          "❌ Cancel Edit",
+          key="cancel_edit"
+      ):
 
         st.session_state.edit_id = None
 
