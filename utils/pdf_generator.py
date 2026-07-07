@@ -11,31 +11,38 @@ def generate_list_pdf(df):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
     styles = getSampleStyleSheet()
-    elements = []
+    elements = [Paragraph("<b>Quotations Summary Report</b>", styles['Title']), Spacer(1, 12)]
 
-    elements.append(Paragraph("<b>Quotations Summary Report</b>", styles['Title']))
-    elements.append(Spacer(1, 12))
-
-    # Prepare data for the table
+    # Prepare data
     data = [["Customer", "Status", "Total (AED)"]]
+    
     for _, row in df.iterrows():
-        data.append([str(row['customer_name']), str(row['status']), f"{row['total']:,.2f}"])
+        # Wrap the customer name in a Paragraph so it wraps inside the cell
+        customer_paragraph = Paragraph(str(row['customer_name']), styles['Normal'])
+        
+        data.append([
+            customer_paragraph, 
+            str(row['status']), 
+            f"{row['total']:,.2f}"
+        ])
 
-    # Create and style the table
-    t = Table(data, colWidths=[200, 100, 150])
+    # Table styling
+    # Ensure your column widths are sufficient for the text
+    t = Table(data, colWidths=[250, 80, 100]) # Increased customer column width to 250
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1F4E79")),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), # Added Middle vertical alignment
         ('PADDING', (0, 0), (-1, -1), 6),
     ]))
+    
     elements.append(t)
-
     doc.build(elements)
     buffer.seek(0)
     return buffer.getvalue()
-
+    
 def generate_quotation_pdf(data):
 
     buffer = BytesIO()
