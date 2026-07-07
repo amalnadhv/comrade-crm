@@ -147,7 +147,30 @@ def leads_page():
         
             margin-top: 8px;
         
-        }        
+        }   
+
+        .table-header {
+        
+            background: linear-gradient(
+                135deg,
+                #1e3c72,
+                #2a5298
+            );
+        
+            color:white;
+        
+            padding:10px 8px;
+        
+            border-radius:10px;
+        
+            font-weight:700;
+        
+            text-align:center;
+        
+            margin-bottom:8px;
+        
+        }
+        
         </style>
         """,
         unsafe_allow_html=True
@@ -656,11 +679,8 @@ def leads_page():
         """
 
 
-
-    # ---------------- TABLE HEADER ----------------
-
-
-    h=st.columns(
+# ---------------- TABLE HEADER ----------------
+    h = st.columns(
         [
             2,
             2,
@@ -671,30 +691,41 @@ def leads_page():
             2
         ]
     )
-
-
-    titles=[
+    
+    
+    titles = [
         "🏢 Company",
         "👤 Contact",
         "📞 Phone",
         "Status",
         "📅 Follow Up",
         "👨 Assigned",
-        "Actions"
+        "⚙ Actions"
     ]
-
-
+    
+    
     for c,t in zip(h,titles):
-
+    
         c.markdown(
-            f"**{t}**"
+            f"""
+            <div class="table-header">
+                {t}
+            </div>
+            """,
+            unsafe_allow_html=True
         )
-
-
-    st.divider()
-
-
-
+    
+    
+    st.markdown(
+    """
+    <hr style="
+    margin:5px 0;
+    border:0;
+    border-top:1px solid #ddd;
+    ">
+    """,
+    unsafe_allow_html=True
+    )
     # ---------------- ROWS ----------------
 
 
