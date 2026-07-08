@@ -71,7 +71,7 @@ def followups_page():
     tab1, tab2, tab3 = st.tabs(["📋 Management", "📅 Calendar", "📄 Export"])
     
     df = load_followups()
-   leads = get_leads()
+    leads = get_leads()
     if leads is None:
         leads = pd.DataFrame()
     
