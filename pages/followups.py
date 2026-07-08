@@ -71,8 +71,15 @@ def followups_page():
     tab1, tab2, tab3 = st.tabs(["📋 Management", "📅 Calendar", "📄 Export"])
     
     df = load_followups()
-    leads = get_leads() or pd.DataFrame()
-    customers = pd.DataFrame(get_customers(), columns=["id", "name", "phone", "email", "company", "status"]) if get_customers() is not None else pd.DataFrame()
+    leads = get_leads()
+    if leads is None:
+        leads = pd.DataFrame()
+
+    raw_customers = get_customers()
+    if raw_customers is not None:
+        customers = pd.DataFrame(raw_customers, columns=["id", "name", "phone", "email", "company", "status"])
+    else:
+        customers = pd.DataFrame()
 
     with tab1:
         # --- YOUR EXISTING LOGIC ---
