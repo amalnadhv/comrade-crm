@@ -71,16 +71,20 @@ def followups_page():
     tab1, tab2, tab3 = st.tabs(["📋 Management", "📅 Calendar", "📄 Export"])
     
     df = load_followups()
-    leads = get_leads()
+   leads = get_leads()
     if leads is None:
         leads = pd.DataFrame()
-
+    
+    # Handle customers
     raw_customers = get_customers()
     if raw_customers is not None:
-        customers = pd.DataFrame(raw_customers, columns=["id", "name", "phone", "email", "company", "status"])
+        customers = pd.DataFrame(
+            raw_customers, 
+            columns=["id", "name", "phone", "email", "company", "status"]
+        )
     else:
         customers = pd.DataFrame()
-
+        
     with tab1:
         # --- YOUR EXISTING LOGIC ---
         total, pending, done, overdue = len(df), len(df[df.status=="Pending"]) if not df.empty else 0, len(df[df.status=="Done"]) if not df.empty else 0, len(df[df.status=="Overdue"]) if not df.empty else 0
