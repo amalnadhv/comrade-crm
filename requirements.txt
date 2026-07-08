@@ -1,7 +1,7 @@
-streamlit==1.46.1
+streamlit
 pandas
 streamlit-aggrid
 reportlab
 plotly
 fpdf
-streamlit-calendar==1.4.0
+streamlit-calendar
