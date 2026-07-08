@@ -4,4 +4,4 @@ streamlit-aggrid
 reportlab
 plotly
 fpdf
-streamlit-calendar==1.4.0
+streamlit-calendar
